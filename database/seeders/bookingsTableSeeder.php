@@ -17,13 +17,15 @@ class bookingsTableSeeder extends Seeder
             [
                 'title' => 'Meeting',
                 'color' => 'red',
-                'start' => '2024-02-11',
-                'info' => 'Meeting with clients'
+                'start' => now(),
+                'end' => now()->addHours(2),
+                'info' => 'Meeting with students'
             ],
             [
                 'title' => 'Conference',
                 'color' => 'blue',
-                'start' => '2024-02-12',
+                'start' => now()->addDays(1),
+                'end' => now()->addDays(2),
                 'info' => 'Tech conference'
             ],
             // Add more sample bookings as needed

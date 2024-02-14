@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('title');
             $table->string('color');
             $table->date('start')->nullable();
+            $table->date('end')->nullable();
             $table->string('info');
         });
     }
