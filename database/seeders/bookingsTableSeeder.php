@@ -14,16 +14,11 @@ class bookingsTableSeeder extends Seeder
     public function run(): void
     {
         $bookings = [
-            [
-                'title' => 'Meeting',
-                'color' => 'red',
-                'start' => '2024-02-11',
-                'info' => 'Meeting with clients'
+            [   'calendar_event_id' => 5,
+                'info' => 'Meeting with students'
             ],
             [
-                'title' => 'Conference',
-                'color' => 'blue',
-                'start' => '2024-02-12',
+                'calendar_event_id' => 6,
                 'info' => 'Tech conference'
             ],
             // Add more sample bookings as needed

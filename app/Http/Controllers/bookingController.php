@@ -11,7 +11,7 @@ class bookingController extends Controller
 {
     public function index()
     {
-        $bookings = Booking::all(); // Example: Fetch all bookings from the database
+        $bookings = Booking::with('calendarEvent')->get(); // Example: Fetch all bookings from the database
         return response()->json($bookings);
     }
 }

@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+class CreateBookingsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -14,9 +14,8 @@ return new class extends Migration
         Schema::create('bookings', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
-            $table->string('title');
-            $table->string('color');
-            $table->date('start')->nullable();
+            $table->unsignedBigInteger('calendar_event_id'); // Foreign key column
+            $table->foreign('calendar_event_id')->references('id')->on('calendar_events')->onDelete('cascade');
             $table->string('info');
         });
     }
