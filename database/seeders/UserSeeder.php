@@ -15,7 +15,11 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         User::create([
-            'username' => 'user1',
-        ]);
+            'username' => 'Moderator User'
+        ])->roles()->attach(1); // Attach role with ID 1 (Admin) to this user
+
+        User::create([
+            'username' => 'Faculty User'
+        ])->roles()->attach(2);
     }
 }

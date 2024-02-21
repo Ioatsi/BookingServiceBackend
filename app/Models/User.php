@@ -28,6 +28,10 @@ class User extends Authenticatable
 
     public function roles()
     {
-        return $this->belongsToMany(Role::class, 'user_roles', 'user_id', 'role_id');
+        return $this->belongsToMany(Role::class);
+    }
+    public function rooms()
+    {
+        return $this->belongsToMany(Room::class);
     }
 }

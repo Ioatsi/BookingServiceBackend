@@ -20,6 +20,6 @@ class RoomSeeder extends Seeder
             'department' => 'Department Value',
             'number' => 101,
             'type' => 'Type Value',
-        ]);
+        ])->users()->attach(1);
     }
 }
