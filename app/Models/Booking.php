@@ -48,4 +48,18 @@ class Booking extends Model
     {
         return $this->belongsTo(Semester::class);
     }
+    public function conflicts()
+    {
+        // Check for bookings that conflict with the current booking
+        $conflictingBookings = Booking::where('room_id', $this->room_id)
+            ->where(function ($query) {
+                $query->whereBetween('start', [$this->start, $this->end])
+                    ->orWhereBetween('end', [$this->start, $this->end]);
+            })
+            ->where('id', '<>', $this->id) // Exclude the current booking
+            ->where('status', 0) // Check for bookings with status 0
+            ->get();
+
+        return $conflictingBookings;
+    }
 }
