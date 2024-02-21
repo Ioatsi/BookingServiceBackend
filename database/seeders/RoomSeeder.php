@@ -17,7 +17,7 @@ class RoomSeeder extends Seeder
             'name' => 'Room Name',
             'capacity' => 10,
             'building_id' => 1,
-            'department' => 'Department Value',
+            'department_id' => 1,
             'number' => 101,
             'type' => 'Type Value',
         ])->users()->attach(1);

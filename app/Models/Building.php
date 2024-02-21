@@ -19,7 +19,7 @@ class Building extends Model
         return $this->hasMany(Room::class);
     }
 
-    public function department()
+    public function departments()
     {
         return $this->belongsTo(Department::class);
     }

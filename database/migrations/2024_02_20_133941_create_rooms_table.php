@@ -15,7 +15,7 @@ return new class extends Migration {
             $table->string('name');
             $table->integer('capacity');
             $table->foreignId('building_id')->constrained('buildings');
-            $table->string('department');
+            $table->string('department_id')->constrained('departments');
             $table->integer('number');
             $table->string('type');
             $table->timestamps();

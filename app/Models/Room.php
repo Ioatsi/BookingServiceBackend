@@ -12,7 +12,7 @@ class Room extends Model
         'name',
         'capacity',
         'building_id',
-        'department',
+        'department_id',
         'number',
         'type',
     ];
@@ -24,5 +24,13 @@ class Room extends Model
     public function users()
     {
         return $this->belongsToMany(User::class, 'moderator_room', 'room_id', 'user_id');
+    }
+    public function buildings()
+    {
+        return $this->belongsTo(Building::class);
+    }
+    public function departments()
+    {
+        return $this->belongsTo(Department::class);
     }
 }
