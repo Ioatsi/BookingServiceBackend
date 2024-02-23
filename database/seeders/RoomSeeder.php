@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use App\Models\Room;
 
 class RoomSeeder extends Seeder
 {
@@ -13,13 +12,6 @@ class RoomSeeder extends Seeder
      */
     public function run(): void
     {
-        Room::create([
-            'name' => 'Room Name',
-            'capacity' => 10,
-            'building_id' => 1,
-            'department_id' => 1,
-            'number' => 101,
-            'type' => 'Type Value',
-        ])->users()->attach(1);
+        \App\Models\Room::factory(10)->create();
     }
 }

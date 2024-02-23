@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Models\Semester;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use App\Models\Semester;
 
 class SemesterSeeder extends Seeder
 {
@@ -14,9 +14,9 @@ class SemesterSeeder extends Seeder
     public function run(): void
     {
         Semester::create([
-            'start' => '2024-01-01',
-            'end' => '2024-05-01',
             'type' => 'Winter',
+            'start' => date('2022-01-01'),
+            'end' => date('2022-06-01'),
         ]);
     }
 }

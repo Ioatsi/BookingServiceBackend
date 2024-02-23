@@ -19,4 +19,8 @@ class Semester extends Model
     {
         return $this->hasMany(Booking::class);
     }
+    public function recurrings()
+    {
+        return $this->hasMany(Recurring::class);
+    }
 }

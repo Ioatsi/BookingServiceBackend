@@ -10,10 +10,10 @@ class Booking extends Model
     use HasFactory;
     protected $fillable = [
         'group_id',
+        'recurring_id',
         'booker_id',
         'semester_id',
         'room_id',
-        'moderator_id',
         'status',
         'title',
         'start',
@@ -29,9 +29,9 @@ class Booking extends Model
         'end' => 'datetime',
     ];
 
-    public function bookingGroup()
+    public function Group()
     {
-        return $this->belongsTo(BookingGroup::class, 'group_id');
+        return $this->belongsTo(Group::class, 'group_id');
     }
 
     public function booker()
@@ -48,6 +48,12 @@ class Booking extends Model
     {
         return $this->belongsTo(Semester::class);
     }
+
+    public function recurring()
+    {
+        return $this->belongsTo(Recurring::class);
+    }
+
     public function conflicts()
     {
         // Check for bookings that conflict with the current booking

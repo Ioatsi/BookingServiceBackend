@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('users', function (Blueprint $table) {
+        Schema::create('recurrings', function (Blueprint $table) {
             $table->id();
-            $table->string('username');
+            $table->string('title');
+            $table->integer('status');
+            $table->foreignId('semester_id')->constrained('semesters');
             $table->timestamps();
         });
     }
@@ -23,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('users');
+        Schema::dropIfExists('reccuring');
     }
 };

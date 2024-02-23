@@ -12,11 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('moderator_room', function (Blueprint $table) {
-            $table->unsignedBigInteger('room_id');
-            $table->unsignedBigInteger('user_id');
-            $table->foreign('room_id')->references('id')->on('rooms')->onDelete('cascade');
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->primary(['room_id', 'user_id']);
+            $table->id();            
+            $table->foreignId('user_id')->constrained('users');
+            $table->foreignId('room_id')->constrained('rooms');
+            $table->timestamps();
         });
     }
 

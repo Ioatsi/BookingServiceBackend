@@ -5,17 +5,22 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class BookingGroup extends Model
+class Day extends Model
 {
     use HasFactory;
     protected $fillable = [
-        'group_title',
+        'recurring_id',
+        'name',
         'start',
         'end',
     ];
-
     protected $casts = [
-        'start' => 'date',
-        'end' => 'date',
+        'start' => 'time',
+        'end' => 'time',
     ];
+
+    public function recurring(){
+        return $this->belongsTo(Recurring::class);
+    }
+
 }

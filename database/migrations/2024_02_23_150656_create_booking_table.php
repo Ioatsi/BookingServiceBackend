@@ -4,7 +4,8 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     /**
      * Run the migrations.
      */
@@ -12,11 +13,12 @@ return new class extends Migration {
     {
         Schema::create('bookings', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('group_id')->constrained('booking_groups');
+            $table->foreignId('group_id')->nullable()->constrained('groups');
+            $table->foreignId('recurring_id')->nullable()->constrained('recurrings');
             $table->foreignId('booker_id')->constrained('users');
-            $table->foreignId('semester_id');
+            $table->foreignId('semester_id')->constrained('semesters');
             $table->foreignId('room_id')->constrained('rooms');
-            $table->string('status');
+            $table->integer('status');
             $table->string('title');
             $table->dateTime('start');
             $table->dateTime('end');
@@ -33,6 +35,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('bookings');
+        Schema::dropIfExists('booking');
     }
 };
