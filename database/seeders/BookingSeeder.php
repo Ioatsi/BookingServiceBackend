@@ -32,7 +32,7 @@ class BookingSeeder extends Seeder
         $recurringGroupIds = Recurring::pluck('id')->toArray();
         $userIds = User::pluck('id')->toArray();
         $semesterIds = Semester::pluck('id')->toArray();
-        $roomIds = Room::pluck('room_id')->toArray();
+        $roomIds = Room::pluck('id')->toArray();
         //
         
         for ($i = 0; $i < 3; $i++) {

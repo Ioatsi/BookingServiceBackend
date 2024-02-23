@@ -23,8 +23,8 @@ class DaySeeder extends Seeder
         Day::create([
             'day' => 'Thursday',
             'recurring_id' => 1,
-            'start' => '10:00:00',
-            'end' => '12:00:00',
+            'start' => time('10:00:00'),
+            'end' => time('12:00:00'),
         ]);
     }
 }

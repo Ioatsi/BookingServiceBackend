@@ -19,7 +19,7 @@ class Moderator_roomSeeder extends Seeder
             $query->where('name', 'Moderator');
         })->pluck('id')->toArray();
 
-        $roomIds = Room::pluck('room_id')->toArray();
+        $roomIds = Room::pluck('id')->toArray();
 
         foreach ($moderatorIds as $moderatorId) {
             foreach ($roomIds as $roomId) {
