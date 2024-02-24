@@ -37,13 +37,30 @@ class BookingSeeder extends Seeder
         
         for ($i = 0; $i < 3; $i++) {
             Booking::create([
-                'group_id' => $this->faker->randomElement($bookingGroupIds),
+                'group_id' => null,
                 'recurring_id' => $this->faker->randomElement($recurringGroupIds),
                 'booker_id' => $this->faker->randomElement($userIds),
                 'semester_id' => $this->faker->randomElement($semesterIds),
                 'room_id' => $this->faker->randomElement($roomIds),
                 'status' => $this->faker->numberBetween(0, 1), // Assuming status is either 0 or 1
-                'title' => $this->faker->sentence,
+                'title' => $this->faker->word(),
+                'start' => $this->faker->dateTimeBetween('+1 week', '+1 month'),
+                'end' => $this->faker->dateTimeBetween('+2 weeks', '+2 months'),
+                'color' => $this->faker->hexColor,
+                'info' => $this->faker->text,
+                'participants' => $this->faker->sentence,
+                'type' => $this->faker->randomElement(['Group', 'Recurring']),
+            ]);
+        }
+        for ($i = 0; $i < 2; $i++) {
+            Booking::create([
+                'group_id' =>  $this->faker->randomElement($bookingGroupIds),
+                'recurring_id' => null,
+                'booker_id' => $this->faker->randomElement($userIds),
+                'semester_id' => $this->faker->randomElement($semesterIds),
+                'room_id' => $this->faker->randomElement($roomIds),
+                'status' => $this->faker->numberBetween(0, 1), // Assuming status is either 0 or 1
+                'title' => $this->faker->word(),
                 'start' => $this->faker->dateTimeBetween('+1 week', '+1 month'),
                 'end' => $this->faker->dateTimeBetween('+2 weeks', '+2 months'),
                 'color' => $this->faker->hexColor,
