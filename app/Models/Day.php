@@ -15,8 +15,8 @@ class Day extends Model
         'end',
     ];
     protected $casts = [
-        'start' => 'time',
-        'end' => 'time',
+        'start' => 'datetime',
+        'end' => 'datetime',
     ];
 
     public function recurring(){

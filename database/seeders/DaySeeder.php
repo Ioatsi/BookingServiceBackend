@@ -15,16 +15,16 @@ class DaySeeder extends Seeder
     {
         //
         Day::create([
-            'day' => 'Monday',
+            'name' => 'Monday',
             'recurring_id' => 1,
-            'start' => '10:00:00',
-            'end' => '12:00:00',
+            'start' => '2024-02-21 10:00:00',
+            'end' => '2024-02-21 12:00:00',
         ]);
         Day::create([
-            'day' => 'Thursday',
+            'name' => 'Thursday',
             'recurring_id' => 1,
-            'start' => time('10:00:00'),
-            'end' => time('12:00:00'),
+            'start' =>'2024-02-21 10:00:00',
+            'end' => '2024-02-21 12:00:00',
         ]);
     }
 }
