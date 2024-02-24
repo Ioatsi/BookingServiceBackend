@@ -28,6 +28,9 @@ class Booking extends Model
         'start' => 'datetime',
         'end' => 'datetime',
     ];
+    protected $attributes = [
+        'status' => 0,
+    ];
 
     public function Group()
     {
@@ -53,7 +56,6 @@ class Booking extends Model
     {
         return $this->belongsTo(Recurring::class);
     }
-
     public function conflicts()
     {
         // Check for bookings that conflict with the current booking
