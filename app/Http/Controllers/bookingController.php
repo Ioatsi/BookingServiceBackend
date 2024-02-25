@@ -69,6 +69,15 @@ class bookingController extends Controller
         return response()->json($bookings);
     }
 
+    public function updateBookingStatus(Request $request, $id)
+    {
+        $booking = Booking::findOrFail($id);
+        $booking->status = $request->input('status');
+        $booking->save();
+
+        return response()->json($booking);
+    }
+
     public function getBookingById($id)
     {
         $booking = Booking::find($id);

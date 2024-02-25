@@ -39,6 +39,7 @@ Route::post('getAllBookingsByRoom', [BookingController::class, 'getAllBookingsBy
 
 Route::post('/createBooking', [BookingController::class, 'store']);
 
+Route::put('/updateBookingStatus/{id}', [BookingController::class, 'updateBookingStatus']);
 
 //Room
 Route::get('getRooms', [RoomController::class, 'index']);
