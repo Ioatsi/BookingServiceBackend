@@ -35,8 +35,6 @@ class Booking extends Model
             if($conflicting->isNotEmpty()) {
                 $firstConflicting = $conflicting->first();
                 $conflictId = $firstConflicting->conflict_id ? $firstConflicting->conflict_id : static::generateUniqueConflictId();
-                //var_dump($firstConflicting);
-                var_dump($conflictId);
                 foreach ($conflicting as $conflict) {
                     $conflict->update(['conflict_id' => $conflictId]);
                 }

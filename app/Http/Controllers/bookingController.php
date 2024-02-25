@@ -20,6 +20,7 @@ class bookingController extends Controller
         $validatedData = $request->validate([
             'group_id' => 'nullable|exists:groups,id',
             'recurring_id' => 'nullable|exists:recurrings,id',
+            'conflict_id' => 'nullable',
             'booker_id' => 'required|exists:users,id',
             'title' => 'required',
             'info' => 'required',
