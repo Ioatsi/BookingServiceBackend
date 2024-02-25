@@ -64,9 +64,18 @@ class bookingController extends Controller
     {
         // Retrieve array of IDs from request body
         $ids = $request->input('ids');
-
+        $conflicts = [];
         $bookings = Booking::whereIn('room_id', $ids)->get();
-        return response()->json($bookings);
+        foreach ($bookings as $booking) {
+            $conflictingBookings = $booking->conflicts();            
+            // Merge conflicting bookings with the result array
+            $conflicts = array_merge($conflicts, $conflictingBookings->toArray());
+        }
+        
+        return response()->json([
+            'bookings' => $bookings,
+            'conflicts' => $conflicts
+        ]);
     }
 
     public function updateBookingStatus(Request $request, $id)

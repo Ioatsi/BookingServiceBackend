@@ -11,6 +11,7 @@ class Booking extends Model
     protected $fillable = [
         'group_id',
         'recurring_id',
+        'conflict_id',
         'booker_id',
         'semester_id',
         'room_id',
@@ -23,6 +24,53 @@ class Booking extends Model
         'participants',
         'type',
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+        static::creating(function ($booking) {
+            $conflicting = Booking::conflicts($booking);
+            
+
+            if($conflicting->isNotEmpty()) {
+                $firstConflicting = $conflicting->first();
+                $conflictId = $firstConflicting->conflict_id ? $firstConflicting->conflict_id : static::generateUniqueConflictId();
+                //var_dump($firstConflicting);
+                var_dump($conflictId);
+                foreach ($conflicting as $conflict) {
+                    $conflict->update(['conflict_id' => $conflictId]);
+                }
+
+                $booking->conflict_id = $conflictId;
+            }
+        });
+    }
+
+    protected static function generateUniqueConflictId()
+    {
+        $conflictId = null;
+        do {
+            // Generate a new unique ID (e.g., UUID)
+            $conflictId = uniqid(); // Example: Generate a unique ID using uniqid()
+            // Check if the generated ID already exists in the table
+        } while (static::where('conflict_id', $conflictId)->exists());
+
+        return $conflictId;
+    }
+    public function scopeConflicts($query, Booking $booking)
+    {
+        // Check for bookings that conflict with the current booking
+        $conflictingBookings = Booking::where('room_id', $booking->room_id)
+            ->where(function ($query) use ($booking) {
+                $query->whereBetween('start', [$booking->start, $booking->end])
+                    ->orWhereBetween('end', [$booking->start, $booking->end]);
+            })
+            ->where('id', '<>', $booking->id) // Exclude the current booking
+            ->where('status', 0) // Check for bookings with status 0
+            ->get();
+
+        return $conflictingBookings;
+    }
 
     protected $casts = [
         'start' => 'datetime',
@@ -56,18 +104,5 @@ class Booking extends Model
     {
         return $this->belongsTo(Recurring::class);
     }
-    public function conflicts()
-    {
-        // Check for bookings that conflict with the current booking
-        $conflictingBookings = Booking::where('room_id', $this->room_id)
-            ->where(function ($query) {
-                $query->whereBetween('start', [$this->start, $this->end])
-                    ->orWhereBetween('end', [$this->start, $this->end]);
-            })
-            ->where('id', '<>', $this->id) // Exclude the current booking
-            ->where('status', 0) // Check for bookings with status 0
-            ->get();
-
-        return $conflictingBookings;
-    }
+    
 }

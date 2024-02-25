@@ -34,7 +34,7 @@ Route::get('/getActiveBookings', [BookingController::class, 'getActiveBookings']
 //Get active bookings by room
 Route::get('/getBookingByRoom/{id}', [BookingController::class, 'getBookingByRoom']);
 
-//Get active and pending bookings by room ids
+//Get active and pending bookings by room ids for moderator
 Route::post('getAllBookingsByRoom', [BookingController::class, 'getAllBookingsByRoom']);
 
 Route::post('/createBooking', [BookingController::class, 'store']);

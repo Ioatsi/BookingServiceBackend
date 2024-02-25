@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('group_id')->nullable()->constrained('groups');
             $table->foreignId('recurring_id')->nullable()->constrained('recurrings');
+            $table->string('conflict_id')->nullable();
             $table->foreignId('booker_id')->constrained('users');
             $table->foreignId('semester_id')->constrained('semesters');
             $table->foreignId('room_id')->constrained('rooms');
