@@ -22,7 +22,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 /* Booking */
 Route::get('/bookings', [BookingController::class, 'index']);
 
-//For moderator
+//For moderator and admin
 Route::get('/getAllBookings', [BookingController::class, 'getAllBookings']);
 
 //For user
@@ -31,11 +31,16 @@ Route::get('/getUserBookings/{id}', [BookingController::class, 'getUserBookings'
 //For callendar
 Route::get('/getActiveBookings', [BookingController::class, 'getActiveBookings']);
 
-//For room bookings
+//Get active bookings by room
 Route::get('/getBookingByRoom/{id}', [BookingController::class, 'getBookingByRoom']);
+
+//Get active and pending bookings by room ids
+Route::post('getAllBookingsByRoom', [BookingController::class, 'getAllBookingsByRoom']);
 
 Route::post('/createBooking', [BookingController::class, 'store']);
 
 
 //Room
 Route::get('getRooms', [RoomController::class, 'index']);
+
+Route::get('getModeratedRooms/{id}', [RoomController::class, 'getModeratedRooms']);

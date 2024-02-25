@@ -60,6 +60,14 @@ class bookingController extends Controller
         $bookings = Booking::where('room_id', $id)->where('status', 1)->get();
         return response()->json($bookings);
     }
+    public function getAllBookingsByRoom(Request $request)
+    {
+        // Retrieve array of IDs from request body
+        $ids = $request->input('ids');
+
+        $bookings = Booking::whereIn('room_id', $ids)->get();
+        return response()->json($bookings);
+    }
 
     public function getBookingById($id)
     {
@@ -88,6 +96,4 @@ class bookingController extends Controller
         $booking->update($request->all());
         return response()->json(['message' => 'Booking updated successfully.']);
     }
-
-    
 }
