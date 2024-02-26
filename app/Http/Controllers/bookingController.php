@@ -63,19 +63,15 @@ class bookingController extends Controller
     }
     public function getAllBookingsByRoom(Request $request)
     {
+
         // Retrieve array of IDs from request body
         $ids = $request->input('ids');
-        $conflicts = [];
+        //$conflicts = [];
         $bookings = Booking::whereIn('room_id', $ids)->get();
-        foreach ($bookings as $booking) {
-            $conflictingBookings = $booking->conflicts();            
-            // Merge conflicting bookings with the result array
-            $conflicts = array_merge($conflicts, $conflictingBookings->toArray());
-        }
+        
         
         return response()->json([
-            'bookings' => $bookings,
-            'conflicts' => $conflicts
+            'bookings' => $bookings
         ]);
     }
 

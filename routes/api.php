@@ -28,7 +28,7 @@ Route::get('/getAllBookings', [BookingController::class, 'getAllBookings']);
 //For user
 Route::get('/getUserBookings/{id}', [BookingController::class, 'getUserBookings']);
 
-//For callendar
+//For calendar
 Route::get('/getActiveBookings', [BookingController::class, 'getActiveBookings']);
 
 //Get active bookings by room
