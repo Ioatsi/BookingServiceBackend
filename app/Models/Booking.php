@@ -64,7 +64,7 @@ class Booking extends Model
                     ->orWhereBetween('end', [$booking->start, $booking->end]);
             })
             ->where('id', '<>', $booking->id) // Exclude the current booking
-            ->where('status', 0) // Check for bookings with status 0
+            //->where('status', 0) // Check for bookings with status 0
             ->get();
 
         return $conflictingBookings;

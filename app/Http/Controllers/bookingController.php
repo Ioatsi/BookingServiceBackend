@@ -61,17 +61,29 @@ class bookingController extends Controller
         $bookings = Booking::where('room_id', $id)->where('status', 1)->get();
         return response()->json($bookings);
     }
+
+    public function getConflicts($bookings)
+    {
+        $conflicts = collect();
+        foreach ($bookings as $booking) {
+            $conflicts = $conflicts->merge(Booking::whereNotNull('conflict_id')->where('conflict_id', $booking->conflict_id)->get());
+        }
+
+        $conflicts = $conflicts->unique('id');
+        return response()->json($conflicts);
+    }
     public function getAllBookingsByRoom(Request $request)
     {
 
         // Retrieve array of IDs from request body
         $ids = $request->input('ids');
-        //$conflicts = [];
         $bookings = Booking::whereIn('room_id', $ids)->get();
-        
+        $conflicts = collect();
+        $conflicts = $this->getConflicts($bookings);
         
         return response()->json([
-            'bookings' => $bookings
+            'bookings' => $bookings,
+            'conflicts' => $conflicts
         ]);
     }
 
