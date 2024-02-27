@@ -24,19 +24,44 @@ class BookingFactory extends Factory
         static $incrementingName = 1;
         $bookerIds = User::pluck('id')->toArray();
         $roomIds = Room::pluck('id')->toArray();
+        // Generate a random start date within the last week
         $startDate = $this->faker->dateTimeBetween('-1 week', 'now');
-        $endDate = $this->faker->dateTimeBetween($startDate, strtotime('+1 week'));
+
+        // Set the start time to 08:00 if it's before 08:00
+        if ($startDate->format('H') < 8) {
+            $startDate->setTime(8, 0, 0);
+        }
+
+        // Set the start time to 20:00 if it's after 20:00
+        if ($startDate->format('H') >= 20) {
+            $startDate->setTime(20, 0, 0);
+        }
+
+        // Round to the nearest hour
+        $startDate->setTime($startDate->format('H'), 0, 0);
+
+        // Add exactly 2 hours to the start date to get the end date
+        $endDate = clone $startDate;
+        $endDate->modify('+2 hours');
+
+        // Make sure end date does not exceed 20:00
+        if ($endDate->format('H') >= 20) {
+            $endDate->setTime(20, 0, 0);
+        }
+
+        // Round to the nearest hour
+        $endDate->setTime($endDate->format('H'), 0, 0);
         return [
             'booker_id' => $this->faker->randomElement($bookerIds),
             'semester_id' => 1,
-            'room_id' => $this->faker->randomElement($roomIds),
-            'status' => $this->faker->randomElement([0,1]),
+            'room_id' => $this->faker->randomElement([1, 2, 3]),
+            'status' => $this->faker->randomElement([0, 1]),
             'title' => 'booking' . $incrementingName++,
             'start' => $startDate,
             'end' => $endDate,
             'color' => $this->faker->randomElement(['red', 'green', 'blue', 'orange', 'purple', 'pink', 'yellow']),
             'info' => $this->faker->sentence(10),
-            'participants' => "Participant1, Participant2, Participant3",     
+            'participants' => "Participant1, Participant2, Participant3",
             'group_id' => null,
             'recurring_id' => null,
             'type' => 'normal',

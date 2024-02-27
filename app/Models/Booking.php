@@ -30,9 +30,9 @@ class Booking extends Model
         parent::boot();
         static::creating(function ($booking) {
             $conflicting = Booking::conflicts($booking);
-            
 
-            if($conflicting->isNotEmpty()) {
+
+            if ($conflicting->isNotEmpty()) {
                 $firstConflicting = $conflicting->first();
                 $conflictId = $firstConflicting->conflict_id ? $firstConflicting->conflict_id : static::generateUniqueConflictId();
                 foreach ($conflicting as $conflict) {
@@ -59,13 +59,22 @@ class Booking extends Model
     {
         // Check for bookings that conflict with the current booking
         $conflictingBookings = Booking::where('room_id', $booking->room_id)
-            ->where(function ($query) use ($booking) {
-                $query->whereBetween('start', [$booking->start, $booking->end])
-                    ->orWhereBetween('end', [$booking->start, $booking->end]);
+        ->where(function ($query) use ($booking) {
+            $query->where(function ($query) use ($booking) {
+                $query->where('start', '>=', $booking->start)
+                      ->where('start', '<', $booking->end);
             })
-            ->where('id', '<>', $booking->id) // Exclude the current booking
-            //->where('status', 0) // Check for bookings with status 0
-            ->get();
+            ->orWhere(function ($query) use ($booking) {
+                $query->where('end', '>', $booking->start)
+                      ->where('end', '<=', $booking->end);
+            })
+            ->orWhere(function ($query) use ($booking) {
+                $query->where('start', '<', $booking->start)
+                      ->where('end', '>', $booking->end);
+            });
+        })
+        ->where('id', '<>', $booking->id) // Exclude the current booking
+        ->get();
 
         return $conflictingBookings;
     }
@@ -102,5 +111,5 @@ class Booking extends Model
     {
         return $this->belongsTo(Recurring::class);
     }
-    
+
 }

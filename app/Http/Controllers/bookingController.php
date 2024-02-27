@@ -32,9 +32,9 @@ class bookingController extends Controller
             'participants' => 'required',
             'type' => 'required',
         ]);
-        if (!Gate::forUser($request->input('booker_id'))->allows('create-booking')) {
+        /* if (!Gate::forUser($request->input('booker_id'))->allows('create-booking')) {
             abort(403);
-        }
+        } */
         $booking = Booking::create($validatedData);
         return response()->json(['message' => 'Booking created successfully.', 'booking' => $booking], 201);
     }

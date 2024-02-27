@@ -14,7 +14,7 @@ use App\Models\Room;
 use Faker\Factory as Faker;
 
 class BookingSeeder extends Seeder
-{   
+{
     protected $faker;
 
     public function __construct()
@@ -26,8 +26,10 @@ class BookingSeeder extends Seeder
      */
     public function run(): void
     {
-        \App\Models\Booking::factory(10)->create();
-        
+        \App\Models\Booking::factory(20)->create();
+
+        //Make recurring and group bookings
+        /* 
         $bookingGroupIds = Group::pluck('id')->toArray();
         $recurringGroupIds = Recurring::pluck('id')->toArray();
         $userIds = User::pluck('id')->toArray();
@@ -42,8 +44,8 @@ class BookingSeeder extends Seeder
                 'booker_id' => $this->faker->randomElement($userIds),
                 'semester_id' => $this->faker->randomElement($semesterIds),
                 'room_id' => $this->faker->randomElement($roomIds),
-                'status' => $this->faker->numberBetween(0, 1), // Assuming status is either 0 or 1
-                'title' => $this->faker->word(),
+                'status' => 1,
+                'title' => 'Recurring Event',	
                 'start' => $this->faker->dateTimeBetween('+1 week', '+1 month'),
                 'end' => $this->faker->dateTimeBetween('+2 weeks', '+2 months'),
                 'color' => 'red',
@@ -59,16 +61,16 @@ class BookingSeeder extends Seeder
                 'booker_id' => $this->faker->randomElement($userIds),
                 'semester_id' => $this->faker->randomElement($semesterIds),
                 'room_id' => $this->faker->randomElement($roomIds),
-                'status' => $this->faker->numberBetween(0, 1), // Assuming status is either 0 or 1
-                'title' => $this->faker->word(),
+                'status' => 1,
+                'title' => 'Grouped Event',
                 'start' => $this->faker->dateTimeBetween('+1 week', '+1 month'),
-                'end' => $this->faker->dateTimeBetween('+2 weeks', '+2 months'),
+                'end' => $this->faker->dateTimeBetween('+1 weeks', '+1 months'),
                 'color' => 'blue',
                 'info' => $this->faker->text,
                 'participants' => $this->faker->sentence,
                 'type' => $this->faker->randomElement(['Group', 'Recurring']),
             ]);
         }
-
+ */
     }
 }
