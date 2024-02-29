@@ -13,6 +13,7 @@ class Semester extends Model
         'start',
         'end',
         'type',
+        'is_current',
     ];
 
     public function bookings()

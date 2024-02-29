@@ -84,8 +84,16 @@ class Booking extends Model
         'end' => 'datetime',
     ];
     protected $attributes = [
-        'status' => 0,
+        'status' => 0
     ];
+
+    //give curent semester id
+    public function __construct(array $attributes = [])
+    {
+        parent::__construct($attributes);
+
+        $this->attributes['semester_id'] = Semester::where('is_current', true)->value('id');
+    }
 
     public function Group()
     {

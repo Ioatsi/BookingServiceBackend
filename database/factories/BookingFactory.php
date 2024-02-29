@@ -53,7 +53,6 @@ class BookingFactory extends Factory
         $endDate->setTime($endDate->format('H'), 0, 0);
         return [
             'booker_id' => $this->faker->randomElement($bookerIds),
-            'semester_id' => 1,
             'room_id' => $this->faker->randomElement([1, 2, 3]),
             'status' => $this->faker->randomElement([0, 1]),
             'title' => 'booking' . $incrementingName++,

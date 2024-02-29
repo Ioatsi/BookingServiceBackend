@@ -15,8 +15,9 @@ class SemesterSeeder extends Seeder
     {
         Semester::create([
             'type' => 'Winter',
-            'start' => date('2022-01-01'),
-            'end' => date('2022-06-01'),
+            'start' => date('2024-01-01'),
+            'end' => date('2024-06-06'),
+            'is_current' => true
         ]);
     }
 }
