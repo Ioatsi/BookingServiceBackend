@@ -41,6 +41,8 @@ Route::post('/createBooking', [BookingController::class, 'store']);
 
 Route::put('/updateBookingStatus/{id}', [BookingController::class, 'updateBookingStatus']);
 
+Route::post('/getRecurring', [BookingController::class, 'getRecurring']);
+
 //Room
 Route::get('getRooms', [RoomController::class, 'index']);
 

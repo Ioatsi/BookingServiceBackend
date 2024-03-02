@@ -11,6 +11,8 @@ use App\Models\Recurring;
 use App\Models\Semester;
 use Carbon\Carbon;
 
+use Illuminate\Support\Collection;
+
 class bookingController extends Controller
 {
     public function index()
@@ -82,7 +84,7 @@ class bookingController extends Controller
                     $booking->room_id = $validatedData['room_id'];
                     $booking->color = $validatedData['color'];
                     $booking->participants = $validatedData['participants'];
-                    $booking->type = $validatedData['type'];
+                    $booking->type = 'recurring';
                     $booking->save();
                 }
                 $currentDate->addDay();
@@ -122,6 +124,31 @@ class bookingController extends Controller
         return response()->json([
             'bookings' => $bookings
         ]);
+    }
+
+    public function getRecurring(Request $request)
+    {
+        //$bookings = Booking::whereIn('room_id', $request->input('room_id'))->where('type', 'recurring')->get();
+        
+        $recurrings =Booking::whereIn('room_id', $request->input('room_id'))
+        ->where('type', 'recurring')
+        ->get();
+
+        if($recurrings->count()>0){
+            $recurrings = $recurrings->groupBy('recurring_id');
+        }
+        //echo($bookings);
+        $recurring_groups = new Collection();
+        $recurrings->each(function ($recurring) use ($recurring_groups) {
+            $recurring_groups->push((object)[
+                'id' => $recurring[0]->recurring_id,
+                'title' => $recurring[0]->title,
+                'bookings' => $recurring,
+                'days' => Day::where('recurring_id', $recurring[0]->recurring_id)->get()
+            ]);
+        });
+        
+        return response()->json( ['message' => 'Grouped recurring bookings by room ID.', 'recurrings' => $recurring_groups]);
     }
 
     public function updateBookingStatus(Request $request, $id)
