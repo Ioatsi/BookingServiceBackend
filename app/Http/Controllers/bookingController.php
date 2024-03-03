@@ -15,9 +15,14 @@ use Illuminate\Support\Collection;
 
 class bookingController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $bookings = Booking::all(); // Example: Fetch all bookings from the database
+        $semester = Semester::where('is_current', true)->first();
+        $bookings = Booking::where('semester_id', $semester->id)->
+        where('status', 0,)->
+        where('type', 'normal')->
+        whereNull('conflict_id')->
+        whereIn('room_id', $request->input('room_id'))->get();
         return response()->json($bookings);
     }
 
@@ -91,41 +96,17 @@ class bookingController extends Controller
             }
         }
     }
-    public function getAllBookings()
-    {
-        $bookings = Booking::all();
-        return response()->json($bookings);
-    }
-
     public function getUserBookings($id)
     {
         $bookings = Booking::where('booker_id', $id)->get();
         return response()->json($bookings);
     }
 
-    public function getActiveBookings()
+    public function getActiveBookings(Request $request)
     {
-        $bookings = Booking::where('status', 1)->get();
+        $bookings = Booking::whereIn('room_id', $request->input('room_id'))->where('status', 1)->get();
         return response()->json($bookings);
     }
-
-    public function getBookingByRoom($id)
-    {
-        $bookings = Booking::where('room_id', $id)->where('status', 1)->get();
-        return response()->json($bookings);
-    }
-    public function getAllBookingsByRoom(Request $request)
-    {
-
-        // Retrieve array of IDs from request body
-        $ids = $request->input('ids');
-        $bookings = Booking::whereIn('room_id', $ids)->get();
-
-        return response()->json([
-            'bookings' => $bookings
-        ]);
-    }
-
     public function getRecurring(Request $request)
     {
         //$bookings = Booking::whereIn('room_id', $request->input('room_id'))->where('type', 'recurring')->get();
@@ -143,12 +124,15 @@ class bookingController extends Controller
             $recurring_groups->push((object)[
                 'id' => $recurring[0]->recurring_id,
                 'title' => $recurring[0]->title,
-                'bookings' => $recurring,
+                //'bookings' => $recurring,
+                'room_id' => $recurring[0]->room_id,
+                'info' => $recurring[0]->info,
+                'status' => $recurring[0]->status,
                 'days' => Day::where('recurring_id', $recurring[0]->recurring_id)->get()
             ]);
         });
         
-        return response()->json( ['message' => 'Grouped recurring bookings by room ID.', 'recurrings' => $recurring_groups]);
+        return response()->json($recurring_groups);
     }
 
     public function updateBookingStatus(Request $request, $id)
@@ -157,15 +141,6 @@ class bookingController extends Controller
         $booking->status = $request->input('status');
         $booking->save();
 
-        return response()->json($booking);
-    }
-
-    public function getBookingById($id)
-    {
-        $booking = Booking::find($id);
-        if (!$booking) {
-            return response()->json(['message' => 'Booking not found.'], 404);
-        }
         return response()->json($booking);
     }
 
@@ -178,9 +153,9 @@ class bookingController extends Controller
         $booking->delete();
         return response()->json(['message' => 'Booking deleted successfully.']);
     }
-    public function updateBooking(Request $request, $id)
+    public function updateBooking(Request $request)
     {
-        $booking = Booking::find($id);
+        $booking = Booking::find($request->id);
         if (!$booking) {
             return response()->json(['message' => 'Booking not found.'], 404);
         }

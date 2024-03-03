@@ -19,29 +19,22 @@ use App\Http\Controllers\RoomController;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();    
 });
-/* Booking */
-Route::get('/bookings', [BookingController::class, 'index']);
 
 //For moderator and admin
-Route::get('/getAllBookings', [BookingController::class, 'getAllBookings']);
+Route::post('/getBookings', [BookingController::class, 'index']);
+Route::post('/getRecurring', [BookingController::class, 'getRecurring']);
+
+//For calendar
+Route::post('/getActiveBookings', [BookingController::class, 'getActiveBookings']);
 
 //For user
 Route::get('/getUserBookings/{id}', [BookingController::class, 'getUserBookings']);
 
-//For calendar
-Route::get('/getActiveBookings', [BookingController::class, 'getActiveBookings']);
-
-//Get active bookings by room
-Route::get('/getBookingByRoom/{id}', [BookingController::class, 'getBookingByRoom']);
-
-//Get active and pending bookings by room ids for moderator
-Route::post('getAllBookingsByRoom', [BookingController::class, 'getAllBookingsByRoom']);
 
 Route::post('/createBooking', [BookingController::class, 'store']);
 
-Route::put('/updateBookingStatus/{id}', [BookingController::class, 'updateBookingStatus']);
+Route::post('/updateBooking', [BookingController::class, 'updateBooking']);
 
-Route::post('/getRecurring', [BookingController::class, 'getRecurring']);
 
 //Room
 Route::get('getRooms', [RoomController::class, 'index']);
