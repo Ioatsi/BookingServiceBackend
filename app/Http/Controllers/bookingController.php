@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Gate;
 use App\Models\Booking;
 use App\Models\Day;
 use App\Models\Recurring;
+use App\Models\Room;
 use App\Models\Semester;
 use Carbon\Carbon;
 
@@ -18,14 +19,15 @@ class bookingController extends Controller
     public function index(Request $request)
     {
         $semester = Semester::where('is_current', true)->first();
-        $bookings = Booking::where('semester_id', $semester->id)->
-        where('status', 0,)->
-        where('type', 'normal')->
-        whereNull('conflict_id')->
-        whereIn('room_id', $request->input('room_id'))
-        ->orderBy('created_at', 'desc')
-        ->get();
-        
+        $bookings = Booking::join('rooms', 'bookings.room_id', '=', 'rooms.id')
+            ->where('bookings.semester_id', $semester->id)
+            ->where('bookings.status', 0)
+            ->where('bookings.type', 'normal')
+            ->whereNull('bookings.conflict_id')
+            ->whereIn('bookings.room_id', $request->input('room_id'))
+            ->orderBy('bookings.created_at', 'desc')
+            ->select('bookings.*', 'rooms.name as room_name')
+            ->get();
         return response()->json($bookings);
     }
 
@@ -64,7 +66,7 @@ class bookingController extends Controller
         $recurring = new Recurring();
         $recurring->title = $validatedData['title'];
         $recurring->status = 0;
-        $recurring-> semester_id = $semester->id;
+        $recurring->semester_id = $semester->id;
         $recurring->save();
         $days = $validatedData['days'];
 
@@ -80,7 +82,7 @@ class bookingController extends Controller
             $dayend = Carbon::parse($day['end']);
             Day::create($day);
             while ($currentDate <= Carbon::parse($endDate)) {
-                if($currentDate->dayOfWeekIso == $day['name']){
+                if ($currentDate->dayOfWeekIso == $day['name']) {
                     $booking = new Booking();
                     $booking->recurring_id = $recurring->id;
                     $booking->booker_id = $validatedData['booker_id'];
@@ -102,36 +104,38 @@ class bookingController extends Controller
     {
         $semester = Semester::where('is_current', true)->first();
         $bookings = Booking::where('semester_id', $semester->id)
-        ->where('booker_id', $id)
-        ->orderBy('created_at', 'desc')
-        ->get();
+            ->where('booker_id', $id)
+            ->orderBy('created_at', 'desc')
+            ->get();
         return response()->json($bookings);
     }
 
     public function getActiveBookings(Request $request)
     {
         $semester = Semester::where('is_current', true)->first();
-        $bookings = Booking::where('semester_id', $semester->id)
-        ->whereIn('room_id', $request->input('room_id'))
-        ->where('status', 1)
-        ->orderBy('created_at', 'desc')
-        ->get();
+        $bookings = Booking::join('rooms', 'bookings.room_id', '=', 'rooms.id')
+            ->where('bookings.semester_id', $semester->id)
+            ->whereIn('bookings.room_id', $request->input('room_id'))
+            ->where('bookings.status', 1)
+            ->orderBy('bookings.created_at', 'desc')
+            ->select('bookings.*', 'rooms.name as room_name')
+            ->get();
         return response()->json($bookings);
     }
     public function getRecurring(Request $request)
     {
         $semester = Semester::where('is_current', true)->first();
         $recurrings = Booking::where('semester_id', $semester->id)
-        ->whereIn('room_id', $request->input('room_id'))
-        ->where('type', 'recurring')
-        ->where('status', 0)
-        ->orderBy('created_at', 'desc')
-        ->get();
+            ->whereIn('room_id', $request->input('room_id'))
+            ->where('type', 'recurring')
+            ->where('status', 0)
+            ->orderBy('created_at', 'desc')
+            ->get();
 
-        if($recurrings->count()>0){
+        if ($recurrings->count() > 0) {
             $recurrings = $recurrings->groupBy('recurring_id');
         }
-        
+
         $recurring_groups = new Collection();
         $recurrings->each(function ($recurring) use ($recurring_groups) {
             $recurring_groups->push((object)[
@@ -139,12 +143,13 @@ class bookingController extends Controller
                 'title' => $recurring[0]->title,
                 //'bookings' => $recurring,
                 'room_id' => $recurring[0]->room_id,
+                'room_name' => Room::where('id', $recurring[0]->room_id)->first()->name,
                 'info' => $recurring[0]->info,
                 'status' => $recurring[0]->status,
                 'days' => Day::where('recurring_id', $recurring[0]->recurring_id)->get()
             ]);
         });
-        
+
         return response()->json($recurring_groups);
     }
 
@@ -152,13 +157,13 @@ class bookingController extends Controller
     {
         $semester = Semester::where('is_current', true)->first();
         $conflicts = Booking::where('semester_id', $semester->id)
-        ->whereIn('room_id', $request->input('room_id'))
-        //->where('status', 0)
-        ->whereNotNull('conflict_id')
-        ->orderBy('created_at', 'desc')
-        ->get();
+            ->whereIn('room_id', $request->input('room_id'))
+            //->where('status', 0)
+            ->whereNotNull('conflict_id')
+            ->orderBy('created_at', 'desc')
+            ->get();
 
-        if($conflicts->count()>0){
+        if ($conflicts->count() > 0) {
             $conflicts = $conflicts->groupBy('conflict_id');
         }
 
@@ -167,6 +172,8 @@ class bookingController extends Controller
             $conflict_groups->push((object)[
                 'id' => $conflict[0]->conflict_id,
                 'bookings' => $conflict,
+                'room_id' => $conflict[0]->room_id,
+                'room_name' => Room::where('id', $conflict[0]->room_id)->first()->name,
             ]);
         });
 
@@ -197,7 +204,7 @@ class bookingController extends Controller
         if (!$bookings) {
             return response()->json(['message' => 'Booking not found.'], 404);
         }
-        foreach($bookings as $booking){
+        foreach ($bookings as $booking) {
             $booking->update($request->all());
         }
         return response()->json(['message' => 'Booking updated successfully.']);
@@ -212,7 +219,7 @@ class bookingController extends Controller
         foreach ($recurings as $recuring) {
             $recuring->update($request->all());
             $bookings = Booking::where('recurring_id', $recuring->id)->get();
-            foreach($bookings as $booking){
+            foreach ($bookings as $booking) {
                 $booking->update($request->all());
             }
             return response()->json(['message' => 'Booking updated successfully.']);
