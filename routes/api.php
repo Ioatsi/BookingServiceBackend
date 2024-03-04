@@ -35,8 +35,9 @@ Route::get('/getUserBookings/{id}', [BookingController::class, 'getUserBookings'
 Route::post('/createBooking', [BookingController::class, 'store']);
 
 
-Route::post('/updateBooking', [BookingController::class, 'updateBooking']);
-Route::post('/updateRecurring', [BookingController::class, 'updateRecurring']);
+Route::post('/approveBooking', [BookingController::class, 'approveBooking']);
+Route::post('/cancelBooking', [BookingController::class, 'cancelBooking']);
+Route::post('/editBooking', [BookingController::class, 'editBooking']);
 
 
 //Room

@@ -54,7 +54,7 @@ class bookingController extends Controller
         } */
         if ($request->input('is_recurring')) {
             $this->createRecurringBooking($validatedData);
-            return response()->json(['message' => 'Recrring booking created successfully.'], 201);
+            return response()->json(['message' => 'Recurring booking created successfully.'], 201);
         }
         $booking = Booking::create($validatedData);
         return response()->json(['message' => 'Booking created successfully.', 'booking' => $booking], 201);
@@ -180,47 +180,111 @@ class bookingController extends Controller
         return response()->json($conflict_groups);
     }
 
-    public function updateBookingStatus(Request $request, $id)
+    public function approveBooking(Request $request)
     {
-        $booking = Booking::findOrFail($id);
-        $booking->status = $request->input('status');
-        $booking->save();
-
-        return response()->json($booking);
-    }
-
-    public function deleteBooking($id)
-    {
-        $booking = Booking::find($id);
-        if (!$booking) {
-            return response()->json(['message' => 'Booking not found.'], 404);
+        if ($request->input('is_recurring')){
+            $this->approveRecurringBooking($request);
+            return response()->json(['message' => 'Recurring booking approved successfully.']);
         }
-        $booking->delete();
-        return response()->json(['message' => 'Booking deleted successfully.']);
-    }
-    public function updateBooking(Request $request)
-    {
-        $bookings = Booking::whereIn('id', $request->input('id'))->get();
+        $bookings = Booking::whereIn('id',$request->input('id'))->get();
         if (!$bookings) {
             return response()->json(['message' => 'Booking not found.'], 404);
         }
         foreach ($bookings as $booking) {
-            $booking->update($request->all());
+            $booking->status = 1;
+            $booking->save();
+        }
+        return response()->json(['message' => 'Booking approved successfully.']);
+    }
+    public function approveRecurringBooking(Request $request)
+    {
+        $recurring = Recurring::whereIn('id', $request->input('id'))->get();
+        if (!$recurring) {
+            return response()->json(['message' => 'Booking not found.'], 404);
+        }
+        foreach ($recurring as $recurring) {
+            $recurring->status = 1;
+            $recurring->save();
+            $bookings = Booking::where('recurring_id', $recurring->id)->get();
+            foreach ($bookings as $booking) {
+                $booking->status = 1;
+                $booking->save();
+            }
+            return response()->json(['message' => 'Booking approved successfully.']);
+        }
+    }
+    public function cancelBooking(Request $request)
+    {
+        if ($request->input('isRecurring')){
+            $this->cancelRecurringBooking($request);
+            return response()->json(['message' => 'Recurring booking canceled successfully.']);
+        }
+        $bookings = Booking::whereIn('booking_id',$request->input('id'));
+        if (!$bookings) {
+            return response()->json(['message' => 'Booking not found.'], 404);
+        }
+        foreach ($bookings as $booking) {
+            $booking->status = 2;
+            $booking->save();
+        }
+        return response()->json(['message' => 'Booking canceled successfully.']);
+    }
+    public function cancelRecurringBooking(Request $request)
+    {
+        $recurring = Recurring::whereIn('id', $request->input('id'))->get();
+        if (!$recurring) {
+            return response()->json(['message' => 'Booking not found.'], 404);
+        }
+        foreach ($recurring as $recuring) {
+            $recuring->status = 2;
+            $recuring->save();
+            $bookings = Booking::where('recurring_id', $recuring->id)->get();
+            foreach ($bookings as $booking) {
+                $booking->status = 2;
+                $booking->save();
+            }
+            return response()->json(['message' => 'Booking canceled successfully.']);
+        }
+    }
+    public function editBooking(Request $request)
+    {
+        $validatedData = $request->validate([
+            'id' => 'required',
+            'room_id' => 'required',
+            'title' => 'required',
+            'info' => 'required',
+            'start' => 'required|date',
+            'end' => 'required|date',
+            'color' => 'required',
+            'participants' => 'nullable',
+            'type' => 'required',
+            'days' => 'nullable',
+            'is_recurring' => 'nullable',
+        ]);
+        if ($request->input('is_recurring')) {
+            $this->editRecurringBooking($validatedData);
+            return response()->json(['message' => 'Recurring booking updated successfully.']);
+        }
+        $bookings = Booking::whereIn('booking_id',$validatedData['id']);
+        if (!$bookings) {
+            return response()->json(['message' => 'Booking not found.'], 404);
+        }
+        foreach ($bookings as $booking) {
+            $booking->update($validatedData);
         }
         return response()->json(['message' => 'Booking updated successfully.']);
     }
-
-    public function updateRecurring(Request $request)
+    public function editRecurringBooking($validatedData)
     {
-        $recurings = Recurring::whereIn('id', $request->input('id'))->get();
-        if (!$recurings) {
+        $recurring = Recurring::whereIn('id', $validatedData['id'])->get();
+        if (!$recurring) {
             return response()->json(['message' => 'Booking not found.'], 404);
         }
-        foreach ($recurings as $recuring) {
-            $recuring->update($request->all());
+        foreach ($recurring as $recuring) {
+            $recuring->update($validatedData);
             $bookings = Booking::where('recurring_id', $recuring->id)->get();
             foreach ($bookings as $booking) {
-                $booking->update($request->all());
+                $booking->update($validatedData);
             }
             return response()->json(['message' => 'Booking updated successfully.']);
         }
