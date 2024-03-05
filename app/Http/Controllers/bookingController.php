@@ -146,6 +146,7 @@ class bookingController extends Controller
                 'room_name' => Room::where('id', $recurring[0]->room_id)->first()->name,
                 'info' => $recurring[0]->info,
                 'status' => $recurring[0]->status,
+                'type' => 'recurringGroup',
                 'days' => Day::where('recurring_id', $recurring[0]->recurring_id)->get()
             ]);
         });
@@ -158,7 +159,7 @@ class bookingController extends Controller
         $semester = Semester::where('is_current', true)->first();
         $conflicts = Booking::where('semester_id', $semester->id)
             ->whereIn('room_id', $request->input('room_id'))
-            //->where('status', 0)
+            ->where('status', !2)
             ->whereNotNull('conflict_id')
             ->orderBy('created_at', 'desc')
             ->get();
@@ -182,7 +183,7 @@ class bookingController extends Controller
 
     public function approveBooking(Request $request)
     {
-        if ($request->input('is_recurring')){
+        if ($request->input('type') == 'recurringGroup'){
             $this->approveRecurringBooking($request);
             return response()->json(['message' => 'Recurring booking approved successfully.']);
         }
@@ -215,11 +216,11 @@ class bookingController extends Controller
     }
     public function cancelBooking(Request $request)
     {
-        if ($request->input('isRecurring')){
+        if ($request->input('type') == 'recurringGroup') {
             $this->cancelRecurringBooking($request);
             return response()->json(['message' => 'Recurring booking canceled successfully.']);
         }
-        $bookings = Booking::whereIn('booking_id',$request->input('id'));
+        $bookings = Booking::whereIn('id',$request->input('id'))->get();
         if (!$bookings) {
             return response()->json(['message' => 'Booking not found.'], 404);
         }
@@ -231,20 +232,20 @@ class bookingController extends Controller
     }
     public function cancelRecurringBooking(Request $request)
     {
-        $recurring = Recurring::whereIn('id', $request->input('id'))->get();
-        if (!$recurring) {
+        $recurrings = Recurring::whereIn('id', $request->input('id'))->get();
+        if (!$recurrings) {
             return response()->json(['message' => 'Booking not found.'], 404);
         }
-        foreach ($recurring as $recuring) {
-            $recuring->status = 2;
-            $recuring->save();
-            $bookings = Booking::where('recurring_id', $recuring->id)->get();
+        foreach ($recurrings as $recurring) {
+            $recurring->status = 2;
+            $recurring->save();
+            $bookings = Booking::where('recurring_id', $recurring->id)->get();
             foreach ($bookings as $booking) {
                 $booking->status = 2;
                 $booking->save();
             }
-            return response()->json(['message' => 'Booking canceled successfully.']);
         }
+        return response()->json(['message' => 'Booking canceled successfully.']);
     }
     public function editBooking(Request $request)
     {

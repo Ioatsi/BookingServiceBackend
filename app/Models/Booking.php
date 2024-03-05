@@ -59,6 +59,7 @@ class Booking extends Model
     {
         // Check for bookings that conflict with the current booking
         $conflictingBookings = Booking::where('room_id', $booking->room_id)
+        ->where('status', '!=', 2)
         ->where(function ($query) use ($booking) {
             $query->where(function ($query) use ($booking) {
                 $query->where('start', '>=', $booking->start)

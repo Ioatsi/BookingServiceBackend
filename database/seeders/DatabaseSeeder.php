@@ -22,12 +22,12 @@ class DatabaseSeeder extends Seeder
         $this->call(UsersSeeder::class);
         $this->call(RoomSeeder::class);
         $this->call(SemesterSeeder::class);
-        $this->call(RecurringSeeder::class);
+        //$this->call(RecurringSeeder::class);
         $this->call(BookingSeeder::class);
         $this->call(RolesSeeder::class);
         $this->call(User_rolesSeeder::class);
         $this->call(Moderator_roomSeeder::class);
-        $this->call(DaySeeder::class);
+        //$this->call(DaySeeder::class);
         // \App\Models\User::factory()->create([
         //     'name' => 'Test User',
         //     'email' => 'test@example.com',
