@@ -78,6 +78,7 @@ class bookingController extends Controller
         foreach ($days as $day) {
             $currentDate = Carbon::today();
             $day['recurring_id'] = $recurring->id;
+            $day['status'] = 0;
             $daystart = Carbon::parse($day['start']);
             $dayend = Carbon::parse($day['end']);
             Day::create($day);
@@ -147,7 +148,7 @@ class bookingController extends Controller
                 'info' => $recurring[0]->info,
                 'status' => $recurring[0]->status,
                 'type' => 'recurringGroup',
-                'days' => Day::where('recurring_id', $recurring[0]->recurring_id)->get()
+                'days' => Day::where('recurring_id', $recurring[0]->recurring_id)->where('status', 0)->get(),
             ]);
         });
 
@@ -183,11 +184,11 @@ class bookingController extends Controller
 
     public function approveBooking(Request $request)
     {
-        if ($request->input('type') == 'recurringGroup'){
+        if ($request->input('type') == 'recurringGroup') {
             $this->approveRecurringBooking($request);
             return response()->json(['message' => 'Recurring booking approved successfully.']);
         }
-        $bookings = Booking::whereIn('id',$request->input('id'))->get();
+        $bookings = Booking::whereIn('id', $request->input('id'))->get();
         if (!$bookings) {
             return response()->json(['message' => 'Booking not found.'], 404);
         }
@@ -220,7 +221,7 @@ class bookingController extends Controller
             $this->cancelRecurringBooking($request);
             return response()->json(['message' => 'Recurring booking canceled successfully.']);
         }
-        $bookings = Booking::whereIn('id',$request->input('id'))->get();
+        $bookings = Booking::whereIn('id', $request->input('id'))->get();
         if (!$bookings) {
             return response()->json(['message' => 'Booking not found.'], 404);
         }
@@ -256,7 +257,7 @@ class bookingController extends Controller
             'info' => 'required',
             'start' => 'required|date',
             'end' => 'required|date',
-            'color' => 'required',
+            'color' => 'nullable',
             'participants' => 'nullable',
             'type' => 'required',
             'days' => 'nullable',
@@ -270,29 +271,91 @@ class bookingController extends Controller
         if (!$booking) {
             return response()->json(['message' => 'Booking not found.'], 404);
         }
-        
+
         $booking->room_id = $validatedData['room_id'];
         $booking->title = $validatedData['title'];
         $booking->info = $validatedData['info'];
         $booking->start = $validatedData['start'];
         $booking->end = $validatedData['end'];
         $booking->save();
-        
+
         return response()->json(['message' => 'Booking updated successfully.']);
     }
     public function editRecurringBooking($validatedData)
     {
+        $semester = Semester::where('is_current', true)->first();
         $recurring = Recurring::find($validatedData['id']);
         if (!$recurring) {
             return response()->json(['message' => 'Booking not found.'], 404);
         }
-        foreach ($recurring as $recurring) {
-            $recurring->update($validatedData);
-            $bookings = Booking::where('recurring_id', $recurring->id)->get();
-            foreach ($bookings as $booking) {
-                $booking->update($validatedData);
+        $recurring->title = $validatedData['title'];
+        $recurring->save();
+        $existingDays = Day::where('recurring_id', $recurring->id)->get();
+        $newDays = $validatedData['days'];
+
+        foreach ($newDays as $newDay) {
+            if (isset($existingDays[$newDay['id']])) {
+                $existingDays[$newDay['id']]->name = $newDay['name'];
+                $existingDays[$newDay['id']]->start = $newDay['start'];
+                $existingDays[$newDay['id']]->end = $newDay['end'];
+                $existingDays[$newDay['id']]->save();
+
+                unset($existingDays[$newDay['id']]);
+            } else {
+                Day::create([
+                    'recurring_id' => $recurring->id,
+                    'name' => $newDay['name'],
+                    'start' => $newDay['start'],
+                    'end' => $newDay['end'],
+                    'status' => 0
+                ]);
             }
-            return response()->json(['message' => 'Booking updated successfully.']);
         }
+
+        foreach ($existingDays as $existingDay) {
+            $existingDay->status = 1;
+            $existingDay->save();
+        }
+        $existingBookings = Booking::where('recurring_id', $recurring->id)->get();
+
+
+        foreach ($existingBookings as $existingBooking) {
+            $existingStart = Carbon::parse($existingBooking->start);
+            $existingDayOfWeek = $existingStart->isoFormat('E');
+            $matched = false;
+
+            foreach ($newDays as $newDay) {
+                $newStart = Carbon::parse($newDay['start']);
+                $newDayOfWeek = $newStart->isoFormat('E');
+
+                if ($existingDayOfWeek == $newDayOfWeek) {
+                    $existingBooking->start = $newStart;
+                    $existingBooking->save();
+                    $matched = true;
+                    break;
+                }
+            }
+
+            if (!$matched) {
+                $existingBooking->status = 2;
+                $existingBooking->save();
+            }
+        }
+        foreach ($newDays as $newDay) {
+            $existingBooking = Booking::where('recurring_id', $recurring->id)
+                ->where('start', $newDay['start'])
+                ->first();
+            if (!$existingBooking) {
+                $booking = new Booking();
+                $booking->recurring_id = $recurring->id;
+                $booking->booker_id = $validatedData['booker_id'];
+                $booking->title = $validatedData['title'];
+                $booking->info = $validatedData['info'];
+                $booking->start = $newDay['start'];
+                $booking->end = $newDay['end'];
+                $booking->save();
+            }
+        }
+        return response()->json(['message' => 'Booking updated successfully.']);
     }
 }

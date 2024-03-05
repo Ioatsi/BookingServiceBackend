@@ -13,6 +13,7 @@ class Day extends Model
         'name',
         'start',
         'end',
+        'status'
     ];
     protected $casts = [
         'start' => 'datetime',
