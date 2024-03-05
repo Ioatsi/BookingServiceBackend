@@ -266,24 +266,29 @@ class bookingController extends Controller
             $this->editRecurringBooking($validatedData);
             return response()->json(['message' => 'Recurring booking updated successfully.']);
         }
-        $bookings = Booking::whereIn('booking_id',$validatedData['id']);
-        if (!$bookings) {
+        $booking = Booking::find($validatedData['id']);
+        if (!$booking) {
             return response()->json(['message' => 'Booking not found.'], 404);
         }
-        foreach ($bookings as $booking) {
-            $booking->update($validatedData);
-        }
+        
+        $booking->room_id = $validatedData['room_id'];
+        $booking->title = $validatedData['title'];
+        $booking->info = $validatedData['info'];
+        $booking->start = $validatedData['start'];
+        $booking->end = $validatedData['end'];
+        $booking->save();
+        
         return response()->json(['message' => 'Booking updated successfully.']);
     }
     public function editRecurringBooking($validatedData)
     {
-        $recurring = Recurring::whereIn('id', $validatedData['id'])->get();
+        $recurring = Recurring::find($validatedData['id']);
         if (!$recurring) {
             return response()->json(['message' => 'Booking not found.'], 404);
         }
-        foreach ($recurring as $recuring) {
-            $recuring->update($validatedData);
-            $bookings = Booking::where('recurring_id', $recuring->id)->get();
+        foreach ($recurring as $recurring) {
+            $recurring->update($validatedData);
+            $bookings = Booking::where('recurring_id', $recurring->id)->get();
             foreach ($bookings as $booking) {
                 $booking->update($validatedData);
             }
