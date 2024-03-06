@@ -262,6 +262,7 @@ class bookingController extends Controller
             'type' => 'required',
             'days' => 'nullable',
             'is_recurring' => 'nullable',
+            'status' => 'required',
         ]);
         if ($request->input('is_recurring')) {
             $this->editRecurringBooking($validatedData);
@@ -283,7 +284,6 @@ class bookingController extends Controller
     }
     public function editRecurringBooking($validatedData)
     {
-        $semester = Semester::where('is_current', true)->first();
         $recurring = Recurring::find($validatedData['id']);
         if (!$recurring) {
             return response()->json(['message' => 'Booking not found.'], 404);
@@ -292,16 +292,20 @@ class bookingController extends Controller
         $recurring->save();
         $existingDays = Day::where('recurring_id', $recurring->id)->get();
         $newDays = $validatedData['days'];
+        $booker = Booking::where('recurring_id', $recurring->id)->first();
 
         foreach ($newDays as $newDay) {
-            if (isset($existingDays[$newDay['id']])) {
-                $existingDays[$newDay['id']]->name = $newDay['name'];
-                $existingDays[$newDay['id']]->start = $newDay['start'];
-                $existingDays[$newDay['id']]->end = $newDay['end'];
-                $existingDays[$newDay['id']]->save();
-
+            if (isset($newDay['id']) && isset($existingDays[$newDay['id']])) {
+                // If the new day has an ID and it exists in the existing days
+                $existingDay = $existingDays[$newDay['id']];
+                $existingDay->name = $newDay['name'];
+                $existingDay->start = $newDay['start'];
+                $existingDay->end = $newDay['end'];
+                $existingDay->save();
+        
                 unset($existingDays[$newDay['id']]);
             } else {
+                // If the new day doesn't have an ID or it doesn't exist in the existing days
                 Day::create([
                     'recurring_id' => $recurring->id,
                     'name' => $newDay['name'],
@@ -316,9 +320,9 @@ class bookingController extends Controller
             $existingDay->status = 1;
             $existingDay->save();
         }
+
+
         $existingBookings = Booking::where('recurring_id', $recurring->id)->get();
-
-
         foreach ($existingBookings as $existingBooking) {
             $existingStart = Carbon::parse($existingBooking->start);
             $existingDayOfWeek = $existingStart->isoFormat('E');
@@ -326,10 +330,18 @@ class bookingController extends Controller
 
             foreach ($newDays as $newDay) {
                 $newStart = Carbon::parse($newDay['start']);
+                $newEnd = Carbon::parse($newDay['end']);
                 $newDayOfWeek = $newStart->isoFormat('E');
+                $newStartDateTime = Carbon::parse($newStart);
+                $newEndDateTime = Carbon::parse($newEnd);
+
+                // Extract the hours from the new start and end times
+                $newStartHours = $newStartDateTime->format('H');
+                $newEndHours = $newEndDateTime->format('H');
 
                 if ($existingDayOfWeek == $newDayOfWeek) {
-                    $existingBooking->start = $newStart;
+                    $existingBooking->start->hour = $newStartHours;
+                    $existingBooking->end->hour = $newEndHours;
                     $existingBooking->save();
                     $matched = true;
                     break;
@@ -342,18 +354,40 @@ class bookingController extends Controller
             }
         }
         foreach ($newDays as $newDay) {
+            $newDate = Carbon::parse($newDay['start']);
+            $newDayOfWeek = $newDate->isoFormat('E');
+            
+            $newStart = Carbon::parse($newDay['start']);
+            $newEnd = Carbon::parse($newDay['end']);
+            
             $existingBooking = Booking::where('recurring_id', $recurring->id)
-                ->where('start', $newDay['start'])
-                ->first();
+            ->whereRaw("DAYOFWEEK(start) = $newDayOfWeek")
+            ->first();
+            $semester = Semester::where('is_current', true)->first();
+            $semesterEnd = Carbon::parse($semester->end);
+            $currentDate = Carbon::today();
+
             if (!$existingBooking) {
-                $booking = new Booking();
-                $booking->recurring_id = $recurring->id;
-                $booking->booker_id = $validatedData['booker_id'];
-                $booking->title = $validatedData['title'];
-                $booking->info = $validatedData['info'];
-                $booking->start = $newDay['start'];
-                $booking->end = $newDay['end'];
-                $booking->save();
+
+                while ($currentDate <= $semesterEnd) {
+                    $currentDayOfWeek = $currentDate->isoFormat('E');
+                    if ($currentDayOfWeek == $newDayOfWeek) {
+                        $booking = new Booking();
+                        $booking->recurring_id = $recurring->id;
+                        $booking->title = $validatedData['title'];
+                        $booking->info = $validatedData['info'];
+                        $booking->booker_id = $booker->booker_id;
+                        $booking->room_id = $validatedData['room_id'];
+                        $booking->type = 'recurring';
+                        $booking->color = 'blue';
+                        $booking->status =  $validatedData['status'];
+                        $booking->start = $currentDate->copy()->setTime($newStart->hour, $newStart->minute);
+                        $booking->end = $currentDate->copy()->setTime($newEnd->hour, $newEnd->minute);
+                        $booking->save();
+                        break;
+                    }
+                    $currentDate->addDay();
+                }
             }
         }
         return response()->json(['message' => 'Booking updated successfully.']);

@@ -85,7 +85,8 @@ class Booking extends Model
         'end' => 'datetime',
     ];
     protected $attributes = [
-        'status' => 0
+        'status' => 0,
+        'participants' => 'No participants',
     ];
 
     //give curent semester id
