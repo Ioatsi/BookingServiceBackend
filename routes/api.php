@@ -24,6 +24,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::post('/getBookings', [BookingController::class, 'index']);
 Route::post('/getRecurring', [BookingController::class, 'getRecurring']);
 Route::post('/getConflicts', [BookingController::class, 'getConflicts']);
+Route::post('/checkConflict', [BookingController::class,'checkConflict']);
 
 //For calendar
 Route::post('/getActiveBookings', [BookingController::class, 'getActiveBookings']);

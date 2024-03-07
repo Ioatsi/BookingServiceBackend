@@ -393,4 +393,30 @@ class bookingController extends Controller
         }
         return response()->json(['message' => 'Booking updated successfully.']);
     }
+
+    public function checkConflict(Request $request)
+    {
+        $conflicts = Booking::where('room_id', $request->room_id)
+        ->where('status', '!=', 2)
+        ->where(function ($query) use ($request) {
+            $query->where(function ($query) use ($request) {
+                $query->where('start', '>=', $request->start)
+                      ->where('start', '<', $request->end);
+            })
+            ->orWhere(function ($query) use ($request) {
+                $query->where('end', '>', $request->start)
+                      ->where('end', '<=', $request->end);
+            })
+            ->orWhere(function ($query) use ($request) {
+                $query->where('start', '<', $request->start)
+                      ->where('end', '>', $request->end);
+            });
+        })
+        ->where('id', '<>', $request->id) // Exclude the current booking
+        ->get();;
+        $isConflicting = $conflicts->isNotEmpty();
+
+        return response()->json(['isConflicting' => $isConflicting]);
+        ;
+    }
 }
