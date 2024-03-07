@@ -413,7 +413,7 @@ class bookingController extends Controller
             });
         })
         ->where('id', '<>', $request->id) // Exclude the current booking
-        ->get();;
+        ->get();
         $isConflicting = $conflicts->isNotEmpty();
 
         return response()->json(['isConflicting' => $isConflicting]);
