@@ -416,7 +416,7 @@ class bookingController extends Controller
         ->get();
         $isConflicting = $conflicts->isNotEmpty();
 
-        return response()->json(['isConflicting' => $isConflicting]);
+        return response()->json(['isConflicting' => $isConflicting, 'conflicts' => $conflicts]);
         ;
     }
 }
