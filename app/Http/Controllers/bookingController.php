@@ -397,26 +397,59 @@ class bookingController extends Controller
     public function checkConflict(Request $request)
     {
         $conflicts = Booking::where('room_id', $request->room_id)
-        ->where('status', '!=', 2)
-        ->where(function ($query) use ($request) {
-            $query->where(function ($query) use ($request) {
-                $query->where('start', '>=', $request->start)
-                      ->where('start', '<', $request->end);
+            ->where('status', '!=', 2)
+            ->where(function ($query) use ($request) {
+                $query->where(function ($query) use ($request) {
+                    $query->where('start', '>=', $request->start)
+                        ->where('start', '<', $request->end);
+                })
+                    ->orWhere(function ($query) use ($request) {
+                        $query->where('end', '>', $request->start)
+                            ->where('end', '<=', $request->end);
+                    })
+                    ->orWhere(function ($query) use ($request) {
+                        $query->where('start', '<', $request->start)
+                            ->where('end', '>', $request->end);
+                    });
             })
-            ->orWhere(function ($query) use ($request) {
-                $query->where('end', '>', $request->start)
-                      ->where('end', '<=', $request->end);
-            })
-            ->orWhere(function ($query) use ($request) {
-                $query->where('start', '<', $request->start)
-                      ->where('end', '>', $request->end);
-            });
-        })
-        ->where('id', '<>', $request->id) // Exclude the current booking
-        ->get();
+            ->where('id', '<>', $request->id) // Exclude the current booking
+            ->get();
         $isConflicting = $conflicts->isNotEmpty();
 
-        return response()->json(['isConflicting' => $isConflicting, 'conflicts' => $conflicts]);
-        ;
+        return response()->json(['isConflicting' => $isConflicting, 'conflicts' => $conflicts]);;
+    }
+
+    public function resolveConflict(Request $request)
+    {
+        $bookings = $request->input('bookings');
+
+        foreach ($bookings as $bookingData) {
+            // Extract data from each booking object
+            $bookingId = $bookingData['id'];
+            $resolved = $bookingData['resolved'];
+            if(isset($bookingData['toKeep'])) {
+                $toKeep = true;
+            }
+            $booking = Booking::find($bookingId);
+
+            // Update the booking based on conditions
+            if ($resolved) {
+                $booking->room_id = $bookingData['room_id'];
+                $booking->start = $bookingData['start'];
+                $booking->end = $bookingData['end'];
+                $booking->conflict_id = null;
+                $booking->save();
+            } else {
+                if ($toKeep) {
+                    $booking->conflict_id = null;
+                    $booking->save();
+                } else {
+                    $booking->status = 2;
+                    $booking->save();
+                }
+            }
+        }
+
+        return response()->json(['message' => 'Conflict resolved successfully']);
     }
 }
