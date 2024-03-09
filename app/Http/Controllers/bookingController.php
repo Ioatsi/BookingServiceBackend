@@ -53,54 +53,59 @@ class bookingController extends Controller
             abort(403);
         } */
         if ($request->input('is_recurring')) {
-            $this->createRecurringBooking($validatedData);
+            $this->createRecurringBookingGroup($validatedData);
             return response()->json(['message' => 'Recurring booking created successfully.'], 201);
         }
         $booking = Booking::create($validatedData);
         return response()->json(['message' => 'Booking created successfully.', 'booking' => $booking], 201);
     }
 
-    public function createRecurringBooking($validatedData)
+    public function createRecurringBookingGroup($validatedData)
     {
         $semester = Semester::where('is_current', true)->first();
         $recurring = new Recurring();
         $recurring->title = $validatedData['title'];
+        $recurring->info = $validatedData['info'];
+        $recurring->color = $validatedData['color'];
+        $recurring->participants = $validatedData['participants'];
+        $recurring->room_id = $validatedData['room_id'];
+        $recurring->booker_id = $validatedData['booker_id'];
         $recurring->status = 0;
         $recurring->semester_id = $semester->id;
         $recurring->save();
         $days = $validatedData['days'];
-
-        //$booking = Booking::create($validatedData);
-
-        //get semester start and end
-
-        $endDate = $semester->end;
         foreach ($days as $day) {
-            $currentDate = Carbon::today();
             $day['recurring_id'] = $recurring->id;
             $day['status'] = 0;
-            $daystart = Carbon::parse($day['start']);
-            $dayend = Carbon::parse($day['end']);
             Day::create($day);
-            while ($currentDate <= Carbon::parse($endDate)) {
-                if ($currentDate->dayOfWeekIso == $day['name']) {
-                    $booking = new Booking();
-                    $booking->recurring_id = $recurring->id;
-                    $booking->booker_id = $validatedData['booker_id'];
-                    $booking->title = $validatedData['title'];
-                    $booking->info = $validatedData['info'];
-                    $booking->start = $currentDate->copy()->setTime($daystart->hour, $daystart->minute);
-                    $booking->end = $currentDate->copy()->setTime($dayend->hour, $dayend->minute);
-                    $booking->room_id = $validatedData['room_id'];
-                    $booking->color = $validatedData['color'];
-                    $booking->participants = $validatedData['participants'];
-                    $booking->type = 'recurring';
-                    $booking->save();
-                }
-                $currentDate->addDay();
-            }
         }
+
+        $conflicting = Recurring::conflicts($recurring);
+
+            if ($conflicting->isNotEmpty()) {
+                $firstConflicting = $conflicting->first();
+                $conflictId = $firstConflicting->conflict_id ? $firstConflicting->conflict_id : static::generateUniqueConflictId();
+                foreach ($conflicting as $conflict) {
+                    $conflict->update(['conflict_id' => $conflictId]);
+                }
+
+                $recurring->conflict_id = $conflictId;
+                $recurring->save();
+            }
     }
+    protected static function generateUniqueConflictId()
+    {
+        $conflictId = null;
+        do {
+            // Generate a new unique ID (e.g., UUID)
+            $conflictId = uniqid(); // Example: Generate a unique ID using uniqid()
+            // Check if the generated ID already exists in the table
+        } while (Recurring::where('conflict_id', $conflictId)->exists());
+
+        return $conflictId;
+    }
+
+   
     public function getUserBookings($id)
     {
         $semester = Semester::where('is_current', true)->first();
@@ -170,9 +175,9 @@ class bookingController extends Controller
             $conflicts = $conflicts->groupBy('conflict_id');
         }
 
-        $conflict_groups = new Collection();
-        $conflicts->each(function ($conflict) use ($conflict_groups) {
-            $conflict_groups->push((object)[
+        $conflictingBookings = new Collection();
+        $conflicts->each(function ($conflict) use ($conflictingBookings) {
+            $conflictingBookings->push((object)[
                 'id' => $conflict[0]->conflict_id,
                 'bookings' => $conflict,
                 'room_id' => $conflict[0]->room_id,
@@ -180,7 +185,23 @@ class bookingController extends Controller
             ]);
         });
 
-        return response()->json($conflict_groups);
+        $recurrings = Recurring::where('semester_id', $semester->id)
+            ->whereIn('room_id', $request->input('room_id'))
+            ->whereNotIn('status', [2])
+            ->whereNotNull('conflict_id')
+            ->orderBy('created_at', 'desc')
+            ->get();
+        $conflictingRecurrings = new Collection();
+        $recurrings->each(function ($recurring) use ($conflictingRecurrings) {
+            $conflictingRecurrings->push((object)[
+                'id' => $recurring[0]->conflict_id,
+                'recurring' => $recurring,
+                'room_id' => $recurring[0]->room_id,
+                'room_name' => Room::where('id', $recurring[0]->room_id)->first()->name,
+            ]);
+        });
+
+        return response()->json(['conflictingBookings:', $conflictingBookings], ['conflictingRecurrings:', $conflictingRecurrings]);
     }
 
     public function approveBooking(Request $request)
@@ -199,21 +220,47 @@ class bookingController extends Controller
         }
         return response()->json(['message' => 'Booking approved successfully.']);
     }
+
     public function approveRecurringBooking(Request $request)
     {
+        $semester = Semester::where('is_current', true)->first();
         $recurring = Recurring::whereIn('id', $request->input('id'))->get();
+
         if (!$recurring) {
             return response()->json(['message' => 'Booking not found.'], 404);
         }
+
         foreach ($recurring as $recurring) {
             $recurring->status = 1;
             $recurring->save();
-            $bookings = Booking::where('recurring_id', $recurring->id)->get();
-            foreach ($bookings as $booking) {
-                $booking->status = 1;
-                $booking->save();
+
+            $days = Day::whereIn('recurring_id', $recurring->id)->get();
+
+            $endDate = $semester->end;
+            foreach ($days as $day) {
+                $currentDate = Carbon::today();
+                $day['recurring_id'] = $recurring->id;
+                $day['status'] = 0;
+                $daystart = Carbon::parse($day['start']);
+                $dayend = Carbon::parse($day['end']);
+                while ($currentDate <= Carbon::parse($endDate)) {
+                    if ($currentDate->dayOfWeekIso == $day['name']) {
+                        $booking = new Booking();
+                        $booking->recurring_id = $recurring->id;
+                        $booking->booker_id = $recurring->booker_id;
+                        $booking->title = $recurring->title;
+                        $booking->info = $recurring->info;
+                        $booking->room_id = $recurring->room_id;
+                        $booking->color = $recurring->color;
+                        $booking->participants = $recurring->participants;
+                        $booking->type = 'recurring';
+                        $booking->start = $currentDate->copy()->setTime($daystart->hour, $daystart->minute);
+                        $booking->end = $currentDate->copy()->setTime($dayend->hour, $dayend->minute);
+                        $booking->save();
+                    }
+                    $currentDate->addDay();
+                }
             }
-            return response()->json(['message' => 'Booking approved successfully.']);
         }
     }
     public function cancelBooking(Request $request)
@@ -427,7 +474,7 @@ class bookingController extends Controller
             // Extract data from each booking object
             $bookingId = $bookingData['id'];
             $resolved = $bookingData['resolved'];
-            if(isset($bookingData['toKeep'])) {
+            if (isset($bookingData['toKeep'])) {
                 $toKeep = true;
             }
             $booking = Booking::find($bookingId);

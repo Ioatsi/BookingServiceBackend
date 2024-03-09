@@ -14,8 +14,14 @@ return new class extends Migration
         Schema::create('recurrings', function (Blueprint $table) {
             $table->id();
             $table->string('title');
+            $table->string('conflict_id')->nullable();
+            $table->foreignId('booker_id')->constrained('users');
             $table->integer('status');
             $table->foreignId('semester_id')->constrained('semesters');
+            $table->foreignId('room_id')->constrained('rooms');
+            $table->string('color');
+            $table->string('info');
+            $table->string('participants');
             $table->timestamps();
         });
     }
