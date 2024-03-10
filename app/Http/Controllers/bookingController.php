@@ -130,8 +130,8 @@ class bookingController extends Controller
     {
         $semester = Semester::where('is_current', true)->first();
         $days = Day::whereIn('room_id', $request->input('room_id'))
-        ->where('status', '!=', 2)
-        ->get();
+            ->where('status', '!=', 2)
+            ->get();
         $recurringIds = new Collection();
         foreach ($days as $day) {
             $recurringIds->push($day->recurring_id);
@@ -211,8 +211,9 @@ class bookingController extends Controller
             });
             $conflictingRecurrings->push((object)[
                 'id' => $recurring[0]->conflict_id,
-                'recurring' => $recurring,
+                'bookings' => $recurring,
                 'room_id' => $recurring[0]->room_id,
+                'type' => 'recurringGroup',
             ]);
         });
 
@@ -355,7 +356,7 @@ class bookingController extends Controller
 
         //Update the recurring group
         $recurring->title = $validatedData['title'];
-        $recurring->title = $validatedData['info'];
+        $recurring->info = $validatedData['info'];
         $recurring->save();
 
         $existingDays = Day::where('recurring_id', $recurring->id)
@@ -398,88 +399,90 @@ class bookingController extends Controller
                 ]);
             }
         }
-
         // Set status to inactive for days not present in new data
         foreach ($existingDays as $existingDay) {
             $existingDay->status = 2;
             $existingDay->save();
         }
+        if ($recurring->status == 1) {
 
 
-        // Get existing bookings associated with the recurring booking
-        $existingBookings = Booking::where('recurring_id', $recurring->id)->get();
-        foreach ($existingBookings as $existingBooking) {
-            // Get the day of the week for the existing booking
-            $existingStart = Carbon::parse($existingBooking->start);
-            $existingDayOfWeek = $existingStart->isoFormat('E');
-            $matched = false;
 
-            // Update existing bookings based on new day
-            foreach ($newDays as $newDay) {
-                $newStart = Carbon::parse($newDay['start']);
-                $newEnd = Carbon::parse($newDay['end']);
-                $newDayOfWeek = $newDay['name'];
-                $newStartDateTime = Carbon::parse($newStart);
-                $newEndDateTime = Carbon::parse($newEnd);
+            // Get existing bookings associated with the recurring booking
+            $existingBookings = Booking::where('recurring_id', $recurring->id)->get();
+            foreach ($existingBookings as $existingBooking) {
+                // Get the day of the week for the existing booking
+                $existingStart = Carbon::parse($existingBooking->start);
+                $existingDayOfWeek = $existingStart->isoFormat('E');
+                $matched = false;
 
-                // Extract the hours from the new start and end times
-                $newStartHours = $newStartDateTime->format('H');
-                $newEndHours = $newEndDateTime->format('H');
-                if ($existingDayOfWeek == $newDayOfWeek) {
-                    $existingBooking->start->hour = $newStartHours;
-                    $existingBooking->end->hour = $newEndHours;
-                    $existingBooking->info = $recurring->info;
-                    $existingBooking->room_id = $newDay['room_id'];
-                    $existingBooking->title = $recurring->title;
+                // Update existing bookings based on new day
+                foreach ($newDays as $newDay) {
+                    $newStart = Carbon::parse($newDay['start']);
+                    $newEnd = Carbon::parse($newDay['end']);
+                    $newDayOfWeek = $newDay['name'];
+                    $newStartDateTime = Carbon::parse($newStart);
+                    $newEndDateTime = Carbon::parse($newEnd);
+
+                    // Extract the hours from the new start and end times
+                    $newStartHours = $newStartDateTime->format('H');
+                    $newEndHours = $newEndDateTime->format('H');
+                    if ($existingDayOfWeek == $newDayOfWeek) {
+                        $existingBooking->start->hour = $newStartHours;
+                        $existingBooking->end->hour = $newEndHours;
+                        $existingBooking->info = $recurring->info;
+                        $existingBooking->room_id = $newDay['room_id'];
+                        $existingBooking->title = $recurring->title;
+                        $existingBooking->save();
+                        $matched = true;
+                        break;
+                    }
+                }
+
+                if (!$matched) {
+                    // If no match found for day name, set the status of the existing booking to inactive
+                    $existingBooking->status = 2;
                     $existingBooking->save();
-                    $matched = true;
-                    break;
                 }
             }
 
-            if (!$matched) {
-                // If no match found for day name, set the status of the existing booking to inactive
-                $existingBooking->status = 2;
-                $existingBooking->save();
-            }
-        }
 
+            // Create new bookings based on new days
+            foreach ($newDays as $newDay) {
+                $newDayOfWeek = $newDay['name'];
 
-        // Create new bookings based on new days
-        foreach ($newDays as $newDay) {
-            $newDayOfWeek = $newDay['name'];
+                $newStart = Carbon::parse($newDay['start']);
+                $newEnd = Carbon::parse($newDay['end']);
 
-            $newStart = Carbon::parse($newDay['start']);
-            $newEnd = Carbon::parse($newDay['end']);
+                $semester = Semester::where('is_current', true)->first();
+                $semesterEnd = Carbon::parse($semester->end);
+                $currentDate = Carbon::today();
+                $existingBooking = Booking::where('recurring_id', $recurring->id)
+                    ->where('status', '!=', 2)
+                    ->whereRaw("DAYOFWEEK(start) = ($newDayOfWeek % 7) + 1")
+                    ->first();
 
-            $semester = Semester::where('is_current', true)->first();
-            $semesterEnd = Carbon::parse($semester->end);
-            $currentDate = Carbon::today();
-            $existingBooking = Booking::where('recurring_id', $recurring->id)
-                ->where('status', '!=', 2)
-                ->whereRaw("DAYOFWEEK(start) = ($newDayOfWeek % 7) + 1")
-                ->first();
+                if ($existingBooking == null) {
+                    // If no existing booking, create a new booking for each week within the current semester
+                    while ($currentDate <= $semesterEnd) {
 
-            if ($existingBooking == null) {
-                // If no existing booking, create a new booking for each week within the current semester
-                while ($currentDate <= $semesterEnd) {
-
-                    $currentDayOfWeek = $currentDate->isoFormat('E');
-                    if ($currentDayOfWeek == $newDayOfWeek) {
-                        $booking = new Booking();
-                        $booking->recurring_id = $recurring->id;
-                        $booking->title = $validatedData['title'];
-                        $booking->info = $validatedData['info'];
-                        $booking->booker_id = $booker;
-                        $booking->room_id = $newDay['room_id'];
-                        $booking->type = 'recurring';
-                        $booking->color = 'blue';
-                        $booking->status =  1;
-                        $booking->start = $currentDate->copy()->setTime($newStart->hour, $newStart->minute);
-                        $booking->end = $currentDate->copy()->setTime($newEnd->hour, $newEnd->minute);
-                        $booking->save();
+                        $currentDayOfWeek = $currentDate->isoFormat('E');
+                        if ($currentDayOfWeek == $newDayOfWeek) {
+                            $booking = new Booking();
+                            $booking->recurring_id = $recurring->id;
+                            $booking->title = $validatedData['title'];
+                            $booking->info = $validatedData['info'];
+                            $booking->booker_id = $booker;
+                            $booking->room_id = $newDay['room_id'];
+                            $booking->type = 'recurring';
+                            $booking->color = 'blue';
+                            $booking->status =  1;
+                            $booking->start = $currentDate->copy()->setTime($newStart->hour, $newStart->minute);
+                            $booking->end = $currentDate->copy()->setTime($newEnd->hour, $newEnd->minute);
+                            $booking->save();
+                        }
+                        $currentDate->addDay();
                     }
-                    $currentDate->addDay();
                 }
             }
         }
@@ -488,86 +491,137 @@ class bookingController extends Controller
 
     public function checkConflict(Request $request)
     {
-        $conflicts = Booking::where('room_id', $request->room_id)
-            ->where('status', '!=', 2)
-            ->where(function ($query) use ($request) {
-                $query->where(function ($query) use ($request) {
-                    $query->where('start', '>=', $request->start)
-                        ->where('start', '<', $request->end);
-                })
-                    ->orWhere(function ($query) use ($request) {
-                        $query->where('end', '>', $request->start)
-                            ->where('end', '<=', $request->end);
-                    })
-                    ->orWhere(function ($query) use ($request) {
-                        $query->where('start', '<', $request->start)
-                            ->where('end', '>', $request->end);
-                    });
-            })
-            ->where('id', '<>', $request->id) // Exclude the current booking
-            ->get();
-        $isConflicting = $conflicts->isNotEmpty();
 
-        return response()->json(['isConflicting' => $isConflicting, 'conflicts' => $conflicts]);;
+        $semester = Semester::where('is_current', true)->first();
+        if ($request->isRecurring == true) {
+            $conflicts = new Collection();
+            $days = $request->days;
+            $existingRecurrings = Recurring::where('semester_id', $semester->id)
+                ->where('status', '!=', 2) // Exclude cancelled recurrings
+                ->where('id', '<>', $request->id)
+                ->get();
+
+            // Iterate over each existing recurring group
+            foreach ($existingRecurrings as $existingRecurring) {
+                // Fetch the days for the existing recurring group
+                $existingRecurringDays = Day::where('recurring_id', $existingRecurring->id)
+                    ->where('status', '!=', 2)
+                    ->get();
+
+                // Check for conflicts between the days of the recurring being created and the days of the existing recurring group
+                foreach ($days as $recurringDay) {
+                    foreach ($existingRecurringDays as $existingRecurringDay) {
+                        // Get the start and end times for the days
+                        $recurringDayStart = Carbon::createFromTimeString($recurringDay['start']);
+                        $recurringDayEnd = Carbon::createFromTimeString($recurringDay['end']);
+                        $existingRecurringDayStart = Carbon::createFromTimeString($existingRecurringDay->start);
+                        $existingRecurringDayEnd = Carbon::createFromTimeString($existingRecurringDay->end);
+
+                        // Check if the days are the same day of the week
+                        if ($recurringDay['name'] == $existingRecurringDay->name && $recurringDay['room_id'] == $existingRecurringDay->room_id) {
+                            // Check if the times overlap
+                            if ($recurringDayStart->between($existingRecurringDayStart, $existingRecurringDayEnd) || $recurringDayEnd->between($existingRecurringDayStart, $existingRecurringDayEnd)) {
+                                // Add the conflicting recurring to the collection
+                                $conflicts->push($existingRecurring);
+                                break 2; // No need to check further days or existing recurrings if a conflict is found
+                            }
+                        }
+                    }
+                }
+            }
+            $isConflicting = $conflicts->isNotEmpty();
+            return response()->json(['isConflicting' => $isConflicting, 'conflicts' => $conflicts]);
+        } else {
+            $conflicts = Booking::where('semester_id', $semester->id)
+                ->where('room_id', $request->room_id)
+                ->where('status', '!=', 2)
+                ->where(function ($query) use ($request) {
+                    $query->where(function ($query) use ($request) {
+                        $query->where('start', '>=', $request->start)
+                            ->where('start', '<', $request->end);
+                    })
+                        ->orWhere(function ($query) use ($request) {
+                            $query->where('end', '>', $request->start)
+                                ->where('end', '<=', $request->end);
+                        })
+                        ->orWhere(function ($query) use ($request) {
+                            $query->where('start', '<', $request->start)
+                                ->where('end', '>', $request->end);
+                        });
+                })
+                ->where('id', '<>', $request->id) // Exclude the current booking
+                ->get();
+            $isConflicting = $conflicts->isNotEmpty();
+
+            return response()->json(['isConflicting' => $isConflicting, 'conflicts' => $conflicts]);
+        }
     }
 
     public function resolveConflict(Request $request)
     {
-        $bookings = $request->input('bookings');
+        if ($request->isRecurring == true) {
+            $this->resolveRecurringConflict($request);
+            return response()->json(['message' => 'Conflict resolved successfully']);
+        } else {
+            $bookings = $request->input('bookings');
 
-        foreach ($bookings as $bookingData) {
-            // Extract data from each booking object
-            $bookingId = $bookingData['id'];
-            $resolved = $bookingData['resolved'];
-            $toKeep = $bookingData['toKeep'];
-            $booking = Booking::find($bookingId);
+            foreach ($bookings as $bookingData) {
+                // Extract data from each booking object
+                $bookingId = $bookingData['id'];
+                $resolved = $bookingData['resolved'];
+                $toKeep = $bookingData['toKeep'];
+                $booking = Booking::find($bookingId);
 
-            // Update the booking based on conditions
-            if ($resolved) {
-                $booking->room_id = $bookingData['room_id'];
-                $booking->start = $bookingData['start'];
-                $booking->end = $bookingData['end'];
-                $booking->conflict_id = null;
-                $booking->save();
-            } else {
-                if ($toKeep) {
+                // Update the booking based on conditions
+                if ($resolved) {
+                    $booking->room_id = $bookingData['room_id'];
+                    $booking->start = $bookingData['start'];
+                    $booking->end = $bookingData['end'];
                     $booking->conflict_id = null;
                     $booking->save();
                 } else {
-                    $booking->status = 2;
-                    $booking->save();
+                    if ($toKeep) {
+                        $booking->room_id = $bookingData['room_id'];
+                        $booking->start = $bookingData['start'];
+                        $booking->end = $bookingData['end'];
+                        $booking->conflict_id = null;
+                        $booking->save();
+                    } else {
+                        $booking->status = 2;
+                        $booking->save();
+                    }
                 }
             }
-        }
 
-        return response()->json(['message' => 'Conflict resolved successfully']);
+            return response()->json(['message' => 'Conflict resolved successfully']);
+        }
     }
 
     public function resolveRecurringConflict(Request $request)
     {
-        $recurings = $request->input('recurings');
+        $recurings = $request->input('bookings');
 
         foreach ($recurings as $recuringData) {
             // Extract data from each booking object
             $recuringId = $recuringData['id'];
             $resolved = $recuringData['resolved'];
             $toKeep = $recuringData['toKeep'];
-            $recuring = Booking::find($recuringId);
-
+            $recuring = Recurring::find($recuringId);
             // Update the booking based on conditions
             if ($resolved) {
-                $recuring->room_id = $recuringData['room_id'];
-                $recuring->start = $recuringData['start'];
-                $recuring->end = $recuringData['end'];
+                $this->editRecurringBooking($recuringData);
                 $recuring->conflict_id = null;
                 $recuring->save();
             } else {
                 if ($toKeep) {
+                    $this->editRecurringBooking($recuringData);
                     $recuring->conflict_id = null;
                     $recuring->save();
                 } else {
-                    $recuring->status = 2;
-                    $recuring->save();
+                    $recurringRequest = new Request([
+                        'id' => [$recuring->id]
+                    ]);
+                    $this->cancelRecurringBooking($recurringRequest);
                 }
             }
         }
