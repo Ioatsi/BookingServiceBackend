@@ -21,7 +21,7 @@ class UsersSeeder extends Seeder
         User::create([
             'name' => 'user1',
         ]);
-        User::create([
+User::create([
             'name' => 'user2',
         ]);
         User::create([

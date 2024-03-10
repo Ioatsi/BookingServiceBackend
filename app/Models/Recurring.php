@@ -67,7 +67,7 @@ class Recurring extends Model
                     $existingRecurringDayEnd = Carbon::createFromTimeString($existingRecurringDay->end);
 
                     // Check if the days are the same day of the week
-                    if ($recurringDayStart->dayOfWeek == $existingRecurringDayStart->dayOfWeek) {
+                    if ($recurringDay->name == $existingRecurringDay->name) {
                         // Check if the times overlap
                         if ($recurringDayStart->between($existingRecurringDayStart, $existingRecurringDayEnd) || $recurringDayEnd->between($existingRecurringDayStart, $existingRecurringDayEnd)) {
                             // Add the conflicting recurring to the collection

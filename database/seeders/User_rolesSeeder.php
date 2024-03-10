@@ -21,7 +21,8 @@ class User_rolesSeeder extends Seeder
         // Assign random roles to users
         foreach ($users as $user) {
             $user->roles()->attach(
-                $roles->random(rand(1, 3))->pluck('id')->toArray()
+                $roles->pluck('id')->toArray()
+                //$roles->random(rand(1, 3))->pluck('id')->toArray()
             );
         }
     }

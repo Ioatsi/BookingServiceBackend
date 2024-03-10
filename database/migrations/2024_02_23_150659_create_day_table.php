@@ -17,7 +17,6 @@ return new class extends Migration
             $table->string('name');
             $table->time('start');
             $table->time('end');
-            $table->integer('status');
             $table->timestamps();
         });
     }
