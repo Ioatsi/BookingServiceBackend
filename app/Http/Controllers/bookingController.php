@@ -420,6 +420,9 @@ class bookingController extends Controller
                 if ($existingDayOfWeek == $newDayOfWeek) {
                     $existingBooking->start->hour = $newStartHours;
                     $existingBooking->end->hour = $newEndHours;
+                    $existingBooking->info = $recurring->info;
+                    $existingBooking->room_id = $recurring->room_id;
+                    $existingBooking->title = $recurring->title;
                     $existingBooking->save();
                     $matched = true;
                     break;
