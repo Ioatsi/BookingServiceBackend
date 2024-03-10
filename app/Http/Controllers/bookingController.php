@@ -480,9 +480,7 @@ class bookingController extends Controller
             // Extract data from each booking object
             $bookingId = $bookingData['id'];
             $resolved = $bookingData['resolved'];
-            if (isset($bookingData['toKeep'])) {
-                $toKeep = true;
-            }
+            $toKeep = $bookingData['toKeep'];
             $booking = Booking::find($bookingId);
 
             // Update the booking based on conditions
