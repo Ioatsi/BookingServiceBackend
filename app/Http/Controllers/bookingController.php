@@ -76,6 +76,7 @@ class bookingController extends Controller
         $days = $validatedData['days'];
         foreach ($days as $day) {
             $day['recurring_id'] = $recurring->id;
+            $day['status'] = 0;
             Day::create($day);
         }
 
@@ -149,7 +150,9 @@ class bookingController extends Controller
                 'info' => $recurring->info,
                 'status' => $recurring->status,
                 'type' => 'recurringGroup',
-                'days' => Day::where('recurring_id', $recurring->id)->get(),
+                'days' => Day::where('recurring_id', $recurring->id)
+                    ->where('status', '!=', 2)
+                    ->get(),
             ]);
         });
 
@@ -342,22 +345,41 @@ class bookingController extends Controller
         if (!$recurring) {
             return response()->json(['message' => 'Booking not found.'], 404);
         }
+
+        //Update the recurring group
         $recurring->title = $validatedData['title'];
+        $recurring->title = $validatedData['info'];
+        $recurring->room_id = $validatedData['room_id'];
         $recurring->save();
-        $existingDays = Day::where('recurring_id', $recurring->id)->get();
+
+        $existingDays = Day::where('recurring_id', $recurring->id)
+            ->where('status', '!=', 2)
+            ->get();
         $newDays = $validatedData['days'];
-        $booker = Booking::where('recurring_id', $recurring->id)->first();
+        $booker = $recurring->booker_id;
 
         foreach ($newDays as $newDay) {
-            if (isset($newDay['id']) && isset($existingDays[$newDay['id']])) {
-                // If the new day has an ID and it exists in the existing days
-                $existingDay = $existingDays[$newDay['id']];
-                $existingDay->name = $newDay['name'];
-                $existingDay->start = $newDay['start'];
-                $existingDay->end = $newDay['end'];
-                $existingDay->save();
+            if (isset($newDay['id'])) {
+                $newDayId = $newDay['id'];
+                $existingDay = $existingDays->where('id', $newDayId)->first();
 
-                unset($existingDays[$newDay['id']]);
+                if ($existingDay) {
+                    // If the new day has an ID and it exists in the existing days
+                    $existingDay->name = $newDay['name'];
+                    $existingDay->start = $newDay['start'];
+                    $existingDay->end = $newDay['end'];
+                    $existingDay->save();
+
+
+                    // Remove the existing day from the list
+                    foreach ($existingDays as $key => $day) {
+                        if ($day->id === $existingDay->id) {
+                            $existingDays->forget($key);
+                            break; // Exit the loop after removing the item
+                        }
+                    }
+                    //echo $existingDays;
+                }
             } else {
                 // If the new day doesn't have an ID or it doesn't exist in the existing days
                 Day::create([
@@ -370,18 +392,22 @@ class bookingController extends Controller
             }
         }
 
+        // Set status to inactive for days not present in new data
         foreach ($existingDays as $existingDay) {
-            $existingDay->status = 1;
+            $existingDay->status = 2;
             $existingDay->save();
         }
 
 
+        // Get existing bookings associated with the recurring booking
         $existingBookings = Booking::where('recurring_id', $recurring->id)->get();
         foreach ($existingBookings as $existingBooking) {
+            // Get the day of the week for the existing booking
             $existingStart = Carbon::parse($existingBooking->start);
             $existingDayOfWeek = $existingStart->isoFormat('E');
             $matched = false;
 
+            // Update existing bookings based on new day
             foreach ($newDays as $newDay) {
                 $newStart = Carbon::parse($newDay['start']);
                 $newEnd = Carbon::parse($newDay['end']);
@@ -403,10 +429,14 @@ class bookingController extends Controller
             }
 
             if (!$matched) {
+                // If no match found for day name, set the status of the existing booking to inactive
                 $existingBooking->status = 2;
                 $existingBooking->save();
             }
         }
+
+
+        // Create new bookings based on new days
         foreach ($newDays as $newDay) {
             $newDate = Carbon::parse($newDay['start']);
             $newDayOfWeek = $newDate->isoFormat('E');
@@ -414,15 +444,15 @@ class bookingController extends Controller
             $newStart = Carbon::parse($newDay['start']);
             $newEnd = Carbon::parse($newDay['end']);
 
-            $existingBooking = Booking::where('recurring_id', $recurring->id)
-                ->whereRaw("DAYOFWEEK(start) = $newDayOfWeek")
-                ->first();
             $semester = Semester::where('is_current', true)->first();
             $semesterEnd = Carbon::parse($semester->end);
             $currentDate = Carbon::today();
+            $existingBooking = Booking::where('recurring_id', $recurring->id)
+                ->whereRaw("DAYOFWEEK(start) = $newDayOfWeek")
+                ->first();
 
             if (!$existingBooking) {
-
+                // If no existing booking, create a new booking for each week within the current semester
                 while ($currentDate <= $semesterEnd) {
                     $currentDayOfWeek = $currentDate->isoFormat('E');
                     if ($currentDayOfWeek == $newDayOfWeek) {
@@ -430,7 +460,7 @@ class bookingController extends Controller
                         $booking->recurring_id = $recurring->id;
                         $booking->title = $validatedData['title'];
                         $booking->info = $validatedData['info'];
-                        $booking->booker_id = $booker->booker_id;
+                        $booking->booker_id = $booker;
                         $booking->room_id = $validatedData['room_id'];
                         $booking->type = 'recurring';
                         $booking->color = 'blue';
@@ -497,6 +527,38 @@ class bookingController extends Controller
                 } else {
                     $booking->status = 2;
                     $booking->save();
+                }
+            }
+        }
+
+        return response()->json(['message' => 'Conflict resolved successfully']);
+    }
+
+    public function resolveRecurringConflict(Request $request)
+    {
+        $recurings = $request->input('recurings');
+
+        foreach ($recurings as $recuringData) {
+            // Extract data from each booking object
+            $recuringId = $recuringData['id'];
+            $resolved = $recuringData['resolved'];
+            $toKeep = $recuringData['toKeep'];
+            $recuring = Booking::find($recuringId);
+
+            // Update the booking based on conditions
+            if ($resolved) {
+                $recuring->room_id = $recuringData['room_id'];
+                $recuring->start = $recuringData['start'];
+                $recuring->end = $recuringData['end'];
+                $recuring->conflict_id = null;
+                $recuring->save();
+            } else {
+                if ($toKeep) {
+                    $recuring->conflict_id = null;
+                    $recuring->save();
+                } else {
+                    $recuring->status = 2;
+                    $recuring->save();
                 }
             }
         }

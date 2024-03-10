@@ -55,7 +55,9 @@ class Recurring extends Model
         // Iterate over each existing recurring group
         foreach ($existingRecurrings as $existingRecurring) {
             // Fetch the days for the existing recurring group
-            $existingRecurringDays = Day::where('recurring_id', $existingRecurring->id)->get();
+            $existingRecurringDays = Day::where('recurring_id', $existingRecurring->id)
+            ->where('status', '!=', 2)
+            ->get();
             
             // Check for conflicts between the days of the recurring being created and the days of the existing recurring group
             foreach ($days as $recurringDay) {
