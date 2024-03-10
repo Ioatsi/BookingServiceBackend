@@ -194,14 +194,14 @@ class bookingController extends Controller
         $recurrings->each(function ($recurring) use ($conflictingRecurrings) {
             $days = new Collection();
             $recurring->each(function ($recurring) use ($days) {
-                $days->push(Day::where('recurring_id', $recurring->id)->get());
+                $days = Day::where('recurring_id', $recurring->id)->get();
+                $recurring->days = $days;
             });
             $conflictingRecurrings->push((object)[
                 'id' => $recurring[0]->conflict_id,
                 'recurring' => $recurring,
                 'room_id' => $recurring[0]->room_id,
                 'room_name' => Room::where('id', $recurring[0]->room_id)->first()->name,
-                'days' => $days,
             ]);
         });
 
@@ -232,17 +232,17 @@ class bookingController extends Controller
     {
         $semester = Semester::where('is_current', true)->first();
         $recurrings = Recurring::whereIn('id', $request->input('id'))->get();
-        
+
         if (!$recurrings) {
             return response()->json(['message' => 'Booking not found.'], 404);
         }
-        
+
         foreach ($recurrings as $recurring) {
             $recurring->status = 1;
             $recurring->save();
-            
+
             $days = Day::where('recurring_id', $recurring->id)->get();
-            
+
             $endDate = $semester->end;
             foreach ($days as $day) {
                 $currentDate = Carbon::today();
