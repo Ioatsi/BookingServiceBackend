@@ -18,7 +18,6 @@ return new class extends Migration
             $table->foreignId('booker_id')->constrained('users');
             $table->integer('status');
             $table->foreignId('semester_id')->constrained('semesters');
-            $table->foreignId('room_id')->constrained('rooms');
             $table->string('color');
             $table->string('info');
             $table->string('participants');

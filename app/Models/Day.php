@@ -13,15 +13,24 @@ class Day extends Model
         'name',
         'start',
         'end',
-        'status'
+        'status',
+        'room_id',
+        'semester_id',
     ];
     protected $casts = [
         'start' => 'datetime',
         'end' => 'datetime',
     ];
 
-    public function recurring(){
+    public function __construct(array $attributes = [])
+    {
+        parent::__construct($attributes);
+
+        $this->attributes['semester_id'] = Semester::where('is_current', true)->value('id');
+    }    
+
+    public function recurring()
+    {
         return $this->belongsTo(Recurring::class);
     }
-
 }

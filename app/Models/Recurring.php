@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Carbon\Carbon;
 
+use Illuminate\Support\Collection;
+
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -14,7 +16,6 @@ class Recurring extends Model
         'semester_id',
         'title',
         'status',
-        'room_id',
         'booker_id',
         'conflict_id',
         'title',
@@ -47,11 +48,11 @@ class Recurring extends Model
         // Retrieve the associated days for the recurring booking
         $days = Day::where('recurring_id', $recurring->id)->get();
 
-        $existingRecurrings = Recurring::where('room_id', $recurring->room_id)
-            ->where('semester_id', $semester->id)
+        $existingRecurrings = Recurring::where('semester_id', $semester->id)
             ->where('status', '!=', 2) // Exclude cancelled recurrings
             ->where('id', '<>', $recurring->id)
             ->get();
+
         // Iterate over each existing recurring group
         foreach ($existingRecurrings as $existingRecurring) {
             // Fetch the days for the existing recurring group
@@ -69,7 +70,7 @@ class Recurring extends Model
                     $existingRecurringDayEnd = Carbon::createFromTimeString($existingRecurringDay->end);
 
                     // Check if the days are the same day of the week
-                    if ($recurringDay->name == $existingRecurringDay->name) {
+                    if ($recurringDay->name == $existingRecurringDay->name && $recurringDay->room_id == $existingRecurringDay->room_id) {
                         // Check if the times overlap
                         if ($recurringDayStart->between($existingRecurringDayStart, $existingRecurringDayEnd) || $recurringDayEnd->between($existingRecurringDayStart, $existingRecurringDayEnd)) {
                             // Add the conflicting recurring to the collection

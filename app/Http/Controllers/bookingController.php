@@ -43,7 +43,6 @@ class bookingController extends Controller
             'info' => 'required',
             'start' => 'required|date',
             'end' => 'required|date',
-            'room_id' => 'required|exists:rooms,id',
             'color' => 'required',
             'participants' => 'required',
             'type' => 'required',
@@ -68,7 +67,6 @@ class bookingController extends Controller
         $recurring->info = $validatedData['info'];
         $recurring->color = $validatedData['color'];
         $recurring->participants = $validatedData['participants'];
-        $recurring->room_id = $validatedData['room_id'];
         $recurring->booker_id = $validatedData['booker_id'];
         $recurring->status = 0;
         $recurring->semester_id = $semester->id;
@@ -131,8 +129,15 @@ class bookingController extends Controller
     public function getRecurring(Request $request)
     {
         $semester = Semester::where('is_current', true)->first();
+        $days = Day::whereIn('room_id', $request->input('room_id'))
+        ->where('status', '!=', 2)
+        ->get();
+        $recurringIds = new Collection();
+        foreach ($days as $day) {
+            $recurringIds->push($day->recurring_id);
+        }
         $recurrings = Recurring::where('semester_id', $semester->id)
-            ->whereIn('room_id', $request->input('room_id'))
+            ->whereIn('id', $recurringIds)
             ->whereIn('status', [0, 1])
             ->where('conflict_id', null)
             ->orderBy('created_at', 'desc')
@@ -145,8 +150,6 @@ class bookingController extends Controller
                 'id' => $recurring->id,
                 'title' => $recurring->title,
                 //'bookings' => $recurring,
-                'room_id' => $recurring->room_id,
-                'room_name' => Room::where('id', $recurring->room_id)->first()->name,
                 'info' => $recurring->info,
                 'status' => $recurring->status,
                 'type' => 'recurringGroup',
@@ -184,8 +187,14 @@ class bookingController extends Controller
             ]);
         });
 
+        $days = Day::whereIn('room_id', $request->input('room_id'))->where('status', '!=', 2)->where('semester_id', $semester->id)->get();
+        $recurringIds = new Collection();
+        foreach ($days as $day) {
+            $recurringIds->push($day->recurring_id);
+        }
+
         $recurrings = Recurring::where('semester_id', $semester->id)
-            ->whereIn('room_id', $request->input('room_id'))
+            ->whereIn('id', $recurringIds)
             ->whereNotIn('status', [2])
             ->whereNotNull('conflict_id')
             ->orderBy('created_at', 'desc')
@@ -204,7 +213,6 @@ class bookingController extends Controller
                 'id' => $recurring[0]->conflict_id,
                 'recurring' => $recurring,
                 'room_id' => $recurring[0]->room_id,
-                'room_name' => Room::where('id', $recurring[0]->room_id)->first()->name,
             ]);
         });
 
@@ -258,7 +266,7 @@ class bookingController extends Controller
                         $booking->booker_id = $recurring->booker_id;
                         $booking->title = $recurring->title;
                         $booking->info = $recurring->info;
-                        $booking->room_id = $recurring->room_id;
+                        $booking->room_id = $day->room_id;
                         $booking->color = $recurring->color;
                         $booking->participants = $recurring->participants;
                         $booking->type = 'recurring';
@@ -309,7 +317,6 @@ class bookingController extends Controller
     {
         $validatedData = $request->validate([
             'id' => 'required',
-            'room_id' => 'required',
             'title' => 'required',
             'info' => 'required',
             'start' => 'required|date',
@@ -349,7 +356,6 @@ class bookingController extends Controller
         //Update the recurring group
         $recurring->title = $validatedData['title'];
         $recurring->title = $validatedData['info'];
-        $recurring->room_id = $validatedData['room_id'];
         $recurring->save();
 
         $existingDays = Day::where('recurring_id', $recurring->id)
@@ -368,6 +374,7 @@ class bookingController extends Controller
                     $existingDay->name = $newDay['name'];
                     $existingDay->start = $newDay['start'];
                     $existingDay->end = $newDay['end'];
+                    $existingDay->room_id = $newDay['room_id'];
                     $existingDay->save();
 
 
@@ -386,6 +393,7 @@ class bookingController extends Controller
                     'name' => $newDay['name'],
                     'start' => $newDay['start'],
                     'end' => $newDay['end'],
+                    'room_id' => $newDay['room_id'],
                     'status' => 0
                 ]);
             }
@@ -421,7 +429,7 @@ class bookingController extends Controller
                     $existingBooking->start->hour = $newStartHours;
                     $existingBooking->end->hour = $newEndHours;
                     $existingBooking->info = $recurring->info;
-                    $existingBooking->room_id = $recurring->room_id;
+                    $existingBooking->room_id = $newDay['room_id'];
                     $existingBooking->title = $recurring->title;
                     $existingBooking->save();
                     $matched = true;
@@ -455,6 +463,7 @@ class bookingController extends Controller
             if ($existingBooking == null) {
                 // If no existing booking, create a new booking for each week within the current semester
                 while ($currentDate <= $semesterEnd) {
+
                     $currentDayOfWeek = $currentDate->isoFormat('E');
                     if ($currentDayOfWeek == $newDayOfWeek) {
                         $booking = new Booking();
@@ -462,7 +471,7 @@ class bookingController extends Controller
                         $booking->title = $validatedData['title'];
                         $booking->info = $validatedData['info'];
                         $booking->booker_id = $booker;
-                        $booking->room_id = $validatedData['room_id'];
+                        $booking->room_id = $newDay['room_id'];
                         $booking->type = 'recurring';
                         $booking->color = 'blue';
                         $booking->status =  1;

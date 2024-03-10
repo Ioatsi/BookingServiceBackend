@@ -17,7 +17,9 @@ return new class extends Migration
             $table->string('name');
             $table->time('start');
             $table->time('end');
-            $table->integer('status');
+            $table->integer('status');            
+            $table->foreignId('room_id')->constrained('rooms');
+            $table->foreignId('semester_id')->constrained('semesters');
             $table->timestamps();
         });
     }
