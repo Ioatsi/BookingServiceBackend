@@ -192,11 +192,16 @@ class bookingController extends Controller
         }
         $conflictingRecurrings = new Collection();
         $recurrings->each(function ($recurring) use ($conflictingRecurrings) {
+            $days = new Collection();
+            $recurring->each(function ($recurring) use ($days) {
+                $days->push(Day::where('recurring_id', $recurring->id)->get());
+            });
             $conflictingRecurrings->push((object)[
                 'id' => $recurring[0]->conflict_id,
                 'recurring' => $recurring,
                 'room_id' => $recurring[0]->room_id,
                 'room_name' => Room::where('id', $recurring[0]->room_id)->first()->name,
+                'days' => $days,
             ]);
         });
 
