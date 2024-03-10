@@ -133,7 +133,7 @@ class bookingController extends Controller
         $semester = Semester::where('is_current', true)->first();
         $recurrings = Recurring::where('semester_id', $semester->id)
             ->whereIn('room_id', $request->input('room_id'))
-            ->where('status', 0)
+            ->whereIn('status', [0, 1])
             ->where('conflict_id', null)
             ->orderBy('created_at', 'desc')
             ->get();
@@ -378,7 +378,6 @@ class bookingController extends Controller
                             break; // Exit the loop after removing the item
                         }
                     }
-                    //echo $existingDays;
                 }
             } else {
                 // If the new day doesn't have an ID or it doesn't exist in the existing days
@@ -411,14 +410,13 @@ class bookingController extends Controller
             foreach ($newDays as $newDay) {
                 $newStart = Carbon::parse($newDay['start']);
                 $newEnd = Carbon::parse($newDay['end']);
-                $newDayOfWeek = $newStart->isoFormat('E');
+                $newDayOfWeek = $newDay['name'];
                 $newStartDateTime = Carbon::parse($newStart);
                 $newEndDateTime = Carbon::parse($newEnd);
 
                 // Extract the hours from the new start and end times
                 $newStartHours = $newStartDateTime->format('H');
                 $newEndHours = $newEndDateTime->format('H');
-
                 if ($existingDayOfWeek == $newDayOfWeek) {
                     $existingBooking->start->hour = $newStartHours;
                     $existingBooking->end->hour = $newEndHours;
@@ -438,8 +436,7 @@ class bookingController extends Controller
 
         // Create new bookings based on new days
         foreach ($newDays as $newDay) {
-            $newDate = Carbon::parse($newDay['start']);
-            $newDayOfWeek = $newDate->isoFormat('E');
+            $newDayOfWeek = $newDay['name'];
 
             $newStart = Carbon::parse($newDay['start']);
             $newEnd = Carbon::parse($newDay['end']);
@@ -448,10 +445,11 @@ class bookingController extends Controller
             $semesterEnd = Carbon::parse($semester->end);
             $currentDate = Carbon::today();
             $existingBooking = Booking::where('recurring_id', $recurring->id)
-                ->whereRaw("DAYOFWEEK(start) = $newDayOfWeek")
+                ->where('status', '!=', 2)
+                ->whereRaw("DAYOFWEEK(start) = ($newDayOfWeek % 7) + 1")
                 ->first();
 
-            if (!$existingBooking) {
+            if ($existingBooking == null) {
                 // If no existing booking, create a new booking for each week within the current semester
                 while ($currentDate <= $semesterEnd) {
                     $currentDayOfWeek = $currentDate->isoFormat('E');
@@ -464,11 +462,10 @@ class bookingController extends Controller
                         $booking->room_id = $validatedData['room_id'];
                         $booking->type = 'recurring';
                         $booking->color = 'blue';
-                        $booking->status =  $validatedData['status'];
+                        $booking->status =  1;
                         $booking->start = $currentDate->copy()->setTime($newStart->hour, $newStart->minute);
                         $booking->end = $currentDate->copy()->setTime($newEnd->hour, $newEnd->minute);
                         $booking->save();
-                        break;
                     }
                     $currentDate->addDay();
                 }
