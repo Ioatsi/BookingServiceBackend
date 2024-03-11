@@ -50,6 +50,53 @@ class bookingController extends Controller
             'total' => $bookings->total(),
         ]);
     }
+    public function getRecurring(Request $request)
+    {
+        $page = $request->input('page', 1);
+        $semester = Semester::where('is_current', true)->first();
+        $perPage = $request->input('perPage', 1); // You can adjust this number as needed
+        $allRoomIds = Room::join('moderator_room', 'rooms.id', '=', 'moderator_room.room_id')
+        ->where('moderator_room.user_id', $request->user_id)
+        ->pluck('rooms.id')
+        ->toArray();
+        $roomIds = $request->input('room_id');
+        if($request->input('room_id') == null){
+            $roomIds = $allRoomIds;
+        }
+        $days = Day::whereIn('room_id', $roomIds)
+            ->where('status', '!=', 2)
+            ->get();
+        $recurringIds = new Collection();
+        foreach ($days as $day) {
+            $recurringIds->push($day->recurring_id);
+        }
+        $recurrings = Recurring::where('semester_id', $semester->id)
+            ->whereIn('id', $recurringIds)
+            ->whereIn('status', [0, 1])
+            ->where('conflict_id', null)
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage, ['*'], 'page', $page);
+
+        $recurring_groups = new Collection();
+        $recurrings->each(function ($recurring) use ($recurring_groups) {
+            $recurring_groups->push((object) [
+                'id' => $recurring->id,
+                'title' => $recurring->title,
+                //'bookings' => $recurring,
+                'info' => $recurring->info,
+                'status' => $recurring->status,
+                'type' => 'recurringGroup',
+                'days' => Day::where('recurring_id', $recurring->id)
+                    ->where('status', '!=', 2)
+                    ->get(),
+            ]);
+        });
+
+        return response()->json([
+            'recurrings' => $recurring_groups,
+            'total' => $recurrings->total(),
+        ]);
+    }
 
     public function store(Request $request)
     {
@@ -124,41 +171,7 @@ class bookingController extends Controller
             ->get();
         return response()->json($bookings);
     }
-    public function getRecurring(Request $request)
-    {
-        $semester = Semester::where('is_current', true)->first();
-        $days = Day::whereIn('room_id', $request->input('room_id'))
-            ->where('status', '!=', 2)
-            ->get();
-        $recurringIds = new Collection();
-        foreach ($days as $day) {
-            $recurringIds->push($day->recurring_id);
-        }
-        $recurrings = Recurring::where('semester_id', $semester->id)
-            ->whereIn('id', $recurringIds)
-            ->whereIn('status', [0, 1])
-            ->where('conflict_id', null)
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-
-        $recurring_groups = new Collection();
-        $recurrings->each(function ($recurring) use ($recurring_groups) {
-            $recurring_groups->push((object) [
-                'id' => $recurring->id,
-                'title' => $recurring->title,
-                //'bookings' => $recurring,
-                'info' => $recurring->info,
-                'status' => $recurring->status,
-                'type' => 'recurringGroup',
-                'days' => Day::where('recurring_id', $recurring->id)
-                    ->where('status', '!=', 2)
-                    ->get(),
-            ]);
-        });
-
-        return response()->json($recurring_groups);
-    }
+   
 
     public function getConflicts(Request $request)
     {
