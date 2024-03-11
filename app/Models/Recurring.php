@@ -39,6 +39,18 @@ class Recurring extends Model
         $this->attributes['semester_id'] = Semester::where('is_current', true)->value('id');
     }    
 
+    protected static function generateUniqueConflictId()
+    {
+        $conflictId = null;
+        do {
+            // Generate a new unique ID (e.g., UUID)
+            $conflictId = uniqid(); // Example: Generate a unique ID using uniqid()
+            // Check if the generated ID already exists in the table
+        } while (Recurring::where('conflict_id', $conflictId)->exists());
+
+        return $conflictId;
+    }
+
     public function scopeConflicts($query, Recurring $recurring)
     {
         $semester = Semester::where('is_current', true)->first();
@@ -81,7 +93,16 @@ class Recurring extends Model
                 }
             }
         }
+        if ($conflictingRecurrings->isNotEmpty()) {
+            $firstConflicting = $conflictingRecurrings->first();
+            $conflictId = $firstConflicting->conflict_id ? $firstConflicting->conflict_id : static::generateUniqueConflictId();
+            foreach ($conflictingRecurrings as $conflict) {
+                $conflict->update(['conflict_id' => $conflictId]);
+            }
 
+            $recurring->conflict_id = $conflictId;
+            $recurring->save();
+        }
 
         return $conflictingRecurrings;
     }

@@ -32,7 +32,7 @@ class Booking extends Model
             $conflicting = Booking::conflicts($booking);
 
 
-            if ($conflicting->isNotEmpty()) {
+            /* if ($conflicting->isNotEmpty()) {
                 $firstConflicting = $conflicting->first();
                 $conflictId = $firstConflicting->conflict_id ? $firstConflicting->conflict_id : static::generateUniqueConflictId();
                 foreach ($conflicting as $conflict) {
@@ -40,7 +40,7 @@ class Booking extends Model
                 }
 
                 $booking->conflict_id = $conflictId;
-            }
+            } */
         });
     }
 
@@ -77,6 +77,15 @@ class Booking extends Model
         ->where('id', '<>', $booking->id) // Exclude the current booking
         ->get();
 
+        if ($conflictingBookings->isNotEmpty()) {
+            $firstConflicting = $conflictingBookings->first();
+            $conflictId = $firstConflicting->conflict_id ? $firstConflicting->conflict_id : static::generateUniqueConflictId();
+            foreach ($conflictingBookings as $conflict) {
+                $conflict->update(['conflict_id' => $conflictId]);
+            }
+
+            $booking->conflict_id = $conflictId;
+        }
         return $conflictingBookings;
     }
 

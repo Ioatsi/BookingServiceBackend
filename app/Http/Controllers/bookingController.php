@@ -47,6 +47,7 @@ class bookingController extends Controller
             'participants' => 'required',
             'type' => 'required',
             'days' => 'nullable',
+            'room_id' => 'nullable',
         ]);
         /* if (!Gate::forUser($request->input('booker_id'))->allows('create-booking')) {
             abort(403);
@@ -78,31 +79,8 @@ class bookingController extends Controller
             Day::create($day);
         }
 
-        $conflicting = Recurring::conflicts($recurring);
-
-        if ($conflicting->isNotEmpty()) {
-            $firstConflicting = $conflicting->first();
-            $conflictId = $firstConflicting->conflict_id ? $firstConflicting->conflict_id : static::generateUniqueConflictId();
-            foreach ($conflicting as $conflict) {
-                $conflict->update(['conflict_id' => $conflictId]);
-            }
-
-            $recurring->conflict_id = $conflictId;
-            $recurring->save();
-        }
+        $conflicting = Recurring::conflicts($recurring);       
     }
-    protected static function generateUniqueConflictId()
-    {
-        $conflictId = null;
-        do {
-            // Generate a new unique ID (e.g., UUID)
-            $conflictId = uniqid(); // Example: Generate a unique ID using uniqid()
-            // Check if the generated ID already exists in the table
-        } while (Recurring::where('conflict_id', $conflictId)->exists());
-
-        return $conflictId;
-    }
-
 
     public function getUserBookings($id)
     {
@@ -146,7 +124,7 @@ class bookingController extends Controller
 
         $recurring_groups = new Collection();
         $recurrings->each(function ($recurring) use ($recurring_groups) {
-            $recurring_groups->push((object)[
+            $recurring_groups->push((object) [
                 'id' => $recurring->id,
                 'title' => $recurring->title,
                 //'bookings' => $recurring,
@@ -179,7 +157,7 @@ class bookingController extends Controller
 
         $conflictingBookings = new Collection();
         $conflicts->each(function ($conflict) use ($conflictingBookings) {
-            $conflictingBookings->push((object)[
+            $conflictingBookings->push((object) [
                 'id' => $conflict[0]->conflict_id,
                 'bookings' => $conflict,
                 'room_id' => $conflict[0]->room_id,
@@ -209,7 +187,7 @@ class bookingController extends Controller
                 $days = Day::where('recurring_id', $recurring->id)->get();
                 $recurring->days = $days;
             });
-            $conflictingRecurrings->push((object)[
+            $conflictingRecurrings->push((object) [
                 'id' => $recurring[0]->conflict_id,
                 'bookings' => $recurring,
                 'room_id' => $recurring[0]->room_id,
@@ -328,6 +306,7 @@ class bookingController extends Controller
             'days' => 'nullable',
             'is_recurring' => 'nullable',
             'status' => 'required',
+            'room_id' => 'nullable',
         ]);
         if ($request->input('is_recurring')) {
             $this->editRecurringBooking($validatedData);
@@ -345,6 +324,7 @@ class bookingController extends Controller
         $booking->end = $validatedData['end'];
         $booking->save();
 
+        $this->updateConflicts($booking);
         return response()->json(['message' => 'Booking updated successfully.']);
     }
     public function editRecurringBooking($validatedData)
@@ -476,7 +456,7 @@ class bookingController extends Controller
                             $booking->room_id = $newDay['room_id'];
                             $booking->type = 'recurring';
                             $booking->color = 'blue';
-                            $booking->status =  1;
+                            $booking->status = 1;
                             $booking->start = $currentDate->copy()->setTime($newStart->hour, $newStart->minute);
                             $booking->end = $currentDate->copy()->setTime($newEnd->hour, $newEnd->minute);
                             $booking->save();
@@ -486,6 +466,7 @@ class bookingController extends Controller
                 }
             }
         }
+        $this->updateConflicts($recurring);
         return response()->json(['message' => 'Booking updated successfully.']);
     }
 
@@ -626,6 +607,27 @@ class bookingController extends Controller
             }
         }
 
+
+
         return response()->json(['message' => 'Conflict resolved successfully']);
+    }
+
+    public function updateConflicts($editedEntry)
+    {
+        $className = get_class($editedEntry);
+        $conflicts = new Collection();
+
+        switch ($className) {
+            case 'App\Models\Booking':
+                $conflicts = Booking::conflicts($editedEntry);
+                $editedEntry->save();
+                break;
+            case 'App\Models\Recurring':
+                $conflicts = Recurring::conflicts($editedEntry);
+                break;
+            default:
+                throw new \Exception("Unknown model class: $className");
+        }
+        return $conflicts;
     }
 }
