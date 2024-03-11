@@ -18,17 +18,37 @@ class bookingController extends Controller
 {
     public function index(Request $request)
     {
+        // Get the current user ID from the authenticated user
+        //$currentUserId = Auth::id();
+        
+        $page = $request->input('page', 1);
+
+        // Define the number of items per page
+        $perPage = $request->input('perPage', 1); // You can adjust this number as needed
+        $allRoomIds = Room::join('moderator_room', 'rooms.id', '=', 'moderator_room.room_id')
+        ->where('moderator_room.user_id', $request->user_id)
+        ->pluck('rooms.id')
+        ->toArray();
+        $roomIds = $request->input('room_id');
+        if($request->input('room_id') == null){
+            $roomIds = $allRoomIds;
+        }
         $semester = Semester::where('is_current', true)->first();
+        $status = $request->input('status', [0, 1]);
         $bookings = Booking::join('rooms', 'bookings.room_id', '=', 'rooms.id')
             ->where('bookings.semester_id', $semester->id)
-            ->where('bookings.status', 0)
+            ->whereIn('bookings.status', $status)
             ->where('bookings.type', 'normal')
             ->whereNull('bookings.conflict_id')
-            ->whereIn('bookings.room_id', $request->input('room_id'))
+            ->whereIn('bookings.room_id', $roomIds)
             ->orderBy('bookings.created_at', 'desc')
             ->select('bookings.*', 'rooms.name as room_name')
-            ->get();
-        return response()->json($bookings);
+            ->paginate($perPage, ['*'], 'page', $page);
+
+        return response()->json([
+            'bookings' => $bookings->items(),
+            'total' => $bookings->total(),
+        ]);
     }
 
     public function store(Request $request)
@@ -79,7 +99,7 @@ class bookingController extends Controller
             Day::create($day);
         }
 
-        $conflicting = Recurring::conflicts($recurring);       
+        $conflicting = Recurring::conflicts($recurring);
     }
 
     public function getUserBookings($id)
@@ -272,6 +292,7 @@ class bookingController extends Controller
         foreach ($bookings as $booking) {
             $booking->status = 2;
             $booking->save();
+            $this->updateConflicts($booking);
         }
         return response()->json(['message' => 'Booking canceled successfully.']);
     }
@@ -288,6 +309,7 @@ class bookingController extends Controller
             foreach ($bookings as $booking) {
                 $booking->status = 2;
                 $booking->save();
+                $this->updateConflicts($booking);
             }
         }
         return response()->json(['message' => 'Booking canceled successfully.']);
