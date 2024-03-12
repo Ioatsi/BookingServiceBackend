@@ -175,13 +175,29 @@ class bookingController extends Controller
 
     public function getConflicts(Request $request)
     {
+         // Get the current user ID from the authenticated user
+        //$currentUserId = Auth::id();
+
+        $page = $request->input('page', 1);
+
+        // Define the number of items per page
+        $perPage = $request->input('perPage', 1); // You can adjust this number as needed
+        $allRoomIds = Room::join('moderator_room', 'rooms.id', '=', 'moderator_room.room_id')
+            ->where('moderator_room.user_id', $request->user_id)
+            ->pluck('rooms.id')
+            ->toArray();
+        $roomIds = $request->input('room_id');
+        if ($request->input('room_id') == null) {
+            $roomIds = $allRoomIds;
+        }
+
         $semester = Semester::where('is_current', true)->first();
         $conflicts = Booking::where('semester_id', $semester->id)
-            ->whereIn('room_id', $request->input('room_id'))
+            ->whereIn('room_id', $roomIds)
             ->whereNotIn('status', [2])
             ->whereNotNull('conflict_id')
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate($perPage, ['*'], 'page', $page);
 
 
         if ($conflicts->count() > 0) {
@@ -198,7 +214,7 @@ class bookingController extends Controller
             ]);
         });
 
-        $days = Day::whereIn('room_id', $request->input('room_id'))->where('status', '!=', 2)->where('semester_id', $semester->id)->get();
+        $days = Day::whereIn('room_id', $roomIds)->where('status', '!=', 2)->where('semester_id', $semester->id)->get();
         $recurringIds = new Collection();
         foreach ($days as $day) {
             $recurringIds->push($day->recurring_id);
@@ -209,7 +225,7 @@ class bookingController extends Controller
             ->whereNotIn('status', [2])
             ->whereNotNull('conflict_id')
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate($perPage, ['*'], 'page', $page);
         if ($recurrings->count() > 0) {
             $recurrings = $recurrings->groupBy('conflict_id');
         }
