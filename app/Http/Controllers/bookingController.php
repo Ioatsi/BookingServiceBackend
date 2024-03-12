@@ -13,6 +13,8 @@ use App\Models\Semester;
 use Carbon\Carbon;
 
 use Illuminate\Support\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
+
 
 class bookingController extends Controller
 {
@@ -175,13 +177,10 @@ class bookingController extends Controller
 
     public function getConflicts(Request $request)
     {
-         // Get the current user ID from the authenticated user
+        // Get the current user ID from the authenticated user
         //$currentUserId = Auth::id();
 
-        $page = $request->input('page', 1);
 
-        // Define the number of items per page
-        $perPage = $request->input('perPage', 1); // You can adjust this number as needed
         $allRoomIds = Room::join('moderator_room', 'rooms.id', '=', 'moderator_room.room_id')
             ->where('moderator_room.user_id', $request->user_id)
             ->pluck('rooms.id')
@@ -197,8 +196,7 @@ class bookingController extends Controller
             ->whereNotIn('status', [2])
             ->whereNotNull('conflict_id')
             ->orderBy('created_at', 'desc')
-            ->paginate($perPage, ['*'], 'page', $page);
-
+            ->get();
 
         if ($conflicts->count() > 0) {
             $conflicts = $conflicts->groupBy('conflict_id');
@@ -214,6 +212,51 @@ class bookingController extends Controller
             ]);
         });
 
+        $page = $request->input('page', 1);
+
+        // Define the number of items per page
+        $perPage = $request->input('perPage', 1); // You can adjust this number as needed
+
+        $conflictsPaginated = new LengthAwarePaginator(
+            $conflictingBookings->forPage($page, $perPage),
+            $conflictingBookings->count(),
+            $perPage,
+            $page,
+            ['path' => route('getConflicts')]
+        );
+
+        // Convert the array back to a collection
+        $conflictsCollection = collect($conflictsPaginated->items());
+
+        // Extract items without keys
+        $mappedConflicts = $conflictsCollection->values();
+        // Combine mapped conflicts with pagination data
+        $mergedData = [
+            'data' => $mappedConflicts,
+            'total' => $conflictsPaginated->total(),
+            'per_page' => $conflictsPaginated->perPage(),
+            'current_page' => $conflictsPaginated->currentPage(),
+            'last_page' => $conflictsPaginated->lastPage(),
+            'path' => $conflictsPaginated->path(),
+        ];
+
+        return response()->json($mergedData);
+    }
+    public function getRecurringConflicts(Request $request)
+    {
+        // Get the current user ID from the authenticated user
+        //$currentUserId = Auth::id();
+
+        $allRoomIds = Room::join('moderator_room', 'rooms.id', '=', 'moderator_room.room_id')
+            ->where('moderator_room.user_id', $request->user_id)
+            ->pluck('rooms.id')
+            ->toArray();
+        $roomIds = $request->input('room_id');
+        if ($request->input('room_id') == null) {
+            $roomIds = $allRoomIds;
+        }
+
+        $semester = Semester::where('is_current', true)->first();
         $days = Day::whereIn('room_id', $roomIds)->where('status', '!=', 2)->where('semester_id', $semester->id)->get();
         $recurringIds = new Collection();
         foreach ($days as $day) {
@@ -225,7 +268,7 @@ class bookingController extends Controller
             ->whereNotIn('status', [2])
             ->whereNotNull('conflict_id')
             ->orderBy('created_at', 'desc')
-            ->paginate($perPage, ['*'], 'page', $page);
+            ->get();
         if ($recurrings->count() > 0) {
             $recurrings = $recurrings->groupBy('conflict_id');
         }
@@ -239,15 +282,38 @@ class bookingController extends Controller
             $conflictingRecurrings->push((object) [
                 'id' => $recurring[0]->conflict_id,
                 'bookings' => $recurring,
-                'room_id' => $recurring[0]->room_id,
                 'type' => 'recurringGroup',
             ]);
         });
 
-        return response()->json([
-            'conflictingBookings' => $conflictingBookings,
-            'conflictingRecurrings' => $conflictingRecurrings
-        ]);
+        $page = $request->input('page', 1);
+        // Define the number of items per page
+        $perPage = $request->input('perPage', 1); // You can adjust this number as needed
+
+        $conflictsPaginated = new LengthAwarePaginator(
+            $conflictingRecurrings->forPage($page, $perPage),
+            $conflictingRecurrings->count(),
+            $perPage,
+            $page,
+            ['path' => route('getConflicts')]
+        );
+
+        // Convert the array back to a collection
+        $conflictsCollection = collect($conflictsPaginated->items());
+
+        // Extract items without keys
+        $mappedConflicts = $conflictsCollection->values();
+        // Combine mapped conflicts with pagination data
+        $mergedData = [
+            'data' => $mappedConflicts,
+            'total' => $conflictsPaginated->total(),
+            'per_page' => $conflictsPaginated->perPage(),
+            'current_page' => $conflictsPaginated->currentPage(),
+            'last_page' => $conflictsPaginated->lastPage(),
+            'path' => $conflictsPaginated->path(),
+        ];
+
+        return response()->json($mergedData);
     }
 
     public function approveBooking(Request $request)
@@ -591,42 +657,39 @@ class bookingController extends Controller
 
     public function resolveConflict(Request $request)
     {
-        if ($request->isRecurring == true) {
-            $this->resolveRecurringConflict($request);
-            return response()->json(['message' => 'Conflict resolved successfully']);
-        } else {
-            $bookings = $request->input('bookings');
 
-            foreach ($bookings as $bookingData) {
-                // Extract data from each booking object
-                $bookingId = $bookingData['id'];
-                $resolved = $bookingData['resolved'];
-                $toKeep = $bookingData['toKeep'];
-                $booking = Booking::find($bookingId);
+        $bookings = $request->input('bookings');
 
-                // Update the booking based on conditions
-                if ($resolved) {
+        foreach ($bookings as $bookingData) {
+            // Extract data from each booking object
+            $bookingId = $bookingData['id'];
+            $resolved = $bookingData['resolved'];
+            $toKeep = $bookingData['toKeep'];
+            $booking = Booking::find($bookingId);
+
+            // Update the booking based on conditions
+            if ($resolved) {
+                $booking->room_id = $bookingData['room_id'];
+                $booking->start = $bookingData['start'];
+                $booking->end = $bookingData['end'];
+                $booking->conflict_id = null;
+                $booking->save();
+            } else {
+                if ($toKeep) {
                     $booking->room_id = $bookingData['room_id'];
                     $booking->start = $bookingData['start'];
                     $booking->end = $bookingData['end'];
                     $booking->conflict_id = null;
                     $booking->save();
                 } else {
-                    if ($toKeep) {
-                        $booking->room_id = $bookingData['room_id'];
-                        $booking->start = $bookingData['start'];
-                        $booking->end = $bookingData['end'];
-                        $booking->conflict_id = null;
-                        $booking->save();
-                    } else {
-                        $booking->status = 2;
-                        $booking->save();
-                    }
+                    $booking->status = 2;
+                    $booking->save();
                 }
             }
-
-            return response()->json(['message' => 'Conflict resolved successfully']);
         }
+
+        return response()->json(['message' => 'Conflict resolved successfully']);
+
     }
 
     public function resolveRecurringConflict(Request $request)

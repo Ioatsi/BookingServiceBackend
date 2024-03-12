@@ -23,9 +23,11 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 //For moderator and admin
 Route::post('/getBookings', [BookingController::class, 'index']);
 Route::post('/getRecurring', [BookingController::class, 'getRecurring']);
-Route::post('/getConflicts', [BookingController::class, 'getConflicts']);
+Route::post('/getConflicts', [BookingController::class, 'getConflicts'])->name('getConflicts');
+Route::post('/getRecurringConflicts', [BookingController::class, 'getRecurringConflicts'])->name('getRecurringConflicts');
 Route::post('/checkConflict', [BookingController::class,'checkConflict']);
 Route::post('/resolveConflict', [BookingController::class,'resolveConflict']);
+Route::post('/resolveRecurringConflict', [BookingController::class,'resolveRecurringConflict']);
 
 //For calendar
 Route::post('/getActiveBookings', [BookingController::class, 'getActiveBookings']);
