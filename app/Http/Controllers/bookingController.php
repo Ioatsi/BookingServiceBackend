@@ -163,15 +163,35 @@ class bookingController extends Controller
 
     public function getActiveBookings(Request $request)
     {
+        $allRoomIds = Room::join('moderator_room', 'rooms.id', '=', 'moderator_room.room_id')
+            ->pluck('rooms.id')
+            ->toArray();
+        $roomIds = $request->input('room_id');
+        if ($request->input('room_id') == null) {
+            $roomIds = $allRoomIds;
+        }
+        $date = $request->input('date', now()->toDateString());
         $semester = Semester::where('is_current', true)->first();
-        $bookings = Booking::join('rooms', 'bookings.room_id', '=', 'rooms.id')
+
+        $query = Booking::join('rooms', 'bookings.room_id', '=', 'rooms.id')
             ->where('bookings.semester_id', $semester->id)
-            ->whereIn('bookings.room_id', $request->input('room_id'))
+            ->whereIn('bookings.room_id', $roomIds)
             ->where('bookings.status', 1)
             ->orderBy('bookings.created_at', 'desc')
             ->select('bookings.*', 'rooms.name as room_name')
-            ->get();
-        return response()->json($bookings);
+            ->where(function ($query) use ($date) {
+                $query->whereBetween('bookings.start', [
+                    Carbon::parse($date)->startOfMonth(), // Start of current month
+                    Carbon::parse($date)->endOfMonth() // End of current month
+                ])->orWhereBetween('bookings.start', [
+                            Carbon::parse($date)->subMonth()->startOfMonth(), // Start of last month
+                            Carbon::parse($date)->subMonth()->endOfMonth() // End of last month
+                        ])->orWhereBetween('bookings.start', [
+                            Carbon::parse($date)->addMonth()->startOfMonth(), // Start of next month
+                            Carbon::parse($date)->addMonth()->endOfMonth() // End of next month
+                        ]);
+            })->get();
+        return response()->json($query);
     }
 
 
