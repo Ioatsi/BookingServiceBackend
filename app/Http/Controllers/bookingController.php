@@ -20,17 +20,17 @@ class bookingController extends Controller
     {
         // Get the current user ID from the authenticated user
         //$currentUserId = Auth::id();
-        
+
         $page = $request->input('page', 1);
 
         // Define the number of items per page
         $perPage = $request->input('perPage', 1); // You can adjust this number as needed
         $allRoomIds = Room::join('moderator_room', 'rooms.id', '=', 'moderator_room.room_id')
-        ->where('moderator_room.user_id', $request->user_id)
-        ->pluck('rooms.id')
-        ->toArray();
+            ->where('moderator_room.user_id', $request->user_id)
+            ->pluck('rooms.id')
+            ->toArray();
         $roomIds = $request->input('room_id');
-        if($request->input('room_id') == null){
+        if ($request->input('room_id') == null) {
             $roomIds = $allRoomIds;
         }
         $semester = Semester::where('is_current', true)->first();
@@ -56,11 +56,11 @@ class bookingController extends Controller
         $semester = Semester::where('is_current', true)->first();
         $perPage = $request->input('perPage', 1); // You can adjust this number as needed
         $allRoomIds = Room::join('moderator_room', 'rooms.id', '=', 'moderator_room.room_id')
-        ->where('moderator_room.user_id', $request->user_id)
-        ->pluck('rooms.id')
-        ->toArray();
+            ->where('moderator_room.user_id', $request->user_id)
+            ->pluck('rooms.id')
+            ->toArray();
         $roomIds = $request->input('room_id');
-        if($request->input('room_id') == null){
+        if ($request->input('room_id') == null) {
             $roomIds = $allRoomIds;
         }
         $days = Day::whereIn('room_id', $roomIds)
@@ -171,7 +171,7 @@ class bookingController extends Controller
             ->get();
         return response()->json($bookings);
     }
-   
+
 
     public function getConflicts(Request $request)
     {
@@ -443,8 +443,8 @@ class bookingController extends Controller
                     $newStartHours = $newStartDateTime->format('H');
                     $newEndHours = $newEndDateTime->format('H');
                     if ($existingDayOfWeek == $newDayOfWeek) {
-                        $existingBooking->start->hour = $newStartHours;
-                        $existingBooking->end->hour = $newEndHours;
+                        $existingBooking->start = $existingBooking->start->copy()->hour($newStartHours);
+                        $existingBooking->end = $existingBooking->end->copy()->hour($newEndHours);
                         $existingBooking->info = $recurring->info;
                         $existingBooking->room_id = $newDay['room_id'];
                         $existingBooking->title = $recurring->title;
