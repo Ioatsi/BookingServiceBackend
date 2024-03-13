@@ -86,8 +86,11 @@ class Recurring extends Model
                         // Check if the times overlap
                         if ($recurringDayStart->between($existingRecurringDayStart, $existingRecurringDayEnd) || $recurringDayEnd->between($existingRecurringDayStart, $existingRecurringDayEnd)) {
                             // Add the conflicting recurring to the collection
+                            $conflictId = $existingRecurringDay->conflict_id ? $existingRecurringDay->conflict_id : static::generateUniqueConflictId();
+                            $existingRecurringDay->update(['conflict_id' => $conflictId]);
+                            $recurringDay->update(['conflict_id' => $conflictId]);
                             $conflictingRecurrings->push($existingRecurring);
-                            break 2; // No need to check further days or existing recurrings if a conflict is found
+                            //break 2; // No need to check further days or existing recurrings if a conflict is found
                         }
                     }
                 }

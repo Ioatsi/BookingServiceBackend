@@ -293,19 +293,30 @@ class bookingController extends Controller
             $recurrings = $recurrings->groupBy('conflict_id');
         }
         $conflictingRecurrings = new Collection();
-        $recurrings->each(function ($recurring) use ($conflictingRecurrings) {
+        $recurrings->each(function ($recurring) use ($conflictingRecurrings, $semester) {
             $days = new Collection();
             $recurring->each(function ($recurring) use ($days) {
-                $days = Day::where('recurring_id', $recurring->id)->get();
+                $days = Day::join('rooms', 'days.room_id', '=', 'rooms.id')
+                    ->where('days.recurring_id', $recurring->id)
+                    ->select('days.*', 'rooms.id as room_id', 'rooms.name as room_name')
+                    ->get();
                 $recurring->days = $days;
             });
+            $conflictingDays = Day::whereIn('recurring_id', $recurring->pluck('id'))
+            ->where('status', '!=', 2)
+            ->whereNotNull('conflict_id')
+            ->where('semester_id', $semester->id)
+            ->get();
+            $conflictingRooms = Room::whereIn('id', $conflictingDays->pluck('room_id'))->get();
             $conflictingRecurrings->push((object) [
                 'id' => $recurring[0]->conflict_id,
                 'bookings' => $recurring,
                 'type' => 'recurringGroup',
+                'conflictingDays' => $conflictingDays,
+                'conflictingRooms' => $conflictingRooms,
             ]);
         });
-
+      
         $page = $request->input('page', 1);
         // Define the number of items per page
         $perPage = $request->input('perPage', 1); // You can adjust this number as needed
@@ -726,10 +737,20 @@ class bookingController extends Controller
             if ($resolved) {
                 $this->editRecurringBooking($recuringData);
                 $recuring->conflict_id = null;
+                $days = Day::where('recurring_id', $recuring->id)->get();
+                foreach ($days as $day) {
+                    $day->conflict_id = null;
+                    $day->save();
+                }
                 $recuring->save();
             } else {
                 if ($toKeep) {
                     $this->editRecurringBooking($recuringData);
+                    $days = Day::where('recurring_id', $recuring->id)->get();
+                    foreach ($days as $day) {
+                        $day->conflict_id = null;
+                        $day->save();
+                    }
                     $recuring->conflict_id = null;
                     $recuring->save();
                 } else {

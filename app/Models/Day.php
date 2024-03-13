@@ -16,6 +16,7 @@ class Day extends Model
         'status',
         'room_id',
         'semester_id',
+        'conflict_id'
     ];
     protected $casts = [
         'start' => 'datetime',
