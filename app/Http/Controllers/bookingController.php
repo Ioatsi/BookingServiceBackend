@@ -184,12 +184,12 @@ class bookingController extends Controller
                     Carbon::parse($date)->startOfMonth(), // Start of current month
                     Carbon::parse($date)->endOfMonth() // End of current month
                 ])->orWhereBetween('bookings.start', [
-                            Carbon::parse($date)->subMonth()->startOfMonth(), // Start of last month
-                            Carbon::parse($date)->subMonth()->endOfMonth() // End of last month
-                        ])->orWhereBetween('bookings.start', [
-                            Carbon::parse($date)->addMonth()->startOfMonth(), // Start of next month
-                            Carbon::parse($date)->addMonth()->endOfMonth() // End of next month
-                        ]);
+                    Carbon::parse($date)->subMonth()->startOfMonth(), // Start of last month
+                    Carbon::parse($date)->subMonth()->endOfMonth() // End of last month
+                ])->orWhereBetween('bookings.start', [
+                    Carbon::parse($date)->addMonth()->startOfMonth(), // Start of next month
+                    Carbon::parse($date)->addMonth()->endOfMonth() // End of next month
+                ]);
             })->get();
         return response()->json($query);
     }
@@ -297,16 +297,17 @@ class bookingController extends Controller
             $days = new Collection();
             $recurring->each(function ($recurring) use ($days) {
                 $days = Day::join('rooms', 'days.room_id', '=', 'rooms.id')
+                    ->where('status', '!=', 2)
                     ->where('days.recurring_id', $recurring->id)
                     ->select('days.*', 'rooms.id as room_id', 'rooms.name as room_name')
                     ->get();
                 $recurring->days = $days;
             });
             $conflictingDays = Day::whereIn('recurring_id', $recurring->pluck('id'))
-            ->where('status', '!=', 2)
-            ->whereNotNull('conflict_id')
-            ->where('semester_id', $semester->id)
-            ->get();
+                ->where('status', '!=', 2)
+                ->whereNotNull('conflict_id')
+                ->where('semester_id', $semester->id)
+                ->get();
             $conflictingRooms = Room::whereIn('id', $conflictingDays->pluck('room_id'))->get();
             $conflictingRecurrings->push((object) [
                 'id' => $recurring[0]->conflict_id,
@@ -316,7 +317,7 @@ class bookingController extends Controller
                 'conflictingRooms' => $conflictingRooms,
             ]);
         });
-      
+
         $page = $request->input('page', 1);
         // Define the number of items per page
         $perPage = $request->input('perPage', 1); // You can adjust this number as needed
@@ -720,7 +721,6 @@ class bookingController extends Controller
         }
 
         return response()->json(['message' => 'Conflict resolved successfully']);
-
     }
 
     public function resolveRecurringConflict(Request $request)
@@ -734,36 +734,26 @@ class bookingController extends Controller
             $toKeep = $recuringData['toKeep'];
             $recuring = Recurring::find($recuringId);
             // Update the booking based on conditions
-            if ($resolved) {
+            if ($resolved || $toKeep) {
                 $this->editRecurringBooking($recuringData);
-                $recuring->conflict_id = null;
-                $days = Day::where('recurring_id', $recuring->id)->get();
-                foreach ($days as $day) {
-                    $day->conflict_id = null;
-                    $day->save();
-                }
-                $recuring->save();
             } else {
-                if ($toKeep) {
-                    $this->editRecurringBooking($recuringData);
-                    $days = Day::where('recurring_id', $recuring->id)->get();
-                    foreach ($days as $day) {
-                        $day->conflict_id = null;
-                        $day->save();
-                    }
-                    $recuring->conflict_id = null;
-                    $recuring->save();
-                } else {
-                    $recurringRequest = new Request([
-                        'id' => [$recuring->id]
-                    ]);
-                    $this->cancelRecurringBooking($recurringRequest);
-                }
+                $recurringRequest = new Request([
+                    'id' => [$recuring->id]
+                ]);
+                $this->cancelRecurringBooking($recurringRequest);
             }
         }
-
-
-
+        foreach ($recurings as $recuringData) {
+            $days = Day::where('recurring_id', $recuring->id)->get();
+            foreach ($days as $day) {
+                $day->conflict_id = null;
+                $day->save();
+            }
+            $recuringId = $recuringData['id'];
+            $recuring = Recurring::find($recuringId);
+            $recuring->conflict_id = null;
+            $recuring->save();
+        }
         return response()->json(['message' => 'Conflict resolved successfully']);
     }
 
