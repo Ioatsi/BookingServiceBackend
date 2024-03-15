@@ -14,6 +14,7 @@ class Room extends Model
         'building_id',
         'department_id',
         'number',
+        'color',
         'type',
     ];
 

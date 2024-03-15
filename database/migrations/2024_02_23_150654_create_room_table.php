@@ -17,6 +17,7 @@ return new class extends Migration
             $table->integer('capacity');
             $table->integer('number');
             $table->string('type');
+            $table->string('color');
             $table->foreignId('building_id')->constrained('buildings');
             $table->foreignId('department_id')->constrained('departments');
             $table->timestamps();

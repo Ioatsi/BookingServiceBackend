@@ -20,12 +20,13 @@ class RoomFactory extends Factory
         $builingIds = Building::pluck('id')->toArray();
         return [
             //
-            'name' => $this->faker->name().' room',
+            'name' => $this->faker->firstName().' room',
             'capacity' => $this->faker->numberBetween(30, 150),
             'building_id' => $this->faker->randomElement($builingIds),
             'department_id' => 1,
             'number' => $this->faker->numberBetween(100, 300),
             'type' => 'normal',
+            'color' => $this->faker->hexColor()
         ];
     }
 }

@@ -19,7 +19,6 @@ class Booking extends Model
         'title',
         'start',
         'end',
-        'color',
         'info',
         'participants',
         'type',

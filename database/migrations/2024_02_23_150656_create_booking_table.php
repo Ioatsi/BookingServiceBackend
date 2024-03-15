@@ -23,7 +23,6 @@ return new class extends Migration
             $table->string('title');
             $table->dateTime('start');
             $table->dateTime('end');
-            $table->string('color');
             $table->string('info');
             $table->string('participants');
             $table->string('type');

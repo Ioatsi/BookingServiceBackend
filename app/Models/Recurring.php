@@ -19,7 +19,6 @@ class Recurring extends Model
         'booker_id',
         'conflict_id',
         'title',
-        'color',
         'info',
         'participants',
     ];

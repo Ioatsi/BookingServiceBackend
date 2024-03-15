@@ -44,7 +44,7 @@ class bookingController extends Controller
             ->whereNull('bookings.conflict_id')
             ->whereIn('bookings.room_id', $roomIds)
             ->orderBy('bookings.created_at', 'desc')
-            ->select('bookings.*', 'rooms.name as room_name')
+            ->select('bookings.*', 'rooms.name as room_name', 'rooms.color as color')
             ->paginate($perPage, ['*'], 'page', $page);
 
         return response()->json([
@@ -81,6 +81,10 @@ class bookingController extends Controller
 
         $recurring_groups = new Collection();
         $recurrings->each(function ($recurring) use ($recurring_groups) {
+            $days = Day::where('recurring_id', $recurring->id)
+                ->where('status', '!=', 2)
+                ->get();
+            $rooms = Room::whereIn('id', $days->pluck('room_id'))->get();
             $recurring_groups->push((object) [
                 'id' => $recurring->id,
                 'title' => $recurring->title,
@@ -88,9 +92,8 @@ class bookingController extends Controller
                 'info' => $recurring->info,
                 'status' => $recurring->status,
                 'type' => 'recurringGroup',
-                'days' => Day::where('recurring_id', $recurring->id)
-                    ->where('status', '!=', 2)
-                    ->get(),
+                'days' => $days,
+                'rooms' => $rooms,
             ]);
         });
 
@@ -112,7 +115,6 @@ class bookingController extends Controller
             'info' => 'required',
             'start' => 'required|date',
             'end' => 'required|date',
-            'color' => 'required',
             'participants' => 'required',
             'type' => 'required',
             'days' => 'nullable',
@@ -135,7 +137,6 @@ class bookingController extends Controller
         $recurring = new Recurring();
         $recurring->title = $validatedData['title'];
         $recurring->info = $validatedData['info'];
-        $recurring->color = $validatedData['color'];
         $recurring->participants = $validatedData['participants'];
         $recurring->booker_id = $validatedData['booker_id'];
         $recurring->status = 0;
@@ -178,7 +179,7 @@ class bookingController extends Controller
             ->whereIn('bookings.room_id', $roomIds)
             ->where('bookings.status', 1)
             ->orderBy('bookings.created_at', 'desc')
-            ->select('bookings.*', 'rooms.name as room_name')
+            ->select('bookings.*', 'rooms.name as room_name', 'rooms.color as color')
             ->where(function ($query) use ($date) {
                 $query->whereBetween('bookings.start', [
                     Carbon::parse($date)->startOfMonth(), // Start of current month
@@ -211,11 +212,13 @@ class bookingController extends Controller
         }
 
         $semester = Semester::where('is_current', true)->first();
-        $conflicts = Booking::where('semester_id', $semester->id)
+        $conflicts = Booking::join('rooms', 'bookings.room_id', '=', 'rooms.id')
+            ->where('semester_id', $semester->id)
             ->whereIn('room_id', $roomIds)
             ->whereNotIn('status', [2])
             ->whereNotNull('conflict_id')
             ->orderBy('created_at', 'desc')
+            ->select('bookings.*', 'rooms.name as room_name', 'rooms.color as color')
             ->get();
 
         if ($conflicts->count() > 0) {
@@ -308,6 +311,7 @@ class bookingController extends Controller
                 ->whereNotNull('conflict_id')
                 ->where('semester_id', $semester->id)
                 ->get();
+            
             $conflictingRooms = Room::whereIn('id', $conflictingDays->pluck('room_id'))->get();
             $conflictingRecurrings->push((object) [
                 'id' => $recurring[0]->conflict_id,
@@ -393,7 +397,6 @@ class bookingController extends Controller
                         $booking->title = $recurring->title;
                         $booking->info = $recurring->info;
                         $booking->room_id = $day->room_id;
-                        $booking->color = $recurring->color;
                         $booking->participants = $recurring->participants;
                         $booking->type = 'recurring';
                         $booking->start = $currentDate->copy()->setTime($daystart->hour, $daystart->minute);
@@ -449,7 +452,6 @@ class bookingController extends Controller
             'info' => 'required',
             'start' => 'required|date',
             'end' => 'required|date',
-            'color' => 'nullable',
             'participants' => 'nullable',
             'type' => 'required',
             'days' => 'nullable',
@@ -604,7 +606,6 @@ class bookingController extends Controller
                             $booking->booker_id = $booker;
                             $booking->room_id = $newDay['room_id'];
                             $booking->type = 'recurring';
-                            $booking->color = 'blue';
                             $booking->status = 1;
                             $booking->start = $currentDate->copy()->setTime($newStart->hour, $newStart->minute);
                             $booking->end = $currentDate->copy()->setTime($newEnd->hour, $newEnd->minute);

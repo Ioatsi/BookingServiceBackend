@@ -58,7 +58,6 @@ class BookingFactory extends Factory
             'title' => 'booking' . $incrementingName++,
             'start' => $startDate,
             'end' => $endDate,
-            'color' => $this->faker->randomElement(['red', 'green', 'blue', 'orange', 'purple', 'pink', 'yellow']),
             'info' => $this->faker->sentence(10),
             'participants' => "Participant1, Participant2, Participant3",
             'group_id' => null,
