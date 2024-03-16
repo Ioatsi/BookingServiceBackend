@@ -24,6 +24,8 @@ class bookingController extends Controller
         //$currentUserId = Auth::id();
 
         $page = $request->input('page', 1);
+        $status = $request->input('status', [0, 1]);
+        $months = $request->input('start');
 
         // Define the number of items per page
         $perPage = $request->input('perPage', 1); // You can adjust this number as needed
@@ -36,17 +38,26 @@ class bookingController extends Controller
             $roomIds = $allRoomIds;
         }
         $semester = Semester::where('is_current', true)->first();
-        $status = $request->input('status', [0, 1]);
-        $bookings = Booking::join('rooms', 'bookings.room_id', '=', 'rooms.id')
+
+        $query = Booking::join('rooms', 'bookings.room_id', '=', 'rooms.id')
             ->where('bookings.semester_id', $semester->id)
             ->whereIn('bookings.status', $status)
             ->where('bookings.type', 'normal')
             ->whereNull('bookings.conflict_id')
-            ->whereIn('bookings.room_id', $roomIds)
-            ->orderBy('bookings.created_at', 'desc')
+            ->whereIn('bookings.room_id', $roomIds);
+
+        // If months are provided, filter by them
+        if (!empty($months)) {
+            $query->where(function ($query) use ($months) {
+                foreach ($months as $month) {
+                    $query->orWhereMonth('bookings.start', $month);
+                }
+            });
+        }
+
+        $bookings = $query->orderBy('bookings.created_at', 'desc')
             ->select('bookings.*', 'rooms.name as room_name', 'rooms.color as color')
             ->paginate($perPage, ['*'], 'page', $page);
-
         return response()->json([
             'bookings' => $bookings->items(),
             'total' => $bookings->total(),
@@ -55,6 +66,9 @@ class bookingController extends Controller
     public function getRecurring(Request $request)
     {
         $page = $request->input('page', 1);
+
+        $status = $request->input('status', [0, 1]);
+
         $semester = Semester::where('is_current', true)->first();
         $perPage = $request->input('perPage', 1); // You can adjust this number as needed
         $allRoomIds = Room::join('moderator_room', 'rooms.id', '=', 'moderator_room.room_id')
@@ -74,7 +88,7 @@ class bookingController extends Controller
         }
         $recurrings = Recurring::where('semester_id', $semester->id)
             ->whereIn('id', $recurringIds)
-            ->whereIn('status', [0, 1])
+            ->whereIn('status', $status)
             ->where('conflict_id', null)
             ->orderBy('created_at', 'desc')
             ->paginate($perPage, ['*'], 'page', $page);
@@ -201,6 +215,7 @@ class bookingController extends Controller
         // Get the current user ID from the authenticated user
         //$currentUserId = Auth::id();
 
+        $months = $request->input('start');
 
         $allRoomIds = Room::join('moderator_room', 'rooms.id', '=', 'moderator_room.room_id')
             ->where('moderator_room.user_id', $request->user_id)
@@ -311,7 +326,7 @@ class bookingController extends Controller
                 ->whereNotNull('conflict_id')
                 ->where('semester_id', $semester->id)
                 ->get();
-            
+
             $conflictingRooms = Room::whereIn('id', $conflictingDays->pluck('room_id'))->get();
             $conflictingRecurrings->push((object) [
                 'id' => $recurring[0]->conflict_id,
