@@ -227,18 +227,23 @@ class bookingController extends Controller
         }
 
         $semester = Semester::where('is_current', true)->first();
-        $conflicts = Booking::join('rooms', 'bookings.room_id', '=', 'rooms.id')
+        $query = Booking::join('rooms', 'bookings.room_id', '=', 'rooms.id')
             ->where('semester_id', $semester->id)
             ->whereIn('room_id', $roomIds)
             ->whereNotIn('status', [2])
             ->whereNotNull('conflict_id')
             ->orderBy('created_at', 'desc')
-            ->select('bookings.*', 'rooms.name as room_name', 'rooms.color as color')
-            ->get();
+            ->select('bookings.*', 'rooms.name as room_name', 'rooms.color as color');
 
-        if ($conflicts->count() > 0) {
-            $conflicts = $conflicts->groupBy('conflict_id');
+        if (!empty($months)) {
+            $query->where(function ($query) use ($months) {
+                foreach ($months as $month) {
+                    $query->orWhereMonth('start', $month);
+                }
+            });
         }
+
+        $conflicts = $query->get()->groupBy('conflict_id');
 
         $conflictingBookings = new Collection();
         $conflicts->each(function ($conflict) use ($conflictingBookings) {
