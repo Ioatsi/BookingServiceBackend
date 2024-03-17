@@ -23,6 +23,9 @@ class bookingController extends Controller
         // Get the current user ID from the authenticated user
         //$currentUserId = Auth::id();
 
+        $sortBy = $request->input('sortBy', 'created_at');
+        $sortOrder = $request->input('sortOrder', 'desc');
+
         $page = $request->input('page', 1);
         $status = $request->input('status', [0, 1]);
         $months = $request->input('start');
@@ -55,7 +58,7 @@ class bookingController extends Controller
             });
         }
 
-        $bookings = $query->orderBy('bookings.created_at', 'desc')
+        $bookings = $query->orderBy($sortBy, $sortOrder)
             ->select('bookings.*', 'rooms.name as room_name', 'rooms.color as color')
             ->paginate($perPage, ['*'], 'page', $page);
         return response()->json([
