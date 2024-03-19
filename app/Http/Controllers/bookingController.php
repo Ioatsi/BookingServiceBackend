@@ -13,6 +13,7 @@ use App\Models\Semester;
 use Carbon\Carbon;
 
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 
@@ -29,6 +30,8 @@ class bookingController extends Controller
         $page = $request->input('page', 1);
         $status = $request->input('status', [0, 1]);
         $months = $request->input('start');
+        $days = $request->input('days', [1, 2, 3, 4, 5]);
+        $type = $request->input('type', ['normal', 'recurring']);
 
         // Define the number of items per page
         $perPage = $request->input('perPage', 1); // You can adjust this number as needed
@@ -45,17 +48,23 @@ class bookingController extends Controller
         $query = Booking::join('rooms', 'bookings.room_id', '=', 'rooms.id')
             ->where('bookings.semester_id', $semester->id)
             ->whereIn('bookings.status', $status)
-            ->where('bookings.type', 'normal')
+            ->whereIn('bookings.type', $type)
             ->whereNull('bookings.conflict_id')
             ->whereIn('bookings.room_id', $roomIds);
 
         // If months are provided, filter by them
         if (!empty($months)) {
-            $query->where(function ($query) use ($months) {
-                foreach ($months as $month) {
-                    $query->orWhereMonth('bookings.start', $month);
-                }
-            });
+            $query->whereIn(DB::raw('MONTH(bookings.start)'), $months);
+        }
+
+        // If days of the week are provided, filter by them
+        if (!empty($days)) {
+            // Adjust the day values to match the MySQL convention
+            $adjustedDays = array_map(function ($day) {
+                return $day + 1; // Increment by 1 to match MySQL convention
+            }, $days);
+
+            $query->whereIn(DB::raw('DAYOFWEEK(bookings.start)'), $adjustedDays);
         }
 
         $bookings = $query->orderBy($sortBy, $sortOrder)
@@ -75,7 +84,7 @@ class bookingController extends Controller
 
         $status = $request->input('status', [0, 1]);
 
-        $dayInputs = $request->input('days',[1,2,3,4,5]);
+        $dayInputs = $request->input('days', [1, 2, 3, 4, 5]);
 
         $semester = Semester::where('is_current', true)->first();
         $perPage = $request->input('perPage', 1); // You can adjust this number as needed
@@ -228,6 +237,8 @@ class bookingController extends Controller
         $sortOrder = $request->input('sortOrder', 'desc');
 
         $months = $request->input('start');
+        $days = $request->input('days', [1, 2, 3, 4, 5]);
+        $type = $request->input('type', ['normal', 'recurring']);
 
         $allRoomIds = Room::join('moderator_room', 'rooms.id', '=', 'moderator_room.room_id')
             ->where('moderator_room.user_id', $request->user_id)
@@ -242,17 +253,25 @@ class bookingController extends Controller
         $query = Booking::join('rooms', 'bookings.room_id', '=', 'rooms.id')
             ->where('semester_id', $semester->id)
             ->whereIn('room_id', $roomIds)
-            ->whereNotIn('status', [2])
+            ->whereNotIn('status', [2])            
+            ->whereIn('bookings.type', $type)
             ->whereNotNull('conflict_id')
             ->orderBy($sortBy, $sortOrder)
             ->select('bookings.*', 'rooms.name as room_name', 'rooms.color as color');
 
-        if (!empty($months)) {
-            $query->where(function ($query) use ($months) {
-                foreach ($months as $month) {
-                    $query->orWhereMonth('start', $month);
-                }
-            });
+         // If months are provided, filter by them
+         if (!empty($months)) {
+            $query->whereIn(DB::raw('MONTH(bookings.start)'), $months);
+        }
+
+        // If days of the week are provided, filter by them
+        if (!empty($days)) {
+            // Adjust the day values to match the MySQL convention
+            $adjustedDays = array_map(function ($day) {
+                return $day + 1; // Increment by 1 to match MySQL convention
+            }, $days);
+
+            $query->whereIn(DB::raw('DAYOFWEEK(bookings.start)'), $adjustedDays);
         }
 
         $conflicts = $query->get()->groupBy('conflict_id');
@@ -301,11 +320,11 @@ class bookingController extends Controller
     {
         // Get the current user ID from the authenticated user
         //$currentUserId = Auth::id();
-        
+
         $sortBy = $request->input('sortBy', 'created_at');
         $sortOrder = $request->input('sortOrder', 'desc');
 
-        $dayInputs = $request->input('days',[1,2,3,4,5]);
+        $dayInputs = $request->input('days', [1, 2, 3, 4, 5]);
 
         $allRoomIds = Room::join('moderator_room', 'rooms.id', '=', 'moderator_room.room_id')
             ->where('moderator_room.user_id', $request->user_id)
@@ -318,9 +337,9 @@ class bookingController extends Controller
 
         $semester = Semester::where('is_current', true)->first();
         $days = Day::whereIn('room_id', $roomIds)
-        ->where('status', '!=', 2)
-        ->whereIn('name', $dayInputs)
-        ->where('semester_id', $semester->id)->get();
+            ->where('status', '!=', 2)
+            ->whereIn('name', $dayInputs)
+            ->where('semester_id', $semester->id)->get();
         $recurringIds = new Collection();
         foreach ($days as $day) {
             $recurringIds->push($day->recurring_id);
