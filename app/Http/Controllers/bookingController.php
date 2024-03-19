@@ -68,9 +68,14 @@ class bookingController extends Controller
     }
     public function getRecurring(Request $request)
     {
+        $sortBy = $request->input('sortBy', 'created_at');
+        $sortOrder = $request->input('sortOrder', 'desc');
+
         $page = $request->input('page', 1);
 
         $status = $request->input('status', [0, 1]);
+
+        $dayInputs = $request->input('days',[1,2,3,4,5]);
 
         $semester = Semester::where('is_current', true)->first();
         $perPage = $request->input('perPage', 1); // You can adjust this number as needed
@@ -83,6 +88,7 @@ class bookingController extends Controller
             $roomIds = $allRoomIds;
         }
         $days = Day::whereIn('room_id', $roomIds)
+            ->whereIn('name', $dayInputs)
             ->where('status', '!=', 2)
             ->get();
         $recurringIds = new Collection();
@@ -93,7 +99,7 @@ class bookingController extends Controller
             ->whereIn('id', $recurringIds)
             ->whereIn('status', $status)
             ->where('conflict_id', null)
-            ->orderBy('created_at', 'desc')
+            ->orderBy($sortBy, $sortOrder)
             ->paginate($perPage, ['*'], 'page', $page);
 
         $recurring_groups = new Collection();
@@ -218,6 +224,9 @@ class bookingController extends Controller
         // Get the current user ID from the authenticated user
         //$currentUserId = Auth::id();
 
+        $sortBy = $request->input('sortBy', 'created_at');
+        $sortOrder = $request->input('sortOrder', 'desc');
+
         $months = $request->input('start');
 
         $allRoomIds = Room::join('moderator_room', 'rooms.id', '=', 'moderator_room.room_id')
@@ -235,7 +244,7 @@ class bookingController extends Controller
             ->whereIn('room_id', $roomIds)
             ->whereNotIn('status', [2])
             ->whereNotNull('conflict_id')
-            ->orderBy('created_at', 'desc')
+            ->orderBy($sortBy, $sortOrder)
             ->select('bookings.*', 'rooms.name as room_name', 'rooms.color as color');
 
         if (!empty($months)) {
@@ -292,6 +301,11 @@ class bookingController extends Controller
     {
         // Get the current user ID from the authenticated user
         //$currentUserId = Auth::id();
+        
+        $sortBy = $request->input('sortBy', 'created_at');
+        $sortOrder = $request->input('sortOrder', 'desc');
+
+        $dayInputs = $request->input('days',[1,2,3,4,5]);
 
         $allRoomIds = Room::join('moderator_room', 'rooms.id', '=', 'moderator_room.room_id')
             ->where('moderator_room.user_id', $request->user_id)
@@ -303,7 +317,10 @@ class bookingController extends Controller
         }
 
         $semester = Semester::where('is_current', true)->first();
-        $days = Day::whereIn('room_id', $roomIds)->where('status', '!=', 2)->where('semester_id', $semester->id)->get();
+        $days = Day::whereIn('room_id', $roomIds)
+        ->where('status', '!=', 2)
+        ->whereIn('name', $dayInputs)
+        ->where('semester_id', $semester->id)->get();
         $recurringIds = new Collection();
         foreach ($days as $day) {
             $recurringIds->push($day->recurring_id);
@@ -313,7 +330,7 @@ class bookingController extends Controller
             ->whereIn('id', $recurringIds)
             ->whereNotIn('status', [2])
             ->whereNotNull('conflict_id')
-            ->orderBy('created_at', 'desc')
+            ->orderBy($sortBy, $sortOrder)
             ->get();
         if ($recurrings->count() > 0) {
             $recurrings = $recurrings->groupBy('conflict_id');
