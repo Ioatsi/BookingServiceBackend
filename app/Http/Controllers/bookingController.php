@@ -204,26 +204,21 @@ class bookingController extends Controller
             $roomIds = $allRoomIds;
         }
         $date = $request->input('date', now()->toDateString());
+        $dateCarbon = Carbon::parse($date);
+
+        // Get the start and end dates of the month
+        $startOfMonth = $dateCarbon->copy()->startOfMonth();
+        $endOfMonth = $dateCarbon->copy()->endOfMonth();
         $semester = Semester::where('is_current', true)->first();
 
         $query = Booking::join('rooms', 'bookings.room_id', '=', 'rooms.id')
             ->where('bookings.semester_id', $semester->id)
             ->whereIn('bookings.room_id', $roomIds)
             ->where('bookings.status', 1)
-            ->orderBy('bookings.created_at', 'desc')
+            ->orderBy('bookings.start', 'asc')
             ->select('bookings.*', 'rooms.name as room_name', 'rooms.color as color')
-            ->where(function ($query) use ($date) {
-                $query->whereBetween('bookings.start', [
-                    Carbon::parse($date)->startOfMonth(), // Start of current month
-                    Carbon::parse($date)->endOfMonth() // End of current month
-                ])->orWhereBetween('bookings.start', [
-                    Carbon::parse($date)->subMonth()->startOfMonth(), // Start of last month
-                    Carbon::parse($date)->subMonth()->endOfMonth() // End of last month
-                ])->orWhereBetween('bookings.start', [
-                    Carbon::parse($date)->addMonth()->startOfMonth(), // Start of next month
-                    Carbon::parse($date)->addMonth()->endOfMonth() // End of next month
-                ]);
-            })->get();
+            ->whereBetween('start', [$startOfMonth, $endOfMonth])
+            ->get();
         return response()->json($query);
     }
 
@@ -253,14 +248,14 @@ class bookingController extends Controller
         $query = Booking::join('rooms', 'bookings.room_id', '=', 'rooms.id')
             ->where('semester_id', $semester->id)
             ->whereIn('room_id', $roomIds)
-            ->whereNotIn('status', [2])            
+            ->whereNotIn('status', [2])
             ->whereIn('bookings.type', $type)
             ->whereNotNull('conflict_id')
             ->orderBy($sortBy, $sortOrder)
             ->select('bookings.*', 'rooms.name as room_name', 'rooms.color as color');
 
-         // If months are provided, filter by them
-         if (!empty($months)) {
+        // If months are provided, filter by them
+        if (!empty($months)) {
             $query->whereIn(DB::raw('MONTH(bookings.start)'), $months);
         }
 
