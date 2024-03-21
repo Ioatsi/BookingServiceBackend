@@ -70,8 +70,24 @@ class bookingController extends Controller
         $bookings = $query->orderBy($sortBy, $sortOrder)
             ->select('bookings.*', 'rooms.name as room_name', 'rooms.color as color')
             ->paginate($perPage, ['*'], 'page', $page);
+
+        
+        $booking_groups = new Collection();
+        $bookings->each(function ($booking) use ($booking_groups) {
+            $rooms = Room::where('id', $booking->room_id)->get();
+            $booking_groups->push((object) [
+                'id' => $booking->id,
+                'title' => $booking->title,
+                'start' => $booking->start,
+                'end' => $booking->end,
+                'info' => $booking->info,
+                'status' => $booking->status,
+                'type' => $booking->type,
+                'rooms' => $rooms
+            ]);
+        });
         return response()->json([
-            'bookings' => $bookings->items(),
+            'bookings' => $booking_groups,
             'total' => $bookings->total(),
         ]);
     }
