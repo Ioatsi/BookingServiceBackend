@@ -51,9 +51,11 @@ class BookingFactory extends Factory
 
         // Round to the nearest hour
         $endDate->setTime($endDate->format('H'), 0, 0);
+        
+        $roomId = Room::pluck('id')->toArray();
         return [
             'booker_id' => $this->faker->randomElement($bookerIds),
-            'room_id' => $this->faker->randomElement([1, 2, 3]),
+            'room_id' => $this->faker->randomElement($roomId),
             'status' => $this->faker->randomElement([0, 1]),
             'title' => 'booking' . $incrementingName++,
             'start' => $startDate,

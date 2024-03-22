@@ -46,6 +46,8 @@ Route::post('/editBooking', [BookingController::class, 'editBooking']);
 
 //Room
 Route::post('getRooms', [RoomController::class, 'index']);
+Route::post('getDepartments', [RoomController::class, 'getDepartments']);
+Route::post('getBuildings', [RoomController::class, 'getBuildings']);
 Route::post('getAllRooms', [RoomController::class, 'getAllRooms']);
 
 Route::get('getModeratedRooms/{id}', [RoomController::class, 'getModeratedRooms']);

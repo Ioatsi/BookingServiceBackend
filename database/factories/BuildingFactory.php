@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Department;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -17,10 +18,12 @@ class BuildingFactory extends Factory
     public function definition(): array
     {
         
-        $incrementingName = 1;
+        static $incrementingName = 1;
+        $departemntId = Department::pluck('id')->toArray();
         return [
             //
-            'department_id' => 1,
+            'department_id' => $this->faker->randomElement($departemntId),            
+            'info' => $this->faker->text,
             'name' => 'building' . $incrementingName++,
         ];
     }

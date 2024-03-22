@@ -18,6 +18,8 @@ return new class extends Migration
             $table->integer('number');
             $table->string('type');
             $table->string('color');
+            $table->string('info');
+            $table->integer('status');
             $table->foreignId('building_id')->constrained('buildings');
             $table->foreignId('department_id')->constrained('departments');
             $table->timestamps();

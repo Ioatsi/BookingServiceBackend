@@ -22,6 +22,9 @@ class RoomController extends Controller
         // Get the current user ID from the authenticated user
         //$currentUserId = Auth::id();
 
+        $department = $request->input('department');
+        $building = $request->input('building');
+
         $sortBy = $request->input('sortBy', 'created_at');
         $sortOrder = $request->input('sortOrder', 'desc');
 
@@ -37,6 +40,14 @@ class RoomController extends Controller
             ->join('buildings', 'rooms.building_id', '=', 'buildings.id')
             ->select('rooms.*', 'departments.name as department', 'buildings.name as building')
             ->orderBy($sortBy, $sortOrder);
+
+        if ($department) {
+            $query->whereIn('rooms.department_id', $department);
+        }
+
+        if ($building) {
+            $query->whereIn('rooms.building_id', $building);
+        }
 
         $rooms = $query->paginate($perPage, ['*'], 'page', $page);
 
@@ -73,34 +84,29 @@ class RoomController extends Controller
         return response()->json($rooms);
     }
 
+    public function getDepartments(Request $request)
+    {
+        $departments = DB::table('departments')->get();
+        return response()->json($departments);
+    }
+
+    public function getBuildings(Request $request)
+    {
+        $department = $request->input('department');
+        $query = DB::table('buildings');
+
+        if ($department) {
+            $query = $query->where('department_id', $department);
+        }
+
+        $buildings = $query->get();
+        return response()->json($buildings);
+    }
+
     /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Room $room)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Room $room)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Room $room)
     {
         //
     }
