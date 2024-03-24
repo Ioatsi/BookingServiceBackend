@@ -14,6 +14,7 @@ class Room extends Model
         'building_id',
         'department_id',
         'number',
+        'info',
         'color',
         'type',
     ];
@@ -22,6 +23,11 @@ class Room extends Model
     {
         return $this->hasMany(Booking::class);
     }
+
+    protected $attributes = [
+        'status' => 1,
+        'type' => 'normal',
+    ];
     public function users()
     {
         return $this->belongsToMany(User::class, 'moderator_room', 'room_id', 'user_id');

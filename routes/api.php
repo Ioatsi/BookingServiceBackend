@@ -50,4 +50,6 @@ Route::post('getDepartments', [RoomController::class, 'getDepartments']);
 Route::post('getBuildings', [RoomController::class, 'getBuildings']);
 Route::post('getAllRooms', [RoomController::class, 'getAllRooms']);
 
+Route::post('createRoom', [RoomController::class, 'store']);
+
 Route::get('getModeratedRooms/{id}', [RoomController::class, 'getModeratedRooms']);

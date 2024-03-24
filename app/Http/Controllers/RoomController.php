@@ -103,11 +103,18 @@ class RoomController extends Controller
         return response()->json($buildings);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        $validatedData = $request->validate([
+            'name' => 'required',
+            'info' => 'required',
+            'capacity' => 'required',
+            'department_id' => 'required',
+            'building_id' => 'required',
+            'color' => 'required',
+            'number' => 'required',
+        ]);
+        $room = Room::create($validatedData);
+        return response()->json(['message' => 'Booking created successfully.', 'booking' => $room], 201);
     }
 }
