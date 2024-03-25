@@ -370,7 +370,7 @@ class bookingController extends Controller
             $days = new Collection();
             $recurring->each(function ($recurring) use ($days) {
                 $days = Day::join('rooms', 'days.room_id', '=', 'rooms.id')
-                    ->where('status', '!=', 2)
+                    ->where('days.status', '!=', 2)
                     ->where('days.recurring_id', $recurring->id)
                     ->select('days.*', 'rooms.id as room_id', 'rooms.name as room_name')
                     ->get();
