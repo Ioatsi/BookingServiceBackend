@@ -264,7 +264,7 @@ class bookingController extends Controller
         $query = Booking::join('rooms', 'bookings.room_id', '=', 'rooms.id')
             ->where('semester_id', $semester->id)
             ->whereIn('room_id', $roomIds)
-            ->whereNotIn('status', [2])
+            ->whereNotIn('bookings.status', [2])
             ->whereIn('bookings.type', $type)
             ->whereNotNull('conflict_id')
             ->orderBy($sortBy, $sortOrder)
