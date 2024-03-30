@@ -71,7 +71,7 @@ class bookingController extends Controller
             ->select('bookings.*', 'rooms.name as room_name', 'rooms.color as color')
             ->paginate($perPage, ['*'], 'page', $page);
 
-        
+
         $booking_groups = new Collection();
         $bookings->each(function ($booking) use ($booking_groups) {
             $rooms = Room::where('id', $booking->room_id)->get();
@@ -83,9 +83,13 @@ class bookingController extends Controller
                 'info' => $booking->info,
                 'status' => $booking->status,
                 'type' => $booking->type,
+                'room_name' => $booking->room_name,
                 'rooms' => $rooms
             ]);
         });
+        if ($request->input('ical') == true) {
+            return $this->generateICal($booking_groups);
+        }
         return response()->json([
             'bookings' => $booking_groups,
             'total' => $bookings->total(),
@@ -144,6 +148,10 @@ class bookingController extends Controller
                 'rooms' => $rooms,
             ]);
         });
+
+        if ($request->input('ical') == true) {
+            return $this->generateICal($recurring_groups, true);
+        }
 
         return response()->json([
             'recurrings' => $recurring_groups,
@@ -212,6 +220,7 @@ class bookingController extends Controller
 
     public function getActiveBookings(Request $request)
     {
+
         $allRoomIds = Room::join('moderator_room', 'rooms.id', '=', 'moderator_room.room_id')
             ->pluck('rooms.id')
             ->toArray();
@@ -235,6 +244,9 @@ class bookingController extends Controller
             ->select('bookings.*', 'rooms.name as room_name', 'rooms.color as color')
             ->whereBetween('start', [$startOfMonth, $endOfMonth])
             ->get();
+        if ($request->input('ical') == true) {
+            return $this->generateICal($query);
+        }
         return response()->json($query);
     }
 
@@ -845,5 +857,81 @@ class bookingController extends Controller
                 throw new \Exception("Unknown model class: $className");
         }
         return $conflicts;
+    }
+    public function generateICal($bookings, $recurring = false)
+    {
+        // Set headers
+        header('Content-Type: text/calendar; charset=utf-8');
+        header('Content-Disposition: attachment; filename="bookings.ics"');
+
+        // Initialize iCal content
+        $ical = "BEGIN:VCALENDAR\r\n";
+        $ical .= "VERSION:2.0\r\n";
+        $ical .= "PRODID:bookingservice\r\n";
+
+        if ($recurring === true) {
+
+            $semester = Semester::where('is_current', true)->first();
+
+            $semesterStartDate = date('Ymd\THis\Z', strtotime($semester->start));
+            $semesterEndDate = date('Ymd\THis\Z', strtotime($semester->end));
+
+            // Iterate over each recurring event
+            foreach ($bookings as $event) {
+                $rrule = 'FREQ=WEEKLY;'; // Default RRULE, assuming events repeat weekly
+                $dtstamp = date('Ymd\THis\Z'); // Current date and time in UTC format
+                $icalEntry = "BEGIN:VEVENT\n";
+                $icalEntry .= "DTSTAMP:" . $dtstamp . "\r\n";
+                $icalEntry .= "UID:" . uniqid() . "\r\n";
+                $rrule = 'FREQ=WEEKLY;';
+                $byDayValues = [];
+                foreach ($event->days as $day) {
+                    $dayName = strtoupper(substr(date('D', strtotime("Sunday +{$day['name']} days")), 0, 2)); // Convert day name to uppercase abbreviated form (e.g., MO, TU)
+                    $byDayValues[] = $dayName; // Add only the day abbreviation
+                }
+                $rrule .= 'BYDAY=' . implode(',', $byDayValues) . ';';
+                $rrule .= "UNTIL={$semesterEndDate};";
+
+                // Create iCalendar entry for the recurring event
+                $icalEntry .= "DTSTART:" . $semesterStartDate . "\r\n";
+                $icalEntry .= "RRULE:$rrule\n"; // Recurrence rule
+                $icalEntry .= "SUMMARY:{$event->title}\n"; // Event title
+                $icalEntry .= "DESCRIPTION:{$event->info}\n"; // Event description
+                $icalEntry .= "END:VEVENT\n";
+
+                // Add the iCalendar entry to the array
+                $icalEntries[] = $icalEntry;
+            }
+
+            // Combine all iCalendar entries into a single string
+            $icalData = "BEGIN:VCALENDAR\n";
+            $icalData .= "VERSION:2.0\n";
+            $icalData .= "PRODID:bookingservice\r\n";
+            $icalData .= implode('', $icalEntries);
+            $icalData .= "END:VCALENDAR";
+
+            // Output the iCalendar data
+            header('Content-type: text/calendar; charset=utf-8');
+            header('Content-Disposition: attachment; filename="calendar.ics"');
+
+            return $icalData;
+        }
+
+        // Loop through bookings and generate iCal events
+        foreach ($bookings as $booking) {
+            $ical .= "BEGIN:VEVENT\r\n";
+            $ical .= "UID:" . uniqid() . "\r\n"; // Unique identifier for the event
+            $ical .= "DTSTART:" . date('Ymd\THis\Z', strtotime($booking->start)) . "\r\n"; // Start date and time
+            $ical .= "DTEND:" . date('Ymd\THis\Z', strtotime($booking->end)) . "\r\n"; // End date and time
+            $ical .= "SUMMARY:" . $booking->title . "\r\n"; // Event summary
+            $ical .= "DESCRIPTION:" . $booking->info . "\r\n"; // Event summary
+            $ical .= "LOCATION:" . $booking->room_name . "\r\n"; // Event summary
+            $ical .= "END:VEVENT\r\n";
+        }
+
+        // Close iCal content
+        $ical .= "END:VCALENDAR";
+
+        return $ical;
     }
 }
