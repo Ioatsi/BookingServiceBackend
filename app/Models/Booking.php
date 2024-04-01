@@ -22,6 +22,7 @@ class Booking extends Model
         'info',
         'participants',
         'type',
+        'publicity',
     ];
 
     protected static function boot()
@@ -95,6 +96,7 @@ class Booking extends Model
     protected $attributes = [
         'status' => 0,
         'participants' => 'No participants',
+        'publicity' => 0,
     ];
 
     //give curent semester id

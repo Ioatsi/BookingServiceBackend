@@ -57,6 +57,7 @@ class BookingFactory extends Factory
             'booker_id' => $this->faker->randomElement($bookerIds),
             'room_id' => $this->faker->randomElement($roomId),
             'status' => $this->faker->randomElement([0, 1]),
+            'publicity' => $this->faker->randomElement([0, 1]),
             'title' => 'booking' . $incrementingName++,
             'start' => $startDate,
             'end' => $endDate,

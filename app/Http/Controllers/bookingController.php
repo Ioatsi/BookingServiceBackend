@@ -220,7 +220,6 @@ class bookingController extends Controller
 
     public function getActiveBookings(Request $request)
     {
-
         $allRoomIds = Room::join('moderator_room', 'rooms.id', '=', 'moderator_room.room_id')
             ->pluck('rooms.id')
             ->toArray();
@@ -234,22 +233,36 @@ class bookingController extends Controller
         // Get the start and end dates of the month
         $startOfMonth = $dateCarbon->copy()->startOfMonth();
         $endOfMonth = $dateCarbon->copy()->endOfMonth();
+
+        // Get the start and end dates of the previous month
+        $startOfPreviousMonth = $dateCarbon->copy()->subMonth()->startOfMonth();
+        $endOfPreviousMonth = $dateCarbon->copy()->subMonth()->endOfMonth();
+
+        // Get the start and end dates of the next month
+        $startOfNextMonth = $dateCarbon->copy()->addMonth()->startOfMonth();
+        $endOfNextMonth = $dateCarbon->copy()->addMonth()->endOfMonth();
+
         $semester = Semester::where('is_current', true)->first();
 
         $query = Booking::join('rooms', 'bookings.room_id', '=', 'rooms.id')
             ->where('bookings.semester_id', $semester->id)
             ->whereIn('bookings.room_id', $roomIds)
             ->where('bookings.status', 1)
+            ->where('bookings.publicity', 1)
             ->orderBy('bookings.start', 'asc')
             ->select('bookings.*', 'rooms.name as room_name', 'rooms.color as color')
-            ->whereBetween('start', [$startOfMonth, $endOfMonth])
+            ->where(function ($query) use ($startOfMonth, $endOfMonth, $startOfPreviousMonth, $endOfPreviousMonth, $startOfNextMonth, $endOfNextMonth) {
+                $query->whereBetween('start', [$startOfMonth, $endOfMonth])
+                    ->orWhereBetween('start', [$startOfPreviousMonth, $endOfPreviousMonth])
+                    ->orWhereBetween('start', [$startOfNextMonth, $endOfNextMonth]);
+            })
             ->get();
+
         if ($request->input('ical') == true) {
             return $this->generateICal($query);
         }
         return response()->json($query);
     }
-
 
     public function getConflicts(Request $request)
     {

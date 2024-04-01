@@ -20,6 +20,7 @@ return new class extends Migration
             $table->foreignId('semester_id')->constrained('semesters');
             $table->foreignId('room_id')->constrained('rooms');
             $table->integer('status');
+            $table->integer('publicity');
             $table->string('title');
             $table->dateTime('start');
             $table->dateTime('end');
