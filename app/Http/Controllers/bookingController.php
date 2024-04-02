@@ -32,6 +32,7 @@ class bookingController extends Controller
         $months = $request->input('start');
         $days = $request->input('days', [1, 2, 3, 4, 5]);
         $type = $request->input('type', ['normal', 'recurring']);
+        $publicity = $request->input('publicity', [0,1]);
 
         // Define the number of items per page
         $perPage = $request->input('perPage', 1); // You can adjust this number as needed
@@ -49,6 +50,7 @@ class bookingController extends Controller
             ->where('bookings.semester_id', $semester->id)
             ->whereIn('bookings.status', $status)
             ->whereIn('bookings.type', $type)
+            ->whereIn('bookings.publicity', $publicity)
             ->whereNull('bookings.conflict_id')
             ->whereIn('bookings.room_id', $roomIds);
 
@@ -83,6 +85,7 @@ class bookingController extends Controller
                 'info' => $booking->info,
                 'status' => $booking->status,
                 'type' => $booking->type,
+                'publicity' => $booking->publicity,
                 'room_name' => $booking->room_name,
                 'rooms' => $rooms
             ]);
@@ -101,9 +104,8 @@ class bookingController extends Controller
         $sortOrder = $request->input('sortOrder', 'desc');
 
         $page = $request->input('page', 1);
-
         $status = $request->input('status', [0, 1]);
-
+        $publicity = $request->input('publicity', [0,1]);
         $dayInputs = $request->input('days', [1, 2, 3, 4, 5]);
 
         $semester = Semester::where('is_current', true)->first();
@@ -127,6 +129,7 @@ class bookingController extends Controller
         $recurrings = Recurring::where('semester_id', $semester->id)
             ->whereIn('id', $recurringIds)
             ->whereIn('status', $status)
+            ->whereIn('publicity', $publicity)
             ->where('conflict_id', null)
             ->orderBy($sortBy, $sortOrder)
             ->paginate($perPage, ['*'], 'page', $page);
@@ -143,6 +146,7 @@ class bookingController extends Controller
                 //'bookings' => $recurring,
                 'info' => $recurring->info,
                 'status' => $recurring->status,
+                'publicity' => $recurring->publicity,
                 'type' => 'recurringGroup',
                 'days' => $days,
                 'rooms' => $rooms,
@@ -173,6 +177,7 @@ class bookingController extends Controller
             'end' => 'required|date',
             'participants' => 'required',
             'type' => 'required',
+            'publicity' => 'required',
             'days' => 'nullable',
             'room_id' => 'nullable',
         ]);
@@ -196,6 +201,7 @@ class bookingController extends Controller
         $recurring->participants = $validatedData['participants'];
         $recurring->booker_id = $validatedData['booker_id'];
         $recurring->status = 0;
+        $recurring->publicity = $validatedData['publicity'];
         $recurring->semester_id = $semester->id;
         $recurring->save();
         $days = $validatedData['days'];
@@ -549,6 +555,7 @@ class bookingController extends Controller
             'end' => 'required|date',
             'participants' => 'nullable',
             'type' => 'required',
+            'publicity' => 'required',
             'days' => 'nullable',
             'is_recurring' => 'nullable',
             'status' => 'required',
@@ -564,6 +571,7 @@ class bookingController extends Controller
         }
 
         $booking->room_id = $validatedData['room_id'];
+        $booking->publicity = $validatedData['publicity'];
         $booking->title = $validatedData['title'];
         $booking->info = $validatedData['info'];
         $booking->start = $validatedData['start'];
@@ -582,6 +590,7 @@ class bookingController extends Controller
 
         //Update the recurring group
         $recurring->title = $validatedData['title'];
+        $recurring->publicity = $validatedData['publicity'];
         $recurring->info = $validatedData['info'];
         $recurring->save();
 
@@ -631,9 +640,6 @@ class bookingController extends Controller
             $existingDay->save();
         }
         if ($recurring->status == 1) {
-
-
-
             // Get existing bookings associated with the recurring booking
             $existingBookings = Booking::where('recurring_id', $recurring->id)->get();
             foreach ($existingBookings as $existingBooking) {
@@ -657,6 +663,7 @@ class bookingController extends Controller
                         $existingBooking->start = $existingBooking->start->copy()->hour($newStartHours);
                         $existingBooking->end = $existingBooking->end->copy()->hour($newEndHours);
                         $existingBooking->info = $recurring->info;
+                        $existingBooking->publicity = $recurring->publicity;
                         $existingBooking->room_id = $newDay['room_id'];
                         $existingBooking->title = $recurring->title;
                         $existingBooking->save();
@@ -702,6 +709,7 @@ class bookingController extends Controller
                             $booking->room_id = $newDay['room_id'];
                             $booking->type = 'recurring';
                             $booking->status = 1;
+                            $booking->publicity = $recurring->publicity;
                             $booking->start = $currentDate->copy()->setTime($newStart->hour, $newStart->minute);
                             $booking->end = $currentDate->copy()->setTime($newEnd->hour, $newEnd->minute);
                             $booking->save();

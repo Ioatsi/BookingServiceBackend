@@ -16,6 +16,7 @@ class Recurring extends Model
         'semester_id',
         'title',
         'status',
+        'publicity',
         'booker_id',
         'conflict_id',
         'title',
@@ -30,7 +31,11 @@ class Recurring extends Model
     {
         return $this->hasMany(Day::class);
     }
-    //give curent semester id
+    
+    protected $attributes = [
+        'publicity' => 0,
+    ];
+    //give current semester id
     public function __construct(array $attributes = [])
     {
         parent::__construct($attributes);

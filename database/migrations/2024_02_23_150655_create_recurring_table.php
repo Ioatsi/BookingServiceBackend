@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('title');
             $table->string('conflict_id')->nullable();
             $table->foreignId('booker_id')->constrained('users');
+            $table->integer('publicity');
             $table->integer('status');
             $table->foreignId('semester_id')->constrained('semesters');
             $table->string('info');
