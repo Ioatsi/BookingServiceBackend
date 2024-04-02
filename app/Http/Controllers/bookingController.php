@@ -226,13 +226,6 @@ class bookingController extends Controller
 
     public function getActiveBookings(Request $request)
     {
-        $allRoomIds = Room::join('moderator_room', 'rooms.id', '=', 'moderator_room.room_id')
-            ->pluck('rooms.id')
-            ->toArray();
-        $roomIds = $request->input('room_id');
-        if ($request->input('room_id') == null) {
-            $roomIds = $allRoomIds;
-        }
         $date = $request->input('date', now()->toDateString());
         $dateCarbon = Carbon::parse($date);
 
@@ -252,17 +245,25 @@ class bookingController extends Controller
 
         $query = Booking::join('rooms', 'bookings.room_id', '=', 'rooms.id')
             ->where('bookings.semester_id', $semester->id)
-            ->whereIn('bookings.room_id', $roomIds)
             ->where('bookings.status', 1)
             ->where('bookings.publicity', 1)
             ->orderBy('bookings.start', 'asc')
-            ->select('bookings.*', 'rooms.name as room_name', 'rooms.color as color')
+            ->select('bookings.*', 'rooms.name as room_name', 'rooms.color as color', 'rooms.building_id as building_id')
             ->where(function ($query) use ($startOfMonth, $endOfMonth, $startOfPreviousMonth, $endOfPreviousMonth, $startOfNextMonth, $endOfNextMonth) {
                 $query->whereBetween('start', [$startOfMonth, $endOfMonth])
                     ->orWhereBetween('start', [$startOfPreviousMonth, $endOfPreviousMonth])
                     ->orWhereBetween('start', [$startOfNextMonth, $endOfNextMonth]);
-            })
-            ->get();
+            });
+
+        if ($request->input('building') != null) {
+            $query->whereIn('building_id', $request->input('building'));
+        }
+
+        if ($request->input('room_id') != null) {
+            $query->whereIn('bookings.room_id', $request->input('room_id'));
+        }
+
+        $query=$query->get();
 
         if ($request->input('ical') == true) {
             return $this->generateICal($query);

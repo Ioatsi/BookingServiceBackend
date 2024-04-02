@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Support\Facades\DB;
 
 use App\Models\Room;
+use App\Models\User;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
@@ -25,21 +26,21 @@ class RoomController extends Controller
         $department = $request->input('department');
         $building = $request->input('building');
 
-        $sortBy = $request->input('sortBy', 'created_at');
-        $sortOrder = $request->input('sortOrder', 'desc');
-
-        $page = $request->input('page', 1);
-        $perPage = $request->input('perPage', 1); // You can adjust this number as needed
-
-        $id = $request->input('id');
-
-        $roomsIds = DB::table('moderator_room')->where('user_id', $id)->get();
-
-        $query = Room::whereIn('rooms.id', $roomsIds->pluck('room_id'))
-            ->join('departments', 'rooms.department_id', '=', 'departments.id')
-            ->join('buildings', 'rooms.building_id', '=', 'buildings.id')
-            ->select('rooms.*', 'departments.name as department', 'buildings.name as building')
-            ->orderBy($sortBy, $sortOrder);
+        if($request->input('id')) {
+            $id = $request->input('id');
+    
+            $roomsIds = DB::table('moderator_room')->where('user_id', $id)->get();
+    
+            $query = Room::whereIn('rooms.id', $roomsIds->pluck('room_id'))
+                ->join('departments', 'rooms.department_id', '=', 'departments.id')
+                ->join('buildings', 'rooms.building_id', '=', 'buildings.id')
+                ->select('rooms.*', 'departments.name as department', 'buildings.name as building');
+            
+        }else{
+            $query = Room::join('departments', 'rooms.department_id', '=', 'departments.id')
+                ->join('buildings', 'rooms.building_id', '=', 'buildings.id')
+                ->select('rooms.*', 'departments.name as department', 'buildings.name as building');
+        }
 
         if ($department) {
             $query->whereIn('rooms.department_id', $department);
@@ -49,7 +50,7 @@ class RoomController extends Controller
             $query->whereIn('rooms.building_id', $building);
         }
 
-        $rooms = $query->paginate($perPage, ['*'], 'page', $page);
+        $rooms = $query->get();
 
 
         $room_groups = new Collection();
@@ -58,6 +59,7 @@ class RoomController extends Controller
                 'id' => $room->id,
                 'name' => $room->name,
                 'number' => $room->number,
+                'color' => $room->color,
                 'capacity' => $room->capacity,
                 'info' => $room->info,
                 'department' => $room->department,
@@ -66,8 +68,7 @@ class RoomController extends Controller
             ]);
         });
         return response()->json([
-            'rooms' => $room_groups,
-            'total' => $rooms->total(),
+            'rooms' => $room_groups 
         ]);
     }
 
