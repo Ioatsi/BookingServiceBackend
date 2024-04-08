@@ -27,6 +27,7 @@ return new class extends Migration
             $table->string('info');
             $table->string('participants');
             $table->string('type');
+            $table->string('url')->nullable();
             $table->timestamps();
         });
     }

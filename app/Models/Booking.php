@@ -23,6 +23,7 @@ class Booking extends Model
         'participants',
         'type',
         'publicity',
+        'url'
     ];
 
     protected static function boot()
@@ -97,6 +98,7 @@ class Booking extends Model
         'status' => 0,
         'participants' => 'No participants',
         'publicity' => 0,
+        'url' => null,
     ];
 
     //give curent semester id

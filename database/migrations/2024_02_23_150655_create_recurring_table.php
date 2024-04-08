@@ -18,6 +18,7 @@ return new class extends Migration
             $table->foreignId('booker_id')->constrained('users');
             $table->integer('publicity');
             $table->integer('status');
+            $table->string('url')->nullable();
             $table->foreignId('semester_id')->constrained('semesters');
             $table->string('info');
             $table->string('participants');

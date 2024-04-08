@@ -22,6 +22,7 @@ class Recurring extends Model
         'title',
         'info',
         'participants',
+        'url'
     ];
     public function semester()
     {
@@ -34,6 +35,7 @@ class Recurring extends Model
     
     protected $attributes = [
         'publicity' => 0,
+        'url' => null
     ];
     //give current semester id
     public function __construct(array $attributes = [])

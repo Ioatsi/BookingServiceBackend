@@ -180,6 +180,7 @@ class bookingController extends Controller
             'publicity' => 'required',
             'days' => 'nullable',
             'room_id' => 'nullable',
+            'url' => 'nullable',
         ]);
         /* if (!Gate::forUser($request->input('booker_id'))->allows('create-booking')) {
             abort(403);
@@ -202,6 +203,7 @@ class bookingController extends Controller
         $recurring->booker_id = $validatedData['booker_id'];
         $recurring->status = 0;
         $recurring->publicity = $validatedData['publicity'];
+        $recurring->url = $validatedData['url'];
         $recurring->semester_id = $semester->id;
         $recurring->save();
         $days = $validatedData['days'];
@@ -561,6 +563,7 @@ class bookingController extends Controller
             'is_recurring' => 'nullable',
             'status' => 'required',
             'room_id' => 'nullable',
+            'url' => 'nullable',
         ]);
         if ($request->input('is_recurring')) {
             $this->editRecurringBooking($validatedData);
@@ -573,6 +576,7 @@ class bookingController extends Controller
 
         $booking->room_id = $validatedData['room_id'];
         $booking->publicity = $validatedData['publicity'];
+        $booking->url = $validatedData['url'];
         $booking->title = $validatedData['title'];
         $booking->info = $validatedData['info'];
         $booking->start = $validatedData['start'];
@@ -592,6 +596,7 @@ class bookingController extends Controller
         //Update the recurring group
         $recurring->title = $validatedData['title'];
         $recurring->publicity = $validatedData['publicity'];
+        $recurring->url = $validatedData['url'];
         $recurring->info = $validatedData['info'];
         $recurring->save();
 
