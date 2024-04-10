@@ -668,8 +668,7 @@ class bookingController extends Controller
                     $newStartMinutes = $newStartDateTime->format('i');
                     $newEndHours = $newEndDateTime->format('H');
                     $newEndMinutes = $newEndDateTime->format('i');
-
-                    echo $newStartHours;
+                    
                     if ($existingDayOfWeek == $newDayOfWeek) {
                         $existingBooking->start = $existingBooking->start->copy()->hour($newStartHours)->minute($newStartMinutes);
                         $existingBooking->end = $existingBooking->end->copy()->hour($newEndHours)->minute($newEndMinutes);
