@@ -99,6 +99,7 @@ class Booking extends Model
         'participants' => 'No participants',
         'publicity' => 0,
         'url' => null,
+        "info" => 'No info provided',
     ];
 
     //give curent semester id

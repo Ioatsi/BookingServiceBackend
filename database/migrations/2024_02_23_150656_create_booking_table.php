@@ -24,8 +24,8 @@ return new class extends Migration
             $table->string('title');
             $table->dateTime('start');
             $table->dateTime('end');
-            $table->string('info');
-            $table->string('participants');
+            $table->string('info')->nullable();
+            $table->string('participants')->nullable();
             $table->string('type');
             $table->string('url')->nullable();
             $table->timestamps();

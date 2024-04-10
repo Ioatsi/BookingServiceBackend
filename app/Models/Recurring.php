@@ -35,7 +35,8 @@ class Recurring extends Model
     
     protected $attributes = [
         'publicity' => 0,
-        'url' => null
+        'url' => null,
+        "info" => 'No info provided',
     ];
     //give current semester id
     public function __construct(array $attributes = [])

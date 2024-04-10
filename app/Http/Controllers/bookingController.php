@@ -32,7 +32,7 @@ class bookingController extends Controller
         $months = $request->input('start');
         $days = $request->input('days', [1, 2, 3, 4, 5]);
         $type = $request->input('type', ['normal', 'recurring']);
-        $publicity = $request->input('publicity', [0,1]);
+        $publicity = $request->input('publicity', [0, 1]);
 
         // Define the number of items per page
         $perPage = $request->input('perPage', 1); // You can adjust this number as needed
@@ -105,7 +105,7 @@ class bookingController extends Controller
 
         $page = $request->input('page', 1);
         $status = $request->input('status', [0, 1]);
-        $publicity = $request->input('publicity', [0,1]);
+        $publicity = $request->input('publicity', [0, 1]);
         $dayInputs = $request->input('days', [1, 2, 3, 4, 5]);
 
         $semester = Semester::where('is_current', true)->first();
@@ -172,7 +172,7 @@ class bookingController extends Controller
             'conflict_id' => 'nullable',
             'booker_id' => 'required|exists:users,id',
             'title' => 'required',
-            'info' => 'required',
+            'info' => 'nullable',
             'start' => 'required|date',
             'end' => 'required|date',
             'participants' => 'required',
@@ -265,7 +265,7 @@ class bookingController extends Controller
             $query->whereIn('bookings.room_id', $request->input('room_id'));
         }
 
-        $query=$query->get();
+        $query = $query->get();
 
         if ($request->input('ical') == true) {
             return $this->generateICal($query);
@@ -611,6 +611,7 @@ class bookingController extends Controller
                 $newDayId = $newDay['id'];
                 $existingDay = $existingDays->where('id', $newDayId)->first();
 
+
                 if ($existingDay) {
                     // If the new day has an ID and it exists in the existing days
                     $existingDay->name = $newDay['name'];
@@ -664,10 +665,14 @@ class bookingController extends Controller
 
                     // Extract the hours from the new start and end times
                     $newStartHours = $newStartDateTime->format('H');
+                    $newStartMinutes = $newStartDateTime->format('i');
                     $newEndHours = $newEndDateTime->format('H');
+                    $newEndMinutes = $newEndDateTime->format('i');
+
+                    echo $newStartHours;
                     if ($existingDayOfWeek == $newDayOfWeek) {
-                        $existingBooking->start = $existingBooking->start->copy()->hour($newStartHours);
-                        $existingBooking->end = $existingBooking->end->copy()->hour($newEndHours);
+                        $existingBooking->start = $existingBooking->start->copy()->hour($newStartHours)->minute($newStartMinutes);
+                        $existingBooking->end = $existingBooking->end->copy()->hour($newEndHours)->minute($newEndMinutes);
                         $existingBooking->info = $recurring->info;
                         $existingBooking->publicity = $recurring->publicity;
                         $existingBooking->room_id = $newDay['room_id'];

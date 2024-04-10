@@ -20,8 +20,8 @@ return new class extends Migration
             $table->integer('status');
             $table->string('url')->nullable();
             $table->foreignId('semester_id')->constrained('semesters');
-            $table->string('info');
-            $table->string('participants');
+            $table->string('info')->nullable();
+            $table->string('participants')->nullable();
             $table->timestamps();
         });
     }
