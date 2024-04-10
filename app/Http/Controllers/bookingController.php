@@ -70,7 +70,7 @@ class bookingController extends Controller
         }
 
         $bookings = $query->orderBy($sortBy, $sortOrder)
-            ->select('bookings.*', 'rooms.name as room_name', 'rooms.color as color')
+            ->select('bookings.*', 'rooms.name as room_name', 'rooms.color as color', 'rooms.id as room')
             ->paginate($perPage, ['*'], 'page', $page);
 
 
@@ -87,6 +87,7 @@ class bookingController extends Controller
                 'type' => $booking->type,
                 'publicity' => $booking->publicity,
                 'room_name' => $booking->room_name,
+                'room_id' => $booking->room,
                 'rooms' => $rooms
             ]);
         });
@@ -668,7 +669,7 @@ class bookingController extends Controller
                     $newStartMinutes = $newStartDateTime->format('i');
                     $newEndHours = $newEndDateTime->format('H');
                     $newEndMinutes = $newEndDateTime->format('i');
-                    
+
                     if ($existingDayOfWeek == $newDayOfWeek) {
                         $existingBooking->start = $existingBooking->start->copy()->hour($newStartHours)->minute($newStartMinutes);
                         $existingBooking->end = $existingBooking->end->copy()->hour($newEndHours)->minute($newEndMinutes);
