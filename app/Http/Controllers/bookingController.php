@@ -30,7 +30,7 @@ class bookingController extends Controller
         $page = $request->input('page', 1);
         $status = $request->input('status', [0, 1]);
         $months = $request->input('start');
-        $days = $request->input('days', [1, 2, 3, 4, 5]);
+        $days = $request->input('days');
         $type = $request->input('type', ['normal', 'recurring']);
         $publicity = $request->input('publicity', [0, 1]);
 
@@ -283,7 +283,7 @@ class bookingController extends Controller
         $sortOrder = $request->input('sortOrder', 'desc');
 
         $months = $request->input('start');
-        $days = $request->input('days', [1, 2, 3, 4, 5]);
+        $days = $request->input('days');
         $type = $request->input('type', ['normal', 'recurring']);
 
         $allRoomIds = Room::join('moderator_room', 'rooms.id', '=', 'moderator_room.room_id')
