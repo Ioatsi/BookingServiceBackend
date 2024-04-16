@@ -2,6 +2,9 @@
 
 use Illuminate\Support\Facades\Route;
 
+use App\Http\Controllers\BookingController;
+use App\Http\Controllers\RoomController;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -16,3 +19,37 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+
+//For moderator and admin
+Route::post('/getBookings', [BookingController::class, 'index']);
+Route::post('/getRecurring', [BookingController::class, 'getRecurring']);
+Route::post('/getConflicts', [BookingController::class, 'getConflicts'])->name('getConflicts');
+Route::post('/getRecurringConflicts', [BookingController::class, 'getRecurringConflicts'])->name('getRecurringConflicts');
+Route::post('/checkConflict', [BookingController::class,'checkConflict']);
+Route::post('/resolveConflict', [BookingController::class,'resolveConflict']);
+Route::post('/resolveRecurringConflict', [BookingController::class,'resolveRecurringConflict']);
+
+//For calendar
+Route::post('/getActiveBookings', [BookingController::class, 'getActiveBookings']);
+
+//For user
+Route::get('/getUserBookings/{id}', [BookingController::class, 'getUserBookings']);
+
+
+Route::post('/createBooking', [BookingController::class, 'store']);
+
+
+Route::post('/approveBooking', [BookingController::class, 'approveBooking']);
+Route::post('/cancelBooking', [BookingController::class, 'cancelBooking']);
+Route::post('/editBooking', [BookingController::class, 'editBooking']);
+
+
+//Room
+Route::post('getRooms', [RoomController::class, 'index']);
+Route::post('getDepartments', [RoomController::class, 'getDepartments']);
+Route::post('getBuildings', [RoomController::class, 'getBuildings']);
+Route::get('getAllRooms', [RoomController::class, 'getAllRooms'])->name('getAllRooms');
+
+Route::post('createRoom', [RoomController::class, 'store']);
+
+Route::get('getModeratedRooms/{id}', [RoomController::class, 'getModeratedRooms']);
