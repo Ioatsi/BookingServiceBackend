@@ -30,7 +30,7 @@ class bookingController extends Controller
         $page = $request->input('page', 1);
         $status = $request->input('status', [0, 1]);
         $months = $request->input('start');
-        $days = $request->input('days', [1, 2, 3, 4, 5]);
+        $days = $request->input('days');
         $type = $request->input('type', ['normal', 'recurring']);
         $publicity = $request->input('publicity', [0, 1]);
 
@@ -72,10 +72,9 @@ class bookingController extends Controller
         $bookings = $query->orderBy($sortBy, $sortOrder)
             ->select('bookings.*', 'rooms.name as room_name', 'rooms.color as color', 'rooms.id as room')
             ->paginate($perPage, ['*'], 'page', $page);
-
-
-        $booking_groups = new Collection();
-        $bookings->each(function ($booking) use ($booking_groups) {
+            
+            $booking_groups = new Collection();
+            $bookings->each(function ($booking) use ($booking_groups) {
             $rooms = Room::where('id', $booking->room_id)->get();
             $booking_groups->push((object) [
                 'id' => $booking->id,
@@ -283,7 +282,7 @@ class bookingController extends Controller
         $sortOrder = $request->input('sortOrder', 'desc');
 
         $months = $request->input('start');
-        $days = $request->input('days', [1, 2, 3, 4, 5]);
+        $days = $request->input('days');
         $type = $request->input('type', ['normal', 'recurring']);
 
         $allRoomIds = Room::join('moderator_room', 'rooms.id', '=', 'moderator_room.room_id')
