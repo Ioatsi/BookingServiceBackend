@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\RoomController;
+use App\Http\Controllers\StatisticsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -53,3 +54,5 @@ Route::get('getAllRooms', [RoomController::class, 'getAllRooms'])->name('getAllR
 Route::post('createRoom', [RoomController::class, 'store']);
 
 Route::get('getModeratedRooms/{id}', [RoomController::class, 'getModeratedRooms']);
+
+Route::post('roomDayFrequencyPercentage', [StatisticsController::class, 'roomDayFrequencyPercentage']);
