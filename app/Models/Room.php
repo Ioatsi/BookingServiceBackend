@@ -27,6 +27,10 @@ class Room extends Model
     protected $attributes = [
         'status' => 1,
         'type' => 'normal',
+        'capacity' => 0,
+        'department_id' => 0,
+        'building_id' => 0,
+        'number' => 0
     ];
     public function users()
     {

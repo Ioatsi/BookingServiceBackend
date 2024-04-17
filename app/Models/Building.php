@@ -10,10 +10,12 @@ class Building extends Model
     use HasFactory;
 
     protected $fillable = [
-        'department_id',
         'name',
     ];
-
+    protected $attributes = [
+        'info' => 'noInfo',
+        'department_id' => 1,
+    ];
     public function rooms()
     {
         return $this->hasMany(Room::class);
