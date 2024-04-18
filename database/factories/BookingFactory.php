@@ -25,7 +25,7 @@ class BookingFactory extends Factory
         $bookerIds = User::pluck('id')->toArray();
         $roomIds = Room::pluck('id')->toArray();
         // Generate a random start date within the last week
-        $startDate = $this->faker->dateTimeBetween('-1 week', 'now');
+        $startDate = $this->faker->dateTimeBetween('-1 year', 'now');
 
         // Set the start time to 08:00 if it's before 08:00
         if ($startDate->format('H') < 8) {

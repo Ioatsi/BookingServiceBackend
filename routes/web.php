@@ -55,4 +55,6 @@ Route::post('createRoom', [RoomController::class, 'store']);
 
 Route::get('getModeratedRooms/{id}', [RoomController::class, 'getModeratedRooms']);
 
-Route::post('roomDayFrequencyPercentage', [StatisticsController::class, 'roomDayFrequencyPercentage']);
+
+//Statistics
+Route::post('roomDayOfWeekFrequency', [StatisticsController::class, 'roomDayOfWeekFrequency']);

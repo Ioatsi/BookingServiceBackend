@@ -16,8 +16,6 @@ class CustomCorsMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        
-        Log::info('Req'.$request);
         if ($request->isMethod('OPTIONS')) {
             $response = response('', 200);
 
