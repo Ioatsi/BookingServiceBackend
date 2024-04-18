@@ -31,7 +31,7 @@ Route::post('/resolveConflict', [BookingController::class,'resolveConflict']);
 Route::post('/resolveRecurringConflict', [BookingController::class,'resolveRecurringConflict']);
 
 //For calendar
-Route::post('/getActiveBookings', [BookingController::class, 'getActiveBookings'])->name('getActiveBookings');
+Route::post('/getActiveBookings', [BookingController::class, 'getActiveBookings']);
 
 //For user
 Route::get('/getUserBookings/{id}', [BookingController::class, 'getUserBookings']);
