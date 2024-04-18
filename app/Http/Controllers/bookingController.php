@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 
-class bookingController extends Controller
+class BookingController extends Controller
 {
     public function index(Request $request)
     {
