@@ -60,5 +60,5 @@ Route::get('getModeratedRooms/{id}', [RoomController::class, 'getModeratedRooms'
 Route::post('roomDayOfWeekFrequency', [StatisticsController::class, 'roomDayOfWeekFrequency']);
 Route::post('roomDayOfMonthFrequency', [StatisticsController::class, 'roomDayOfMonthFrequency']);
 Route::post('roomMonthOfSemesterFrequency', [StatisticsController::class, 'roomMonthOfSemesterFrequency']);
-Route::post('roomDurationFrequency', [StatisticsController::class, 'roomDurationFrequency']);
+Route::post('roomDayOfWeekDurationFrequency', [StatisticsController::class, 'roomDayOfWeekDurationFrequency']);
 Route::post('roomOccupancyPercentage', [StatisticsController::class, 'roomOccupancyPercentage']);
