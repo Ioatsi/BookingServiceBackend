@@ -394,9 +394,9 @@ class StatisticsController extends Controller
                         ->orderBy('duration')
                         ->get();
 
-                        foreach ($frequency as $key => $value) {
-                            $frequencyMap[] = ['label' => $value->duration, 'frequency' => $value->frequency, 'percentage' => round(($value->frequency / $totalBookings) * 100)];
-                        }
+                    foreach ($frequency as $key => $value) {
+                        $frequencyMap[] = ['label' => $value->duration, 'frequency' => $value->frequency, 'percentage' => round(($value->frequency / $totalBookings) * 100)];
+                    }
                     break;
                 case 'last':
                     $lastSemester = Semester::where('id', $semester->id - 2)->first();
@@ -415,9 +415,9 @@ class StatisticsController extends Controller
                         ->orderBy('duration')
                         ->get();
 
-                        foreach ($frequency as $key => $value) {
-                            $frequencyMap[] = ['label' => $value->duration, 'frequency' => $value->frequency, 'percentage' => round(($value->frequency / $totalBookings) * 100)];
-                        }
+                    foreach ($frequency as $key => $value) {
+                        $frequencyMap[] = ['label' => $value->duration, 'frequency' => $value->frequency, 'percentage' => round(($value->frequency / $totalBookings) * 100)];
+                    }
                     break;
                 case 'all':
                     $totalBookings = Booking::where('room_id', $roomId)
@@ -433,9 +433,9 @@ class StatisticsController extends Controller
                         ->orderBy('duration')
                         ->get();
 
-                        foreach ($frequency as $key => $value) {
-                            $frequencyMap[] = ['label' => $value->duration, 'frequency' => $value->frequency, 'percentage' => round(($value->frequency / $totalBookings) * 100)];
-                        }
+                    foreach ($frequency as $key => $value) {
+                        $frequencyMap[] = ['label' => $value->duration, 'frequency' => $value->frequency, 'percentage' => round(($value->frequency / $totalBookings) * 100)];
+                    }
                     break;
             }
             $result[] = [
@@ -443,7 +443,52 @@ class StatisticsController extends Controller
                 'frequency' => $frequencyMap
             ];
         }
-        
+
+        return $result;
+    }
+    public function roomOccupancyPercentage(Request $request)
+    {
+        $roomIds = $request->input('roomIds');
+        foreach ($roomIds as $roomId) {            
+            $year = $request->input('year');
+            $month = $request->input('month');
+            // Get the first and last day of the specified month
+            $firstDayOfMonth = "{$year}-{$month}-01";
+            $lastDayOfMonth = date('Y-m-t', strtotime($firstDayOfMonth));
+    
+            // Calculate the total number of days in the month
+            $totalDaysInMonth = (int)date('t', strtotime($firstDayOfMonth));
+    
+            // Retrieve all bookings for the specified room and month
+            $bookings = Booking::where('room_id', $roomId)
+                ->whereBetween('start', [$firstDayOfMonth, $lastDayOfMonth])
+                ->get();
+    
+            // Calculate the total booked hours in the month
+            $totalBookedHours = 0;
+            foreach ($bookings as $booking) {
+                $startTime = strtotime($booking->start);
+                $endTime = strtotime($booking->end);
+                $totalBookedHours += ($endTime - $startTime) / (60 * 60); // Convert seconds to hours
+            }
+    
+            // Calculate the total available hours in the month (assuming 8 hours per day)
+            $totalAvailableHours = $totalDaysInMonth * 8;
+    
+            // Calculate the occupancy percentage
+            if ($totalAvailableHours > 0) {
+                $percentage = round(($totalBookedHours / $totalAvailableHours) * 100);
+            } else {
+                $percentage = 0; // No available hours, so occupancy is 0%
+            }
+
+            $result[] = [
+                'room_id' => $roomId,
+                'total' => $totalBookedHours,
+                'percentage' => $percentage
+            ];
+        }        
+
         return $result;
     }
 }
