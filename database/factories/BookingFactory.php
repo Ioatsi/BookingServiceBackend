@@ -41,12 +41,16 @@ class BookingFactory extends Factory
         // Round to the nearest hour
         $startDate->setTime($startDate->format('H'), 0, 0);
         $semesterId = Semester::where('start', '<=', $startDate)
-                              ->where('end', '>=', $startDate)
-                              ->value('id');
+            ->where('end', '>=', $startDate)
+            ->value('id');
 
         // Add exactly 2 hours to the start date to get the end date
+        /* $endDate = clone $startDate;
+        $endDate->modify('+2 hours'); */
+        $hoursToAdd = rand(1, 6);
+        $minutesToAdd = rand(1, 59); // Random minutes between 0 and 59
         $endDate = clone $startDate;
-        $endDate->modify('+2 hours');
+        $endDate->modify("+$hoursToAdd hours +$minutesToAdd minutes");
 
         // Make sure end date does not exceed 20:00
         if ($endDate->format('H') >= 20) {
@@ -55,7 +59,7 @@ class BookingFactory extends Factory
 
         // Round to the nearest hour
         $endDate->setTime($endDate->format('H'), 0, 0);
-        
+
         $roomId = Room::pluck('id')->toArray();
         return [
             'booker_id' => $this->faker->randomElement($bookerIds),

@@ -98,7 +98,7 @@ class StatisticsController extends Controller
             // Fill in missing days with a frequency of 0
             $fullFrequency = [];
             for ($i = 1; $i <= 7; $i++) {
-                $label = Carbon::create()->startOfWeek()->addDays($i-1)->format('l'); 
+                $label = Carbon::create()->startOfWeek()->addDays($i - 1)->format('l');
                 if (isset($frequencyMap[$i])) {
                     $percentage = round(($frequencyMap[$i] / $totalBookings) * 100);
                     $fullFrequency[] = ['label' => $label, 'frequency' => $percentage, 'percentage' => $percentage];
@@ -116,7 +116,6 @@ class StatisticsController extends Controller
 
         return $result;
     }
-
     public function roomDayOfMonthFrequency(Request $request)
     {
         /**
@@ -348,7 +347,6 @@ class StatisticsController extends Controller
 
         return $result;
     }
-
     private function getMonthsInRange($startDate = null, $endDate = null)
     {
         $months = [];
@@ -368,5 +366,84 @@ class StatisticsController extends Controller
             $currentMonth->addMonth();
         }
         return $months;
+    }
+    public function roomDurationFrequency(Request $request)
+    {
+        $roomIds = $request->input('roomIds');
+
+        // Get the sample size from the request
+        $sample = $request->input('sample');
+
+        $semester = Semester::where('is_current', 1)->first();
+        foreach ($roomIds as $roomId) {
+            $frequencyMap = [];
+            switch ($sample) {
+                case 'current':
+                    $totalBookings = Booking::where('room_id', $roomId)
+                        ->where('status', 1)
+                        ->where('semester_id', $semester->id)
+                        ->count();
+                    $frequency = Booking::select(
+                        DB::raw('TIMESTAMPDIFF(HOUR, start, end) as duration'),
+                        DB::raw('COUNT(*) as frequency')
+                    )
+                        ->where('room_id', $roomId)
+                        ->where('semester_id', $semester->id)
+                        ->where('status', 1)
+                        ->groupBy('duration')
+                        ->orderBy('duration')
+                        ->get();
+
+                        foreach ($frequency as $key => $value) {
+                            $frequencyMap[] = ['label' => $value->duration, 'frequency' => $value->frequency, 'percentage' => round(($value->frequency / $totalBookings) * 100)];
+                        }
+                    break;
+                case 'last':
+                    $lastSemester = Semester::where('id', $semester->id - 2)->first();
+                    $totalBookings = Booking::where('room_id', $roomId)
+                        ->where('status', 1)
+                        ->where('semester_id', $lastSemester->id)
+                        ->count();
+                    $frequency = Booking::select(
+                        DB::raw('TIMESTAMPDIFF(HOUR, start, end) as duration'),
+                        DB::raw('COUNT(*) as frequency')
+                    )
+                        ->where('room_id', $roomId)
+                        ->where('semester_id', $lastSemester->id)
+                        ->where('status', 1)
+                        ->groupBy('duration')
+                        ->orderBy('duration')
+                        ->get();
+
+                        foreach ($frequency as $key => $value) {
+                            $frequencyMap[] = ['label' => $value->duration, 'frequency' => $value->frequency, 'percentage' => round(($value->frequency / $totalBookings) * 100)];
+                        }
+                    break;
+                case 'all':
+                    $totalBookings = Booking::where('room_id', $roomId)
+                        ->where('status', 1)
+                        ->count();
+                    $frequency = Booking::select(
+                        DB::raw('TIMESTAMPDIFF(HOUR, start, end) as duration'),
+                        DB::raw('COUNT(*) as frequency')
+                    )
+                        ->where('room_id', $roomId)
+                        ->where('status', 1)
+                        ->groupBy('duration')
+                        ->orderBy('duration')
+                        ->get();
+
+                        foreach ($frequency as $key => $value) {
+                            $frequencyMap[] = ['label' => $value->duration, 'frequency' => $value->frequency, 'percentage' => round(($value->frequency / $totalBookings) * 100)];
+                        }
+                    break;
+            }
+            $result[] = [
+                'room_id' => $roomId,
+                'frequency' => $frequencyMap
+            ];
+        }
+        
+        return $result;
     }
 }
