@@ -58,3 +58,4 @@ Route::get('getModeratedRooms/{id}', [RoomController::class, 'getModeratedRooms'
 
 //Statistics
 Route::post('roomDayOfWeekFrequency', [StatisticsController::class, 'roomDayOfWeekFrequency']);
+Route::post('roomDayOfMonthFrequency', [StatisticsController::class, 'roomDayOfMonthFrequency']);
