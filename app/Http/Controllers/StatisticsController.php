@@ -97,16 +97,13 @@ class StatisticsController extends Controller
 
             // Fill in missing days with a frequency of 0
             $fullFrequency = [];
-            for ($i = 1; $i <= 7; $i++) { // Assuming day_of_week ranges from 1 (Monday) to 7 (Sunday)
+            for ($i = 1; $i <= 7; $i++) {
+                $label = Carbon::create()->startOfWeek()->addDays($i-1)->format('l'); 
                 if (isset($frequencyMap[$i])) {
-                    if ($request->input('percentage')) {
-                        $percentage = round(($frequencyMap[$i] / $totalBookings) * 100);
-                        $fullFrequency[] = ['day_of_week' => $i, 'frequency' => $percentage];
-                    } else {
-                        $fullFrequency[] = ['day_of_week' => $i, 'frequency' => $frequencyMap[$i]];
-                    }
+                    $percentage = round(($frequencyMap[$i] / $totalBookings) * 100);
+                    $fullFrequency[] = ['label' => $label, 'frequency' => $percentage, 'percentage' => $percentage];
                 } else {
-                    $fullFrequency[] = ['day_of_week' => $i, 'frequency' => 0];
+                    $fullFrequency[] = ['label' => $label, 'frequency' => 0];
                 }
             }
 
@@ -229,9 +226,9 @@ class StatisticsController extends Controller
             for ($i = 1; $i <= $totalDays; $i++) {
                 if (isset($frequencyMap[$i])) {
                     $percentage = round(($frequencyMap[$i] / $totalBookings) * 100);
-                    $fullFrequency[] = ['day_of_week' => $i, 'frequency' => $frequencyMap[$i], 'percentage' => $percentage];
+                    $fullFrequency[] = ['label' => $i, 'frequency' => $frequencyMap[$i], 'percentage' => $percentage];
                 } else {
-                    $fullFrequency[] = ['day_of_month' => $i, 'frequency' => 0, 'percentage' => 0];
+                    $fullFrequency[] = ['label' => $i, 'frequency' => 0, 'percentage' => 0];
                 }
             }
 
@@ -294,7 +291,8 @@ class StatisticsController extends Controller
                             ->where('status', 1)
                             ->count();
 
-                        $frequencyMap[] = ['month' => $month, 'frequency' => $frequency, 'percentage' => round(($frequency / $totalBookings) * 100)];
+                        $label = Carbon::create()->month($month)->format('F');
+                        $frequencyMap[] = ['label' => $label, 'frequency' => $frequency, 'percentage' => round(($frequency / $totalBookings) * 100)];
                     }
                     break;
 
@@ -318,8 +316,8 @@ class StatisticsController extends Controller
                             ->where('room_id', $roomId)
                             ->where('status', 1)
                             ->count();
-
-                        $frequencyMap[] = ['month' => $month, 'frequency' => $frequency, 'percentage' => round(($frequency / $totalBookings) * 100)];
+                        $label = Carbon::create()->month($month)->format('F');
+                        $frequencyMap[] = ['label' => $label, 'frequency' => $frequency, 'percentage' => round(($frequency / $totalBookings) * 100)];
                     }
                     break;
                 case 'all':
@@ -337,7 +335,8 @@ class StatisticsController extends Controller
                             ->where('status', 1)
                             ->count();
 
-                        $frequencyMap[] = ['month' => $month, 'frequency' => $frequency, 'percentage' => round(($frequency / $totalBookings) * 100)];
+                        $label = Carbon::create()->month($month)->format('F');
+                        $frequencyMap[] = ['label' => $label, 'frequency' => $frequency, 'percentage' => round(($frequency / $totalBookings) * 100)];
                     }
                     break;
             }
