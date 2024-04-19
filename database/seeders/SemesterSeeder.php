@@ -14,9 +14,21 @@ class SemesterSeeder extends Seeder
     public function run(): void
     {
         Semester::create([
+            'type' => 'Spring',
+            'start' => '2023-02-02',
+            'end' => '2023-06-06',
+            'is_current' => false
+        ]);
+        Semester::create([
             'type' => 'Winter',
-            'start' => date('2024-01-01'),
-            'end' => date('2024-06-06'),
+            'start' => '2023-09-09',
+            'end' => '2024-02-01',
+            'is_current' => false
+        ]);
+        Semester::create([
+            'type' => 'Spring',
+            'start' => '2024-02-02',
+            'end' => '2024-06-06',
             'is_current' => true
         ]);
     }

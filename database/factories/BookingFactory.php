@@ -5,6 +5,7 @@ namespace Database\Factories;
 use App\Models\Booking;
 use App\Models\User;
 use App\Models\Room;
+use App\Models\Semester;
 use Faker\Generator as Faker;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -39,6 +40,9 @@ class BookingFactory extends Factory
 
         // Round to the nearest hour
         $startDate->setTime($startDate->format('H'), 0, 0);
+        $semesterId = Semester::where('start', '<=', $startDate)
+                              ->where('end', '>=', $startDate)
+                              ->value('id');
 
         // Add exactly 2 hours to the start date to get the end date
         $endDate = clone $startDate;
@@ -60,6 +64,7 @@ class BookingFactory extends Factory
             'publicity' => $this->faker->randomElement([0, 1]),
             'title' => 'Κράτηση ' . $incrementingName++,
             'start' => $startDate,
+            'semester_id' => $semesterId,
             'end' => $endDate,
             'info' => $this->faker->sentence(10),
             'participants' => "Participant1, Participant2, Participant3",
