@@ -257,11 +257,6 @@ class StatisticsController extends Controller
         // Get the sample size from the request
         $sample = $request->input('sample');
 
-        // Get the semester ID from the request
-        $semesterId = $request->input('semesterId');
-
-        $percentage = $request->input('percentage', false);
-
         $result = []; // The return value
         $semester = Semester::where('is_current', true)->first();
         foreach ($roomIds as $roomId) {
@@ -381,7 +376,7 @@ class StatisticsController extends Controller
         foreach ($roomIds as $roomId) {
             $frequencyMap = [];
             $frequencyDayMap = [];
-            foreach ($days as $day) {                
+            foreach ($days as $day) {
                 switch ($sample) {
                     case 'current':
                         $totalBookings = Booking::where('room_id', $roomId)
@@ -400,7 +395,7 @@ class StatisticsController extends Controller
                             ->groupBy('duration')
                             ->orderBy('duration')
                             ->get();
-    
+
                         foreach ($frequency as $key => $value) {
                             $frequencyMap[] = ['label' => $value->duration, 'frequency' => $value->frequency, 'percentage' => round(($value->frequency / $totalBookings) * 100)];
                         }
@@ -423,7 +418,7 @@ class StatisticsController extends Controller
                             ->groupBy('duration')
                             ->orderBy('duration')
                             ->get();
-    
+
                         foreach ($frequency as $key => $value) {
                             $frequencyMap[] = ['label' => $value->duration, 'frequency' => $value->frequency, 'percentage' => round(($value->frequency / $totalBookings) * 100)];
                         }
@@ -443,13 +438,59 @@ class StatisticsController extends Controller
                             ->groupBy('duration')
                             ->orderBy('duration')
                             ->get();
-    
+
                         foreach ($frequency as $key => $value) {
                             $frequencyMap[] = ['label' => $value->duration, 'frequency' => $value->frequency, 'percentage' => round(($value->frequency / $totalBookings) * 100)];
                         }
                         break;
                 }
                 $frequencyDayMap[] = ['day' => $day, 'frequency' => $frequencyMap];
+            }
+            $result[] = [
+                'room_id' => $roomId,
+                'frequency' => $frequencyDayMap
+            ];
+        }
+
+        return $result;
+    }
+    public function roomMonthOfYearDurationFrequency(Request $request)
+    {
+        $roomIds = $request->input('roomIds');
+
+        $months = $request->input('months');
+
+        // Get the sample size from the request in this context is years
+        $year = $request->input('year');
+
+        $semester = Semester::where('is_current', 1)->first();
+        foreach ($roomIds as $roomId) {
+            $frequencyMap = [];
+            $frequencyDayMap = [];
+            foreach ($months as $month) {
+                $totalBookings = Booking::where('room_id', $roomId)
+                    ->where('status', 1)
+                    ->whereYear('start', $year)
+                    ->whereMonth('start', '=', $month)
+                    ->where('semester_id', $semester->id)
+                    ->count();
+                $frequency = Booking::select(
+                    DB::raw('TIMESTAMPDIFF(HOUR, start, end) as duration'),
+                    DB::raw('COUNT(*) as frequency')
+                )
+                    ->whereYear('start', $year)
+                    ->whereMonth('start', '=', $month)
+                    ->where('room_id', $roomId)
+                    ->where('semester_id', $semester->id)
+                    ->where('status', 1)
+                    ->groupBy('duration')
+                    ->orderBy('duration')
+                    ->get();
+
+                foreach ($frequency as $key => $value) {
+                    $frequencyMap[] = ['label' => $value->duration, 'frequency' => $value->frequency, 'percentage' => round(($value->frequency / $totalBookings) * 100)];
+                }
+                $frequencyDayMap[] = ['month' => $month, 'frequency' => $frequencyMap];
             }
             $result[] = [
                 'room_id' => $roomId,
