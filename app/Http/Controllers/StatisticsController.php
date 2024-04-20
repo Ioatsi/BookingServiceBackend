@@ -441,7 +441,7 @@ class StatisticsController extends Controller
                     'total' => $totalBookedHours,
                     'capacity' => $capacity,
                     'occupied' => $percentage,
-                    'not_Occupied' => $notOccupied
+                    'notOccupied' => $notOccupied
                 ];
             }
         }
@@ -490,7 +490,7 @@ class StatisticsController extends Controller
                 'total' => $totalBookedHours,
                 'capacity' => $totalAvailableHours,
                 'occupied' => $percentage,
-                'not_occupied' => $notOccupied
+                'notOccupied' => $notOccupied
             ];
         }
 
@@ -530,7 +530,7 @@ class StatisticsController extends Controller
                 'capacity' => $totalAvailableHours,
                 'total' => $totalBookedHours,
                 'occupied' => $percentage,
-                'not_Occupied' => $notOccupied
+                'notOccupied' => $notOccupied
             ];
         }
 
@@ -586,7 +586,7 @@ class StatisticsController extends Controller
                 'room_id' => $roomId,
                 'capacity' => $capacity,
                 'occupied' => $percentage,
-                'not_occupied' => $notOccupied,
+                'notOccupied' => $notOccupied,
                 'total' => $totalBookedHours
             ];
         }
