@@ -336,6 +336,58 @@ class StatisticsController extends Controller
 
         return $result;
     }
+    public function roomOccupancyByDayOfWeekPercentage(Request $request)
+    {
+        $roomIds = $request->input('roomIds');
+        $days = $request->input('days');
+        $semesterIds = $request->input('semesterIds');
+        $semesters = Semester::whereIn('id', $semesterIds)->get();
+        foreach ($roomIds as $roomId) {
+            foreach ($days as $day) {   
+                $totalOccurrences = 0;
+                foreach ($semesters as $semester) {
+                    $startDate = Carbon::parse($semester->start);
+                    $endDate = Carbon::parse($semester->end);
+    
+                    // Calculate the number of occurrences of the specified day of the week
+                    $occurrences = $startDate->diffInDaysFiltered(function (Carbon $date) use ($day) {
+                        return $date->isDayOfWeek($day);
+                    }, $endDate);
+    
+                    $totalOccurrences += $occurrences;
+                }
+
+                $capacity = $totalOccurrences * 8;
+
+                $bookings = Booking::where('room_id', $roomId)
+                    ->where('status', 1)
+                    ->whereNull('bookings.conflict_id')
+                    ->whereIn('semester_id', $semesterIds)
+                    ->whereRaw('DAYOFWEEK(start) = ?', [$day])
+                    ->get();
+                    // Calculate the total booked hours in the month
+                $totalBookedHours = 0;
+                foreach ($bookings as $booking) {
+                    $startTime = strtotime($booking->start);
+                    $endTime = strtotime($booking->end);
+                    $totalBookedHours += ($endTime - $startTime) / (60 * 60); // Convert seconds to hours
+                }                
+                if ($capacity > 0) {
+                    $percentage = round(($totalBookedHours / $capacity) * 100);
+                } else {
+                    $percentage = 0; // No available hours, so occupancy is 0%
+                }
+                $result[] = [
+                    'room_id' => $roomId,
+                    'day' => $day,
+                    'total' => $totalBookedHours,
+                    'capacity' => $capacity,
+                    'percentage' => $percentage
+                ];
+            }
+        }
+        return $result;
+    }
     public function roomOccupancyByYearMonthPercentage(Request $request)
     {
         $roomIds = $request->input('roomIds');
@@ -375,6 +427,7 @@ class StatisticsController extends Controller
             $result[] = [
                 'room_id' => $roomId,
                 'total' => $totalBookedHours,
+                'capacity' => $totalAvailableHours,
                 'percentage' => $percentage
             ];
         }
@@ -390,7 +443,7 @@ class StatisticsController extends Controller
             // Retrieve all bookings for the specified room and month
             $bookings = Booking::where('room_id', $roomId)
                 ->whereIn('semester_id', $semesterIds)
-                ->where('status', 1)            
+                ->where('status', 1)
                 ->whereNull('bookings.conflict_id')
                 ->get();
 
@@ -428,7 +481,7 @@ class StatisticsController extends Controller
         }
         return $totalCapacity;
     }
-    
+
 
     //ToDo: Think about thses again is there a way to merge them sto ranges and samples are dynamic and avoid multiple functs and switches
     //Also do these ranges make sense? Can only the samples be dynamic? Does it make sense for them to be? Figure it out, make a list and a choice

@@ -64,5 +64,6 @@ Route::post('roomMonthOfSemesterFrequency', [StatisticsController::class, 'roomM
 Route::post('roomDayOfWeekDurationFrequency', [StatisticsController::class, 'roomDayOfWeekDurationFrequency']);
 Route::post('roomMonthOfYearDurationFrequency', [StatisticsController::class, 'roomMonthOfYearDurationFrequency']);
 
+Route::post('roomOccupancyByDayOfWeekPercentage', [StatisticsController::class, 'roomOccupancyByDayOfWeekPercentage']);
 Route::post('roomOccupancyByYearMonthPercentage', [StatisticsController::class, 'roomOccupancyByYearMonthPercentage']);
 Route::post('roomOccupancyBySemester', [StatisticsController::class, 'roomOccupancyBySemester']);
