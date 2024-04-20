@@ -13,6 +13,8 @@ use PhpParser\Node\Expr\FuncCall;
 
 class StatisticsController extends Controller
 {
+
+    //ToDo add roomHourOfDayOfWeekFrequency
     //Room Booking Frequency by Range with percentage and dynamic samples(to be implemented) 
     public function roomDayOfWeekFrequency(Request $request)
     {
@@ -343,17 +345,17 @@ class StatisticsController extends Controller
         $semesterIds = $request->input('semesterIds');
         $semesters = Semester::whereIn('id', $semesterIds)->get();
         foreach ($roomIds as $roomId) {
-            foreach ($days as $day) {   
+            foreach ($days as $day) {
                 $totalOccurrences = 0;
                 foreach ($semesters as $semester) {
                     $startDate = Carbon::parse($semester->start);
                     $endDate = Carbon::parse($semester->end);
-    
+
                     // Calculate the number of occurrences of the specified day of the week
                     $occurrences = $startDate->diffInDaysFiltered(function (Carbon $date) use ($day) {
                         return $date->isDayOfWeek($day);
                     }, $endDate);
-    
+
                     $totalOccurrences += $occurrences;
                 }
 
@@ -361,17 +363,17 @@ class StatisticsController extends Controller
 
                 $bookings = Booking::where('room_id', $roomId)
                     ->where('status', 1)
-                    ->whereNull('bookings.conflict_id')
+                    ->whereNull('conflict_id')
                     ->whereIn('semester_id', $semesterIds)
                     ->whereRaw('DAYOFWEEK(start) = ?', [$day])
                     ->get();
-                    // Calculate the total booked hours in the month
+                // Calculate the total booked hours in the month
                 $totalBookedHours = 0;
                 foreach ($bookings as $booking) {
                     $startTime = strtotime($booking->start);
                     $endTime = strtotime($booking->end);
                     $totalBookedHours += ($endTime - $startTime) / (60 * 60); // Convert seconds to hours
-                }                
+                }
                 if ($capacity > 0) {
                     $percentage = round(($totalBookedHours / $capacity) * 100);
                 } else {
@@ -444,7 +446,7 @@ class StatisticsController extends Controller
             $bookings = Booking::where('room_id', $roomId)
                 ->whereIn('semester_id', $semesterIds)
                 ->where('status', 1)
-                ->whereNull('bookings.conflict_id')
+                ->whereNull('conflict_id')
                 ->get();
 
             // Calculate the total booked hours in the month
@@ -481,9 +483,46 @@ class StatisticsController extends Controller
         }
         return $totalCapacity;
     }
+    public function roomOccupancyByDateRange(Request $request)
+    {
+        $roomIds = $request->input('roomIds');
+        $dateRange = $request->input('dateRange');
 
+        foreach ($roomIds as $roomId) {
+            $startDate = Carbon::createFromFormat('Y-m-d', $dateRange["start"]);
+            $endDate = Carbon::createFromFormat('Y-m-d', $dateRange["end"]);
+            
 
-    //ToDo: Think about thses again is there a way to merge them sto ranges and samples are dynamic and avoid multiple functs and switches
-    //Also do these ranges make sense? Can only the samples be dynamic? Does it make sense for them to be? Figure it out, make a list and a choice
-    //Adjust after feedback 
+            $totalDays = $startDate->diffInDaysFiltered(function (Carbon $date) {
+                // Exclude weekends (Saturday and Sunday)
+                return !$date->isWeekend();
+            }, $endDate);
+
+            $capacity = $totalDays * 8;
+            $bookings = Booking::where('room_id', $roomId)
+            ->whereBetween('start', [$startDate, $endDate])
+            ->where('status', 1)
+            ->whereNull('conflict_id')
+            ->get();
+            $totalBookedHours = 0;
+            foreach ($bookings as $booking) {
+                $startTime = strtotime($booking->start);
+                $endTime = strtotime($booking->end);
+                $totalBookedHours += ($endTime - $startTime) / (60 * 60); // Convert seconds to hours
+            }
+            // Calculate the occupancy percentage
+            if ($capacity > 0) {
+                $percentage = round(($totalBookedHours / $capacity) * 100);
+            } else {
+                $percentage = 0; // No available hours, so occupancy is 0%
+            }
+            $result[] = [
+                'room_id' => $roomId,
+                'capacity' => $capacity,
+                'percentage' => $percentage,
+                'total' => $totalBookedHours
+            ];
+        }
+        return $result;
+    }
 }
