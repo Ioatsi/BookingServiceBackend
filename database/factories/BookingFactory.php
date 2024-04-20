@@ -40,9 +40,10 @@ class BookingFactory extends Factory
 
         // Round to the nearest hour
         $startDate->setTime($startDate->format('H'), 0, 0);
-        $semesterId = Semester::where('start', '<=', $startDate)
-            ->where('end', '>=', $startDate)
-            ->value('id');
+        $semesterId = Semester::whereYear('start', '=', $startDate->format('Y'))
+        ->where('start', '<=', $startDate)
+        ->where('end', '>=', $startDate)
+        ->value('id');
 
         // Add exactly 2 hours to the start date to get the end date
         /* $endDate = clone $startDate;
