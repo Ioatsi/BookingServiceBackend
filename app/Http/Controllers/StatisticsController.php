@@ -434,12 +434,14 @@ class StatisticsController extends Controller
                 } else {
                     $percentage = 0; // No available hours, so occupancy is 0%
                 }
+                $notOccupied = 100 - $percentage;
                 $result[] = [
                     'room_id' => $roomId,
                     'day' => $day,
                     'total' => $totalBookedHours,
                     'capacity' => $capacity,
-                    'percentage' => $percentage
+                    'occupied' => $percentage,
+                    'not_Occupied' => $notOccupied
                 ];
             }
         }
@@ -482,12 +484,13 @@ class StatisticsController extends Controller
             } else {
                 $percentage = 0; // No available hours, so occupancy is 0%
             }
-
+            $notOccupied = 100 - $percentage;
             $result[] = [
                 'room_id' => $roomId,
                 'total' => $totalBookedHours,
                 'capacity' => $totalAvailableHours,
-                'percentage' => $percentage
+                'occupied' => $percentage,
+                'not_occupied' => $notOccupied
             ];
         }
 
@@ -521,12 +524,13 @@ class StatisticsController extends Controller
             } else {
                 $percentage = 0; // No available hours, so occupancy is 0%
             }
-
+            $notOccupied = 100 - $percentage;
             $result[] = [
                 'room_id' => $roomId,
                 'capacity' => $totalAvailableHours,
                 'total' => $totalBookedHours,
-                'percentage' => $percentage
+                'occupied' => $percentage,
+                'not_Occupied' => $notOccupied
             ];
         }
 
@@ -577,10 +581,12 @@ class StatisticsController extends Controller
             } else {
                 $percentage = 0; // No available hours, so occupancy is 0%
             }
+            $notOccupied = 100 - $percentage;
             $result[] = [
                 'room_id' => $roomId,
                 'capacity' => $capacity,
-                'percentage' => $percentage,
+                'occupied' => $percentage,
+                'not_occupied' => $notOccupied,
                 'total' => $totalBookedHours
             ];
         }
