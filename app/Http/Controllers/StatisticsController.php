@@ -9,6 +9,7 @@ use App\Models\Booking;
 use Carbon\Carbon;
 
 use Illuminate\Support\Facades\DB;
+use PhpParser\Node\Expr\FuncCall;
 
 class StatisticsController extends Controller
 {
@@ -215,7 +216,7 @@ class StatisticsController extends Controller
                 $label = Carbon::create()->month($month)->format('F');
                 $frequencyMap[] = ['label' => $label, 'frequency' => $frequency, 'percentage' => round(($frequency / $totalBookings) * 100)];
             }
-            
+
             $result[] = [
                 'room_id' => $roomId,
                 'frequency' => $frequencyMap
@@ -253,32 +254,32 @@ class StatisticsController extends Controller
 
         // Get the sample size from the request
         $semesterIds = $request->input('semesterIds');
-        
+
         foreach ($roomIds as $roomId) {
             $frequencyMap = [];
             $frequencyDayMap = [];
             foreach ($days as $day) {
-                    $totalBookings = Booking::where('room_id', $roomId)
-                        ->where('status', 1)
-                        ->whereRaw('DAYOFWEEK(start) = ?', [$day])
-                        ->whereIn('semester_id', $semesterIds)
-                        ->count();
-                    $frequency = Booking::select(
-                        DB::raw('TIMESTAMPDIFF(HOUR, start, end) as duration'),
-                        DB::raw('COUNT(*) as frequency')
-                    )
-                        ->whereRaw('DAYOFWEEK(start) = ?', [$day])
-                        ->where('room_id', $roomId)                        
-                        ->whereIn('semester_id', $semesterIds)
-                        ->where('status', 1)
-                        ->groupBy('duration')
-                        ->orderBy('duration')
-                        ->get();
+                $totalBookings = Booking::where('room_id', $roomId)
+                    ->where('status', 1)
+                    ->whereRaw('DAYOFWEEK(start) = ?', [$day])
+                    ->whereIn('semester_id', $semesterIds)
+                    ->count();
+                $frequency = Booking::select(
+                    DB::raw('TIMESTAMPDIFF(HOUR, start, end) as duration'),
+                    DB::raw('COUNT(*) as frequency')
+                )
+                    ->whereRaw('DAYOFWEEK(start) = ?', [$day])
+                    ->where('room_id', $roomId)
+                    ->whereIn('semester_id', $semesterIds)
+                    ->where('status', 1)
+                    ->groupBy('duration')
+                    ->orderBy('duration')
+                    ->get();
 
-                    foreach ($frequency as $key => $value) {
-                        $frequencyMap[] = ['label' => $value->duration, 'frequency' => $value->frequency, 'percentage' => round(($value->frequency / $totalBookings) * 100)];
-                    }
-                    
+                foreach ($frequency as $key => $value) {
+                    $frequencyMap[] = ['label' => $value->duration, 'frequency' => $value->frequency, 'percentage' => round(($value->frequency / $totalBookings) * 100)];
+                }
+
                 $frequencyDayMap[] = ['day' => $day, 'frequency' => $frequencyMap];
             }
             $result[] = [
@@ -380,6 +381,54 @@ class StatisticsController extends Controller
 
         return $result;
     }
+    public function roomOccupancyBySemester(Request $request)
+    {
+        $roomIds = $request->input('roomIds');
+        $semesterIds = $request->input('semesterIds');
+        $totalAvailableHours = $this->calculateSemesterCapacity($semesterIds);
+        foreach ($roomIds as $roomId) {
+            // Retrieve all bookings for the specified room and month
+            $bookings = Booking::where('room_id', $roomId)
+                ->whereIn('semester_id', $semesterIds)
+                ->where('status', 1)            
+                ->whereNull('bookings.conflict_id')
+                ->get();
+
+            // Calculate the total booked hours in the month
+            $totalBookedHours = 0;
+            foreach ($bookings as $booking) {
+                $startTime = strtotime($booking->start);
+                $endTime = strtotime($booking->end);
+                $totalBookedHours += ($endTime - $startTime) / (60 * 60); // Convert seconds to hours
+            }
+
+            // Calculate the occupancy percentage
+            if ($totalAvailableHours > 0) {
+                $percentage = round(($totalBookedHours / $totalAvailableHours) * 100);
+            } else {
+                $percentage = 0; // No available hours, so occupancy is 0%
+            }
+
+            $result[] = [
+                'room_id' => $roomId,
+                'capacity' => $totalAvailableHours,
+                'total' => $totalBookedHours,
+                'percentage' => $percentage
+            ];
+        }
+
+        return $result;
+    }
+    private function calculateSemesterCapacity($semesterIds)
+    {
+        $totalCapacity = 0;
+        foreach ($semesterIds as $semesterId) {
+            $semester = Semester::findOrFail($semesterId);
+            $totalCapacity += $semester->calculateCapacityInHours();
+        }
+        return $totalCapacity;
+    }
+    
 
     //ToDo: Think about thses again is there a way to merge them sto ranges and samples are dynamic and avoid multiple functs and switches
     //Also do these ranges make sense? Can only the samples be dynamic? Does it make sense for them to be? Figure it out, make a list and a choice
