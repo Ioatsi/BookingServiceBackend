@@ -24,7 +24,7 @@ class Semester extends Model
         $totalWeeks = $start->diffInWeeks($end);
 
         // Assuming a 40-hour work week, calculate the total capacity
-        $totalCapacity = $totalWeeks * 40;
+        $totalCapacity = $totalWeeks * 60;
 
         return $totalCapacity;
     }

@@ -14,8 +14,58 @@ use PhpParser\Node\Expr\FuncCall;
 class StatisticsController extends Controller
 {
 
-    //ToDo add roomHourOfDayOfWeekFrequency
-    //Room Booking Frequency by Range with percentage and dynamic samples(to be implemented) 
+    //ToDo add roomHourOfDayOfWeekFrequency, roomDateRangeFrequency
+    public function roomHourOfDayOfWeekFrequency(Request $request)
+    {
+        $roomIds = $request->input('roomIds');
+        $days = $request->input('days');
+        $semesterIds = $request->input('semesterIds');
+        $result = [];
+        foreach ($roomIds as $roomId) {
+            foreach ($days as $day) {
+                $totalBookings = Booking::select(
+                    DB::raw('DAYOFWEEK(start) as day_of_week'),
+                    DB::raw('COUNT(*) as frequency')
+                )->where('room_id', $roomId)->whereIn('semester_id', $semesterIds)->count();
+                $frequency = Booking::select(
+                    DB::raw('DAYOFWEEK(start) as day_of_week'),
+                    DB::raw('HOUR(start) as hour_of_day'),
+                    DB::raw('COUNT(*) as frequency')
+                )
+                    ->whereIn('semester_id', $semesterIds)
+                    ->where('room_id', $roomId)
+                    ->where('status', 1)
+                    ->whereRaw('DAYOFWEEK(start) = ?', [$day]) // Filter by the given day of the week
+                    ->groupBy('day_of_week', 'hour_of_day')
+                    ->orderBy('day_of_week')
+                    ->orderBy('hour_of_day')
+                    ->get();
+                $frequencyMap = [];
+                $fullFrequency = [];
+                // Initialize the frequency map with all hours between 8 and 20 and set the frequency to 0
+                for ($i = 8; $i <= 20; $i++) {
+                    $frequencyMap[$i] = ['label' => $i, 'frequency' => 0, 'percentage' => 0];
+                }
+
+                // Iterate over the frequencies and update the corresponding hour in the frequency map
+                foreach ($frequency as $item) {
+                    $hourOfDay = $item->hour_of_day;
+                    $frequencyMap[$hourOfDay] = [
+                        'label' => $hourOfDay,
+                        'frequency' => $item->frequency,
+                        'percentage' => round(($item->frequency / $totalBookings) * 100)
+                    ];
+                }
+                $label = Carbon::create()->startOfWeek()->addDays($day - 1)->format('l');
+                $fullFrequency[] = ['label' => $label, 'frequency' => $frequencyMap];
+                $result[] = [
+                    'room_id' => $roomId,
+                    'frequency' => $fullFrequency
+                ];
+            }
+        }
+        return $result;
+    }
     public function roomDayOfWeekFrequency(Request $request)
     {
         /**
@@ -62,7 +112,7 @@ class StatisticsController extends Controller
                 $label = Carbon::create()->startOfWeek()->addDays($i - 1)->format('l');
                 if (isset($frequencyMap[$i])) {
                     $percentage = round(($frequencyMap[$i] / $totalBookings) * 100);
-                    $fullFrequency[] = ['label' => $label, 'frequency' => $percentage, 'percentage' => $percentage];
+                    $fullFrequency[] = ['label' => $label, 'frequency' => $frequencyMap, 'percentage' => $percentage];
                 } else {
                     $fullFrequency[] = ['label' => $label, 'frequency' => 0];
                 }
@@ -359,7 +409,7 @@ class StatisticsController extends Controller
                     $totalOccurrences += $occurrences;
                 }
 
-                $capacity = $totalOccurrences * 8;
+                $capacity = $totalOccurrences * 12;
 
                 $bookings = Booking::where('room_id', $roomId)
                     ->where('status', 1)
@@ -417,7 +467,7 @@ class StatisticsController extends Controller
             }
 
             // Calculate the total available hours in the month (assuming 8 hours per day)
-            $totalAvailableHours = $totalDaysInMonth * 8;
+            $totalAvailableHours = $totalDaysInMonth * 12;
 
             // Calculate the occupancy percentage
             if ($totalAvailableHours > 0) {
@@ -491,19 +541,19 @@ class StatisticsController extends Controller
         foreach ($roomIds as $roomId) {
             $startDate = Carbon::createFromFormat('Y-m-d', $dateRange["start"]);
             $endDate = Carbon::createFromFormat('Y-m-d', $dateRange["end"]);
-            
+
 
             $totalDays = $startDate->diffInDaysFiltered(function (Carbon $date) {
                 // Exclude weekends (Saturday and Sunday)
                 return !$date->isWeekend();
             }, $endDate);
 
-            $capacity = $totalDays * 8;
+            $capacity = $totalDays * 12;
             $bookings = Booking::where('room_id', $roomId)
-            ->whereBetween('start', [$startDate, $endDate])
-            ->where('status', 1)
-            ->whereNull('conflict_id')
-            ->get();
+                ->whereBetween('start', [$startDate, $endDate])
+                ->where('status', 1)
+                ->whereNull('conflict_id')
+                ->get();
             $totalBookedHours = 0;
             foreach ($bookings as $booking) {
                 $startTime = strtotime($booking->start);
