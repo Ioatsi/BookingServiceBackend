@@ -15,9 +15,10 @@ class StatisticsController extends Controller
 {
     public function roomHourOfDayOfWeekFrequency(Request $request)
     {
-        $roomIds = $request->input('roomIds');
-        $days = $request->input('days');
-        $semesterIds = $request->input('semesterIds');
+        $roomIds = $request->input('roomIds', [1]);
+        $days = $request->input('days',[1]);
+        $currentSemesterId = Semester::where('is_current', true)->first()->id;
+        $semesterIds = $request->input('semesterIds', [$currentSemesterId]);
         $result = [];
         foreach ($roomIds as $roomId) {
             foreach ($days as $day) {
@@ -78,10 +79,10 @@ class StatisticsController extends Controller
          */
 
         // Get the room IDs from the request
-        $roomIds = $request->input('roomIds');
+        $roomIds = $request->input('roomIds', [1]);
 
-
-        $semesterIds = $request->input('semesterIds');
+        $currentSemesterId = Semester::where('is_current', true)->first()->id;
+        $semesterIds = $request->input('semesterIds', [$currentSemesterId]);
 
         $result = []; // The return value
 
@@ -139,15 +140,17 @@ class StatisticsController extends Controller
          */
 
         // Get the room IDs from the request
-        $roomIds = $request->input('roomIds');
+        $roomIds = $request->input('roomIds', [1]);
 
         // Get the sample size from the request
-        $sample = $request->input('sample');
+        $sample = $request->input('sample', 'some');
 
+        $currentMonth = Carbon::now()->month;
         // Get the month and year from the request
-        $months = $request->input('months');
+        $months = $request->input('months',[$currentMonth]);
 
-        $years = $request->input('years');
+        $currentYear = Carbon::now()->year;
+        $years = $request->input('years',[$currentYear]);
 
         $result = []; // The return value
 
@@ -233,9 +236,10 @@ class StatisticsController extends Controller
          */
 
         // Get the room IDs from the request
-        $roomIds = $request->input('roomIds');
+        $roomIds = $request->input('roomIds', [1]);
 
-        $semesterIds = $request->input('semesterIds');
+        $currentSemesterId = Semester::where('is_current', true)->first()->id;
+        $semesterIds = $request->input('semesterIds', [$currentSemesterId]);
 
         $result = []; // The return value
         foreach ($roomIds as $roomId) {
@@ -298,9 +302,9 @@ class StatisticsController extends Controller
     //Room Booking Duration Frequency by Range with percentage and dynamic samples(to be implemented) 
     public function roomDayOfWeekDurationFrequency(Request $request)
     {
-        $roomIds = $request->input('roomIds');
+        $roomIds = $request->input('roomIds', [1]);
 
-        $days = $request->input('days');
+        $days = $request->input('days', [1]);
 
         // Get the sample size from the request
         $semesterIds = $request->input('semesterIds');
@@ -342,12 +346,14 @@ class StatisticsController extends Controller
     }
     public function roomMonthOfYearDurationFrequency(Request $request)
     {
-        $roomIds = $request->input('roomIds');
+        $roomIds = $request->input('roomIds', [1]);
 
-        $months = $request->input('months');
+        $currentMonth = Carbon::now()->month;
+        $months = $request->input('months', $currentMonth);
 
         // Get the sample size from the request in this context is years
-        $year = $request->input('year');
+        $currentYear = Carbon::now()->year;
+        $year = $request->input('year', $currentYear);
 
         $semester = Semester::where('is_current', 1)->first();
         foreach ($roomIds as $roomId) {
@@ -388,9 +394,10 @@ class StatisticsController extends Controller
     }
     public function roomOccupancyByDayOfWeekPercentage(Request $request)
     {
-        $roomIds = $request->input('roomIds');
-        $days = $request->input('days');
-        $semesterIds = $request->input('semesterIds');
+        $roomIds = $request->input('roomIds', [1]);
+        $days = $request->input('days', [1]);
+        $currentSemesterId = Semester::where('is_current', true)->first()->id;
+        $semesterIds = $request->input('semesterIds', [$currentSemesterId]);
         $semesters = Semester::whereIn('id', $semesterIds)->get();
         foreach ($roomIds as $roomId) {
             foreach ($days as $day) {
@@ -440,10 +447,12 @@ class StatisticsController extends Controller
     }
     public function roomOccupancyByYearMonthPercentage(Request $request)
     {
-        $roomIds = $request->input('roomIds');
+        $roomIds = $request->input('roomIds', [1]);
+        $currentMonth = Carbon::now()->month;
+        $currentYear = Carbon::now()->year;
+        $year = $request->input('year', $currentYear);
+        $month = $request->input('month', $currentMonth);
         foreach ($roomIds as $roomId) {
-            $year = $request->input('year');
-            $month = $request->input('month');
             // Get the first and last day of the specified month
             $firstDayOfMonth = "{$year}-{$month}-01";
             $lastDayOfMonth = date('Y-m-t', strtotime($firstDayOfMonth));
@@ -486,8 +495,9 @@ class StatisticsController extends Controller
     }
     public function roomOccupancyBySemester(Request $request)
     {
-        $roomIds = $request->input('roomIds');
-        $semesterIds = $request->input('semesterIds');
+        $roomIds = $request->input('roomIds', [1]);
+        $currentSemesterId = Semester::where('is_current', true)->first()->id;
+        $semesterIds = $request->input('semesterIds', [$currentSemesterId]);
         $totalAvailableHours = $this->calculateSemesterCapacity($semesterIds);
         foreach ($roomIds as $roomId) {
             // Retrieve all bookings for the specified room and month
@@ -533,12 +543,15 @@ class StatisticsController extends Controller
     }
     public function roomOccupancyByDateRange(Request $request)
     {
-        $roomIds = $request->input('roomIds');
-        $dateRange = $request->input('dateRange');
+        $roomIds = $request->input('roomIds', [1]);
+        $currentMonthStart = Carbon::now()->startOfMonth();
+        $currentMonthEnd = Carbon::now()->endOfMonth();
+        $dateRange = $request->input('dateRange', [$currentMonthStart->format('Y-m-d'), $currentMonthEnd->format('Y-m-d')]);
 
+        $startDate = isset($dateRange["start"]) ? Carbon::createFromFormat('Y-m-d', $dateRange["start"]) : $currentMonthStart;
+        $endDate = isset($dateRange["end"]) ? Carbon::createFromFormat('Y-m-d', $dateRange["end"]) : $currentMonthEnd;
         foreach ($roomIds as $roomId) {
-            $startDate = Carbon::createFromFormat('Y-m-d', $dateRange["start"]);
-            $endDate = Carbon::createFromFormat('Y-m-d', $dateRange["end"]);
+           
 
 
             $totalDays = $startDate->diffInDaysFiltered(function (Carbon $date) {
