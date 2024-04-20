@@ -13,8 +13,6 @@ use PhpParser\Node\Expr\FuncCall;
 
 class StatisticsController extends Controller
 {
-
-    //ToDo add roomHourOfDayOfWeekFrequency, roomDateRangeFrequency
     public function roomHourOfDayOfWeekFrequency(Request $request)
     {
         $roomIds = $request->input('roomIds');
