@@ -499,13 +499,20 @@ class StatisticsController extends Controller
                     $percentage = 0; // No available hours, so occupancy is 0%
                 }
                 $notOccupied = 100 - $percentage;
+                $data = [
+                    'labels' => ['Occupied', 'Not Occupied'],
+                    'percentageDataset' => [$percentage, $notOccupied],
+                    'accumulatedDataset' => [$totalBookedHours, $capacity - $totalBookedHours],
+                ];
                 $result[] = [
                     'room_id' => $roomId,
                     'day' => $day,
+                    'data' => $data,
                     'total' => $totalBookedHours,
                     'capacity' => $capacity,
                     'occupied' => $percentage,
-                    'notOccupied' => $notOccupied
+                    'notOccupied' => $notOccupied,
+                    'options' => ['chartType' => 'doughnut'],
                 ];
             }
         }
@@ -540,21 +547,28 @@ class StatisticsController extends Controller
             }
 
             // Calculate the total available hours in the month (assuming 8 hours per day)
-            $totalAvailableHours = $totalDaysInMonth * 12;
+            $capacity = $totalDaysInMonth * 12;
 
             // Calculate the occupancy percentage
-            if ($totalAvailableHours > 0) {
-                $percentage = round(($totalBookedHours / $totalAvailableHours) * 100);
+            if ($capacity > 0) {
+                $percentage = round(($totalBookedHours / $capacity) * 100);
             } else {
                 $percentage = 0; // No available hours, so occupancy is 0%
             }
             $notOccupied = 100 - $percentage;
+            $data = [
+                'labels' => ['Occupied', 'Not Occupied'],
+                'percentageDataset' => [$percentage, $notOccupied],
+                'accumulatedDataset' => [$totalBookedHours, $capacity - $totalBookedHours],
+            ];
             $result[] = [
                 'room_id' => $roomId,
+                'data' => $data,
                 'total' => $totalBookedHours,
-                'capacity' => $totalAvailableHours,
+                'capacity' => $capacity,
                 'occupied' => $percentage,
-                'notOccupied' => $notOccupied
+                'notOccupied' => $notOccupied,
+                'options' => ['chartType' => 'doughnut'],
             ];
         }
 
@@ -565,7 +579,7 @@ class StatisticsController extends Controller
         $roomIds = $request->input('roomIds', [1]);
         $currentSemesterId = Semester::where('is_current', true)->first()->id;
         $semesterIds = $request->input('semesterIds', [$currentSemesterId]);
-        $totalAvailableHours = $this->calculateSemesterCapacity($semesterIds);
+        $capacity = $this->calculateSemesterCapacity($semesterIds);
         foreach ($roomIds as $roomId) {
             // Retrieve all bookings for the specified room and month
             $bookings = Booking::where('room_id', $roomId)
@@ -583,18 +597,25 @@ class StatisticsController extends Controller
             }
 
             // Calculate the occupancy percentage
-            if ($totalAvailableHours > 0) {
-                $percentage = round(($totalBookedHours / $totalAvailableHours) * 100);
+            if ($capacity > 0) {
+                $percentage = round(($totalBookedHours / $capacity) * 100);
             } else {
                 $percentage = 0; // No available hours, so occupancy is 0%
             }
             $notOccupied = 100 - $percentage;
+            $data = [
+                'labels' => ['Occupied', 'Not Occupied'],
+                'percentageDataset' => [$percentage, $notOccupied],
+                'accumulatedDataset' => [$totalBookedHours, $capacity - $totalBookedHours],
+            ];
             $result[] = [
                 'room_id' => $roomId,
-                'capacity' => $totalAvailableHours,
+                'data' => $data,
                 'total' => $totalBookedHours,
+                'capacity' => $capacity,
                 'occupied' => $percentage,
-                'notOccupied' => $notOccupied
+                'notOccupied' => $notOccupied,
+                'options' => ['chartType' => 'doughnut'],
             ];
         }
 
@@ -645,13 +666,21 @@ class StatisticsController extends Controller
             } else {
                 $percentage = 0; // No available hours, so occupancy is 0%
             }
+            
             $notOccupied = 100 - $percentage;
+            $data = [
+                'labels' => ['Occupied', 'Not Occupied'],
+                'percentageDataset' => [$percentage, $notOccupied],
+                'accumulatedDataset' => [$totalBookedHours, $capacity - $totalBookedHours],
+            ];
             $result[] = [
                 'room_id' => $roomId,
+                'data' => $data,
+                'total' => $totalBookedHours,
                 'capacity' => $capacity,
                 'occupied' => $percentage,
                 'notOccupied' => $notOccupied,
-                'total' => $totalBookedHours
+                'options' => ['chartType' => 'doughnut'],
             ];
         }
         return $result;
