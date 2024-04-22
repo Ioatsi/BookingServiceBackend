@@ -382,9 +382,22 @@ class StatisticsController extends Controller
         $currentSemesterId = Semester::where('is_current', true)->first()->id;
         $semesterIds = $request->input('semesterIds', [$currentSemesterId]);
 
+        $roomIdsLength = count($roomIds);
+        $daysLength = count($days);
+        $semesterIdsLength = count($semesterIds);
+        if ($roomIdsLength === 0) {
+            $roomIds = [1]; // Default value
+        }
+        if ($daysLength === 0) {
+            $days = [1]; // Default value
+        }
+
+        if ($semesterIdsLength === 0) {
+            $semesterIds = [$currentSemesterId]; // Default value
+        }
         foreach ($roomIds as $roomId) {
             $frequencyMap = [];
-            $frequencyDayMap = [];
+            $label = '';
             foreach ($days as $day) {
                 $totalBookings = Booking::where('room_id', $roomId)
                     ->where('status', 1)
@@ -421,47 +434,58 @@ class StatisticsController extends Controller
                         $percentageMax = round(($value->frequency / $totalBookings) * 100);
                     }
                 }
+                $label = $label . ' - ' . Carbon::create()->startOfWeek()->addDays($day - 1)->format('l');
 
                 $fullFrequency = ['labels' => $labels, 'frequency' => $frequencyMap, 'percentage' => $percentageMap, 'totalBookings' => $totalBookings];
             }
+            $room = Room::where('id', $roomId)->first();
+            $label = $room->name . ' ' . $label;
             $result[] = [
                 'room_id' => $roomId,
                 'data' => $fullFrequency,
-                'options' => ['frequencyMax' => round($frequencyMax * 1.1), 'percentageMax' => round($percentageMax * 1.1), 'chartType' => 'line'],
+                'options' => ['label' => $label . ' Day of Week Duration Frequency', 'frequencyMax' => round($frequencyMax * 1.1), 'percentageMax' => round($percentageMax * 1.1), 'chartType' => 'line'],
             ];
         }
 
         return $result;
     }
-    public function roomMonthOfYearDurationFrequency(Request $request)
+    public function roomMonthDurationFrequency(Request $request)
     {
         $roomIds = $request->input('roomIds', [1]);
 
         $currentMonth = Carbon::now()->month;
         $months = $request->input('months', [$currentMonth]);
 
-        // Get the sample size from the request in this context is years
-        $currentYear = Carbon::now()->year;
-        $year = $request->input('year', [$currentYear]);
-
         $currentSemesterId = Semester::where('is_current', true)->first()->id;
-        $semesterId = $request->input('semester', [$currentSemesterId]);
+        $semesterIds = $request->input('semester', [$currentSemesterId]);
+
+        $roomIdsLength = count($roomIds);
+        $semesterIdsLength = count($semesterIds);
+        $monthsLength = count($months);
+        if ($roomIdsLength === 0) {
+            $roomIds = [1]; // Default value
+        }
+        if ($semesterIdsLength === 0) {
+            $semesterIds = [$currentSemesterId]; // Default value
+        }
+        if ($monthsLength === 0) {
+            $months = [$currentMonth]; // Default value
+        }
         foreach ($roomIds as $roomId) {
+            $label = '';
             foreach ($months as $month) {
                 $totalBookings = Booking::where('room_id', $roomId)
                     ->where('status', 1)
-                    ->whereYear('start', $year)
                     ->whereMonth('start', '=', $month)
-                    ->whereIn('semester_id', $semesterId)
+                    ->whereIn('semester_id', $semesterIds)
                     ->count();
                 $frequency = Booking::select(
                     DB::raw('TIMESTAMPDIFF(HOUR, start, end) as duration'),
                     DB::raw('COUNT(*) as frequency')
                 )
-                    ->whereYear('start', $year)
                     ->whereMonth('start', '=', $month)
                     ->where('room_id', $roomId)
-                    ->whereIn('semester_id', $semesterId)
+                    ->whereIn('semester_id', $semesterIds)
                     ->where('status', 1)
                     ->groupBy('duration')
                     ->orderBy('duration')
@@ -485,11 +509,15 @@ class StatisticsController extends Controller
                     }
                 }
                 $fullFrequency = ['labels' => $labels, 'frequency' => $frequencyMap, 'percentage' => $percentageMap, 'totalBookings' => $totalBookings];
+                $label = $label . ' - ' . Carbon::create()->month($month)->format('F');
             }
+
+            $room = Room::where('id', $roomId)->first();
+            $label = $room->name . ' ' . $label;
             $result[] = [
                 'room_id' => $roomId,
                 'data' => $fullFrequency,
-                'options' => ['frequencyMax' => round($frequencyMax * 1.6), 'percentageMax' => round($percentageMax * 1.6), 'chartType' => 'line'],
+                'options' => ['label' => $label . ' Booking Month Duration Frequency', 'frequencyMax' => round($frequencyMax * 1.6), 'percentageMax' => round($percentageMax * 1.6), 'chartType' => 'line'],
             ];
         }
 
