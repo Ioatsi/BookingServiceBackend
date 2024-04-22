@@ -749,7 +749,6 @@ class StatisticsController extends Controller
 
         $dateRange = $request->input('dateRange', [$currentMonthStart->format('Y-m-d'), $currentMonthEnd->format('Y-m-d')]);
 
-
         if ($dateRange == null) {
             $dateRange = [$currentMonthStart->format('Y-m-d'), $currentMonthEnd->format('Y-m-d')];
         }
@@ -801,6 +800,172 @@ class StatisticsController extends Controller
             'notOccupied' => $notOccupied,
             'options' => ['chartType' => 'doughnut'],
         ];
+        return $result;
+    }
+    public function roomDateRangeFrequency(Request $request)
+    {
+        /**
+         * Calculate the frequency of bookings for each day of given date range for a list of rooms
+         *
+         * @param Request $request
+         * @return array An array of room_id and frequency for each day of the month.
+         *               The frequency is the number of bookings on that day of the month.
+         *               The frequency is an array with day_of_month as the key and frequency as the value.
+         */
+
+        // Get the room IDs from the request
+        $roomIds = $request->input('roomIds', [1]);
+
+        $currentMonthStart = Carbon::now()->startOfMonth();
+        $currentMonthEnd = Carbon::now()->endOfMonth();
+
+        $dateRange = $request->input('dateRange', [$currentMonthStart->format('Y-m-d'), $currentMonthEnd->format('Y-m-d')]);
+
+        if ($dateRange == null) {
+            $dateRange = [$currentMonthStart->format('Y-m-d'), $currentMonthEnd->format('Y-m-d')];
+        }
+
+        $roomIdsLength = count($roomIds);
+        if ($roomIdsLength === 0) {
+            $roomIds = [1]; // Default value
+        }
+        $startDate = isset($dateRange["start"]) ? Carbon::createFromFormat('n/j/Y', $dateRange["start"]) : $currentMonthStart;
+        $endDate = isset($dateRange["end"]) ? Carbon::createFromFormat('n/j/Y', $dateRange["end"]) : $currentMonthEnd;
+
+        $result = []; // The return value
+
+        foreach ($roomIds as $roomId) {
+            $label = '';
+
+            // Get the total number of days in the date range
+            $totalDays = $endDate->diffInDays($startDate) + 1;
+
+            // Get the total number of bookings for the date range
+            $totalBookings = Booking::where('room_id', $roomId)
+                ->where('status', 1)
+                ->whereBetween('start', [$startDate, $endDate])
+                ->count();
+
+            // Query to get the bookings for the room within the date range
+            $frequency = Booking::select(DB::raw('DAY(start) as day_of_month'), DB::raw('count(*) as frequency'))
+                ->whereBetween('start', [$startDate, $endDate])
+                ->where('room_id', $roomId)
+                ->where('status', 1)
+                ->groupBy(DB::raw('DAY(start)'))
+                ->orderBy('day_of_month', 'asc')
+                ->get();
+
+            $frequencyMap = [];
+            $percentageMap = [];
+            $frequencyMax = 0;
+            $percentageMax = 0;
+            for ($i = 1; $i <= $totalDays; $i++) {
+                $frequencyMap[$i] = 0;
+                $percentageMap[$i] = 0;
+                $labels[$i - 1] = $i;
+            }
+            foreach ($frequency as $item) {
+                $frequencyMap[$item->day_of_month - 1] = $item->frequency;
+                $percentageMap[$item->day_of_month - 1] = round(($item->frequency / $totalBookings) * 100);
+                if ($item->frequency > $frequencyMax) {
+                    $frequencyMax = $item->frequency;
+                    $percentageMax = round(($item->frequency / $totalBookings) * 100);
+                }
+            }
+
+            $fullFrequency = ['labels' => $labels, 'frequency' => array_values($frequencyMap), 'percentage' => array_values($percentageMap), 'totalBookings' => $totalBookings];
+
+            $room = Room::where('id', $roomId)->first();
+            $label = $room->name . ' ' . $label;
+
+            $result[] = [
+                'room_id' => $roomId,
+                'data' => $fullFrequency,
+                'options' => ['label' => $label . ' Booking Day of Month Frequency', 'frequencyMax' => round($frequencyMax * 1.6), 'percentageMax' => round($percentageMax * 1.6), 'chartType' => 'bar']
+            ];
+        }
+
+        return $result;
+    }
+    public function roomDateRangeDurationFrequency(Request $request)
+    {
+        $roomIds = $request->input('roomIds', [1]);
+
+        $currentSemesterId = Semester::where('is_current', true)->first()->id;
+        $semesterIds = $request->input('semester', [$currentSemesterId]);
+        
+        $currentMonthStart = Carbon::now()->startOfMonth();
+        $currentMonthEnd = Carbon::now()->endOfMonth();
+
+        $dateRange = $request->input('dateRange', [$currentMonthStart->format('Y-m-d'), $currentMonthEnd->format('Y-m-d')]);
+
+        if ($dateRange == null) {
+            $dateRange = [$currentMonthStart->format('Y-m-d'), $currentMonthEnd->format('Y-m-d')];
+        }
+
+        $startDate = isset($dateRange["start"]) ? Carbon::createFromFormat('n/j/Y', $dateRange["start"]) : $currentMonthStart;
+        $endDate = isset($dateRange["end"]) ? Carbon::createFromFormat('n/j/Y', $dateRange["end"]) : $currentMonthEnd;
+        
+        
+        $roomIdsLength = count($roomIds);
+        $semesterIdsLength = count($semesterIds);
+        if ($roomIdsLength === 0) {
+            $roomIds = [1]; // Default value
+        }
+        if ($semesterIdsLength === 0) {
+            $semesterIds = [$currentSemesterId]; // Default value
+        }
+
+        $result = []; // The return value
+
+        foreach ($roomIds as $roomId) {
+            $label = '';
+            $totalBookings = Booking::where('room_id', $roomId)
+                ->where('status', 1)
+                ->whereBetween('start', [$startDate, $endDate])
+                ->whereIn('semester_id', $semesterIds)
+                ->count();
+            $frequency = Booking::select(
+                DB::raw('TIMESTAMPDIFF(HOUR, start, end) as duration'),
+                DB::raw('COUNT(*) as frequency')
+            )
+                ->whereBetween('start', [$startDate, $endDate])
+                ->where('room_id', $roomId)
+                ->whereIn('semester_id', $semesterIds)
+                ->where('status', 1)
+                ->groupBy('duration')
+                ->orderBy('duration')
+                ->get();
+            $frequencyMap = [];
+            $percentageMap = [];
+            $labels = [];
+            $frequencyMax = 0;
+            $percentageMax = 0;
+            for ($hour = 0; $hour < 12; $hour++) {
+                $labels[] = $hour;
+                $frequencyMap[] = 0;
+                $percentageMap[] = 0;
+            }
+            foreach ($frequency as $value) {
+                $frequencyMap[$value->duration] = $value->frequency;
+                $percentageMap[$value->duration] = round(($value->frequency / $totalBookings) * 100);
+                if ($value->frequency > $frequencyMax) {
+                    $frequencyMax = $value->frequency;
+                    $percentageMax = round(($value->frequency / $totalBookings) * 100);
+                }
+            }
+            $fullFrequency = ['labels' => $labels, 'frequency' => $frequencyMap, 'percentage' => $percentageMap, 'totalBookings' => $totalBookings];
+            $label = $label . ' - ' . $startDate->format('F') . ' to ' . $endDate->format('F');
+
+            $room = Room::where('id', $roomId)->first();
+            $label = $room->name . ' ' . $label;
+            $result[] = [
+                'room_id' => $roomId,
+                'data' => $fullFrequency,
+                'options' => ['label' => $label . ' Booking Month Duration Frequency', 'frequencyMax' => round($frequencyMax * 1.6), 'percentageMax' => round($percentageMax * 1.6), 'chartType' => 'line'],
+            ];
+        }
+
         return $result;
     }
 }

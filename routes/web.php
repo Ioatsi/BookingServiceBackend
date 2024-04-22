@@ -64,9 +64,11 @@ Route::post('roomHourOfDayOfWeekFrequency', [StatisticsController::class, 'roomH
 Route::post('roomDayOfWeekFrequency', [StatisticsController::class, 'roomDayOfWeekFrequency']);
 Route::post('roomDayOfMonthFrequency', [StatisticsController::class, 'roomDayOfMonthFrequency']);
 Route::post('roomMonthOfSemesterFrequency', [StatisticsController::class, 'roomMonthOfSemesterFrequency']);
+Route::post('roomDateRangeFrequency', [StatisticsController::class, 'roomDateRangeFrequency']);
 
 Route::post('roomDayOfWeekDurationFrequency', [StatisticsController::class, 'roomDayOfWeekDurationFrequency']);
 Route::post('roomMonthDurationFrequency', [StatisticsController::class, 'roomMonthDurationFrequency']);
+Route::post('roomDateRangeDurationFrequency', [StatisticsController::class, 'roomDateRangeDurationFrequency']);
 
 Route::post('roomOccupancyByDayOfWeekPercentage', [StatisticsController::class, 'roomOccupancyByDayOfWeekPercentage']);
 Route::post('roomOccupancyByMonthPercentage', [StatisticsController::class, 'roomOccupancyByMonthPercentage']);
