@@ -75,7 +75,7 @@ class StatisticsController extends Controller
                 $result[] = [
                     'room_id' => $roomId,
                     'data' => $fullFrequency,
-                    'options' => ['frequencyMax' => round($frequencyMax * 1.1), 'percentageMax' => round($percentageMax * 1.1)],
+                    'options' => ['frequencyMax' => round($frequencyMax * 1.1), 'percentageMax' => round($percentageMax * 1.1), 'chartType' => 'bar'],
                 ];
             }
         }
@@ -142,7 +142,7 @@ class StatisticsController extends Controller
             $result[] = [
                 'room_id' => $roomId,
                 'data' => $fullFrequency,
-                'options' => ['frequencyMax' => round($frequencyMax * 1.1), 'percentageMax' => round($percentageMax * 1.1)],
+                'options' => ['frequencyMax' => round($frequencyMax * 1.1), 'percentageMax' => round($percentageMax * 1.1), 'chartType' => 'bar'],
             ];
         }
 
@@ -240,7 +240,7 @@ class StatisticsController extends Controller
             $result[] = [
                 'room_id' => $roomId,
                 'data' => $fullFrequency,
-                'options' => ['frequencyMax' => round($frequencyMax * 1.6), 'percentageMax' => round($percentageMax * 1.6)]
+                'options' => ['frequencyMax' => round($frequencyMax * 1.6), 'percentageMax' => round($percentageMax * 1.6), 'chartType' => 'bar']
             ];
         }
 
@@ -283,7 +283,7 @@ class StatisticsController extends Controller
                 ->whereIn('semester_id', $semesterIds)
                 ->where('status', 1)
                 ->count();
-                
+
             $frequencyMax = 0;
             $percentageMax = 0;
             foreach ($monthsInSemester as $month) {
@@ -301,12 +301,12 @@ class StatisticsController extends Controller
                     $percentageMax = round(($frequency / $totalBookings) * 100);
                 }
             }
-            $fullFrequency = ['labels' => $labels, 'frequency' => $frequencyMap, 'percentage' => $percentageMap,'totalBookings' => $totalBookings];
+            $fullFrequency = ['labels' => $labels, 'frequency' => $frequencyMap, 'percentage' => $percentageMap, 'totalBookings' => $totalBookings];
 
             $result[] = [
                 'room_id' => $roomId,
                 'data' => $fullFrequency,
-                'options' => ['frequencyMax' => round($frequencyMax * 1.1), 'percentageMax' => round($percentageMax * 1.1)],
+                'options' => ['frequencyMax' => round($frequencyMax * 1.1), 'percentageMax' => round($percentageMax * 1.1), 'chartType' => 'bar'],
             ];
         }
 
@@ -340,7 +340,8 @@ class StatisticsController extends Controller
         $days = $request->input('days', [1]);
 
         // Get the sample size from the request
-        $semesterIds = $request->input('semesterIds');
+        $currentSemesterId = Semester::where('is_current', true)->first()->id;
+        $semesterIds = $request->input('semesterIds', [$currentSemesterId]);
 
         foreach ($roomIds as $roomId) {
             $frequencyMap = [];
@@ -363,15 +364,31 @@ class StatisticsController extends Controller
                     ->orderBy('duration')
                     ->get();
 
-                foreach ($frequency as $key => $value) {
-                    $frequencyMap[] = ['label' => $value->duration, 'frequency' => $value->frequency, 'percentage' => round(($value->frequency / $totalBookings) * 100)];
+                $frequencyMap = [];
+                $percentageMap = [];
+                $labels = [];
+                $frequencyMax = 0;
+                $percentageMax = 0;
+                for ($hour = 0; $hour < 12; $hour++) {
+                    $labels[] = $hour;
+                    $frequencyMap[] = 0;
+                    $percentageMap[] = 0;
+                }
+                foreach ($frequency as $value) {
+                    $frequencyMap[$value->duration] = $value->frequency;
+                    $percentageMap[$value->duration] = round(($value->frequency / $totalBookings) * 100);
+                    if ($value->frequency > $frequencyMax) {
+                        $frequencyMax = $value->frequency;
+                        $percentageMax = round(($value->frequency / $totalBookings) * 100);
+                    }
                 }
 
-                $frequencyDayMap[] = ['day' => $day, 'frequency' => $frequencyMap];
+                $fullFrequency = ['labels' => $labels, 'frequency' => $frequencyMap, 'percentage' => $percentageMap, 'totalBookings' => $totalBookings];
             }
             $result[] = [
                 'room_id' => $roomId,
-                'frequency' => $frequencyDayMap
+                'data' => $fullFrequency,
+                'options' => ['frequencyMax' => round($frequencyMax * 1.1), 'percentageMax' => round($percentageMax * 1.1), 'chartType' => 'line'],
             ];
         }
 
@@ -382,22 +399,21 @@ class StatisticsController extends Controller
         $roomIds = $request->input('roomIds', [1]);
 
         $currentMonth = Carbon::now()->month;
-        $months = $request->input('months', $currentMonth);
+        $months = $request->input('months', [$currentMonth]);
 
         // Get the sample size from the request in this context is years
         $currentYear = Carbon::now()->year;
-        $year = $request->input('year', $currentYear);
+        $year = $request->input('year', [$currentYear]);
 
-        $semester = Semester::where('is_current', 1)->first();
+        $currentSemesterId = Semester::where('is_current', true)->first()->id;
+        $semesterId = $request->input('semester', [$currentSemesterId]);
         foreach ($roomIds as $roomId) {
-            $frequencyMap = [];
-            $frequencyDayMap = [];
             foreach ($months as $month) {
                 $totalBookings = Booking::where('room_id', $roomId)
                     ->where('status', 1)
                     ->whereYear('start', $year)
                     ->whereMonth('start', '=', $month)
-                    ->where('semester_id', $semester->id)
+                    ->whereIn('semester_id', $semesterId)
                     ->count();
                 $frequency = Booking::select(
                     DB::raw('TIMESTAMPDIFF(HOUR, start, end) as duration'),
@@ -406,20 +422,35 @@ class StatisticsController extends Controller
                     ->whereYear('start', $year)
                     ->whereMonth('start', '=', $month)
                     ->where('room_id', $roomId)
-                    ->where('semester_id', $semester->id)
+                    ->whereIn('semester_id', $semesterId)
                     ->where('status', 1)
                     ->groupBy('duration')
                     ->orderBy('duration')
                     ->get();
-
-                foreach ($frequency as $key => $value) {
-                    $frequencyMap[] = ['label' => $value->duration, 'frequency' => $value->frequency, 'percentage' => round(($value->frequency / $totalBookings) * 100)];
+                $frequencyMap = [];
+                $percentageMap = [];
+                $labels = [];
+                $frequencyMax = 0;
+                $percentageMax = 0;
+                for ($hour = 0; $hour < 12; $hour++) {
+                    $labels[] = $hour;
+                    $frequencyMap[] = 0;
+                    $percentageMap[] = 0;
                 }
-                $frequencyDayMap[] = ['month' => $month, 'frequency' => $frequencyMap];
+                foreach ($frequency as $value) {
+                    $frequencyMap[$value->duration] = $value->frequency;
+                    $percentageMap[$value->duration] = round(($value->frequency / $totalBookings) * 100);
+                    if ($value->frequency > $frequencyMax) {
+                        $frequencyMax = $value->frequency;
+                        $percentageMax = round(($value->frequency / $totalBookings) * 100);
+                    }
+                }
+                $fullFrequency = ['labels' => $labels, 'frequency' => $frequencyMap, 'percentage' => $percentageMap, 'totalBookings' => $totalBookings];
             }
             $result[] = [
                 'room_id' => $roomId,
-                'frequency' => $frequencyDayMap
+                'data' => $fullFrequency,
+                'options' => ['frequencyMax' => round($frequencyMax * 1.6), 'percentageMax' => round($percentageMax * 1.6), 'chartType' => 'line'],
             ];
         }
 
