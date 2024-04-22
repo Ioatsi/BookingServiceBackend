@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Semester;
 use App\Models\Booking;
+use App\Models\Room;
 use Carbon\Carbon;
 
 use Illuminate\Support\Facades\DB;
@@ -20,8 +21,23 @@ class StatisticsController extends Controller
         $currentSemesterId = Semester::where('is_current', true)->first()->id;
         $semesterIds = $request->input('semesterIds', [$currentSemesterId]);
         $result = [];
-        $label = '';
+
+        $roomIdsLength = count($roomIds);
+        $daysLength = count($days);
+        $semesterIdsLength = count($semesterIds);
+        if ($roomIdsLength === 0) {
+            $roomIds = [1]; // Default value
+        }
+        if ($daysLength === 0) {
+            $days = [1]; // Default value
+        }
+
+        if ($semesterIdsLength === 0) {
+            $semesterIds = [$currentSemesterId]; // Default value
+        }
+
         foreach ($roomIds as $roomId) {
+            $label = '';
             foreach ($days as $day) {
                 $totalBookings = Booking::select(
                     DB::raw('DAYOFWEEK(start) as day_of_week'),
@@ -49,7 +65,7 @@ class StatisticsController extends Controller
                 $fullFrequency = [];
                 // Initialize the frequency map with all hours between 8 and 20 and set the frequency to 0
                 for ($i = 8; $i <= 20; $i++) {
-                    $labels[$i-8] = $i;
+                    $labels[$i - 8] = $i;
                     //$frequencyMap[] = ['label' => $i, 'datasetFrequency' => 0, 'datasetPercentage' => 0];
                     $frequencyMap[] = 0;
                     $percentageMap[] = 0;
@@ -74,13 +90,16 @@ class StatisticsController extends Controller
                 $label = $label.' - '.Carbon::create()->startOfWeek()->addDays($day - 1)->format('l');
                 $fullFrequency = ['labels' => $labels, 'frequency' => $frequencyMap, 'percentage' => $percentageMap, 'totalBookings' => $totalBookings];
             }
+
+            $room = Room::where('id', $roomId)->first();
+            $label = $room->name . ' ' . $label;
             $result[] = [
                 'room_id' => $roomId,
                 'data' => $fullFrequency,
-                'options' => ['label' => $label.' Booking Hours Frequency','frequencyMax' => round($frequencyMax * 1.1), 'percentageMax' => round($percentageMax * 1.1), 'chartType' => 'bar'],
+                'options' => ['label' => $label . ' Booking Hours Frequency', 'frequencyMax' => round($frequencyMax * 1.1), 'percentageMax' => round($percentageMax * 1.1), 'chartType' => 'bar'],
             ];
         }
-        
+
         return $result;
     }
     public function roomDayOfWeekFrequency(Request $request)
@@ -668,7 +687,7 @@ class StatisticsController extends Controller
             } else {
                 $percentage = 0; // No available hours, so occupancy is 0%
             }
-            
+
             $notOccupied = 100 - $percentage;
             $data = [
                 'labels' => ['Occupied', 'Not Occupied'],
