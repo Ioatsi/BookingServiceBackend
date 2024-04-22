@@ -20,6 +20,7 @@ class StatisticsController extends Controller
         $currentSemesterId = Semester::where('is_current', true)->first()->id;
         $semesterIds = $request->input('semesterIds', [$currentSemesterId]);
         $result = [];
+        $label = '';
         foreach ($roomIds as $roomId) {
             foreach ($days as $day) {
                 $totalBookings = Booking::select(
@@ -48,7 +49,7 @@ class StatisticsController extends Controller
                 $fullFrequency = [];
                 // Initialize the frequency map with all hours between 8 and 20 and set the frequency to 0
                 for ($i = 8; $i <= 20; $i++) {
-                    $labels[] = $i;
+                    $labels[$i-8] = $i;
                     //$frequencyMap[] = ['label' => $i, 'datasetFrequency' => 0, 'datasetPercentage' => 0];
                     $frequencyMap[] = 0;
                     $percentageMap[] = 0;
@@ -70,15 +71,16 @@ class StatisticsController extends Controller
                         //'datasetPercentage' => round(($item->frequency / $totalBookings) * 100)
                     ]; */
                 }
-                $label = Carbon::create()->startOfWeek()->addDays($day - 1)->format('l');
-                $fullFrequency = ['label' => $label, 'labels' => $labels, 'frequency' => $frequencyMap, 'percentage' => $percentageMap, 'totalBookings' => $totalBookings];
-                $result[] = [
-                    'room_id' => $roomId,
-                    'data' => $fullFrequency,
-                    'options' => ['frequencyMax' => round($frequencyMax * 1.1), 'percentageMax' => round($percentageMax * 1.1), 'chartType' => 'bar'],
-                ];
+                $label = $label.' - '.Carbon::create()->startOfWeek()->addDays($day - 1)->format('l');
+                $fullFrequency = ['labels' => $labels, 'frequency' => $frequencyMap, 'percentage' => $percentageMap, 'totalBookings' => $totalBookings];
             }
+            $result[] = [
+                'room_id' => $roomId,
+                'data' => $fullFrequency,
+                'options' => ['label' => $label.' Booking Hours Frequency','frequencyMax' => round($frequencyMax * 1.1), 'percentageMax' => round($percentageMax * 1.1), 'chartType' => 'bar'],
+            ];
         }
+        
         return $result;
     }
     public function roomDayOfWeekFrequency(Request $request)

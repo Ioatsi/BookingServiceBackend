@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\RoomController;
+use App\Http\Controllers\SemesterController;
 use App\Http\Controllers\StatisticsController;
 
 /*
@@ -55,6 +56,8 @@ Route::post('createRoom', [RoomController::class, 'store']);
 
 Route::get('getModeratedRooms/{id}', [RoomController::class, 'getModeratedRooms']);
 
+//Semester
+Route::get('getAllSemesters', [SemesterController::class, 'getAllSemesters']);
 
 //Statistics
 Route::post('roomHourOfDayOfWeekFrequency', [StatisticsController::class, 'roomHourOfDayOfWeekFrequency']);
