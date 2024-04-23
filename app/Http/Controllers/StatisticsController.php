@@ -527,15 +527,16 @@ class StatisticsController extends Controller
     }
     public function roomOccupancyByDayOfWeekPercentage(Request $request)
     {
-        $roomId = $request->input('singleRoomId', 1);
+        $roomIds = $request->input('roomIds', [1]);
         $days = $request->input('days', [1]);
         $currentSemesterId = Semester::where('is_current', true)->first()->id;
         $semesterIds = $request->input('semesterIds', [$currentSemesterId]);
 
         $daysLength = count($days);
         $semesterIdsLength = count($semesterIds);
-        if ($roomId == '') {
-            $roomId = 1; // Default value
+        $roomIdsLength = count($roomIds);
+        if ($roomIdsLength <= 0) {
+            $roomIds = [1]; // Default value
         }
         if ($daysLength === 0) {
             $days = [1]; // Default value
@@ -545,32 +546,43 @@ class StatisticsController extends Controller
             $semesterIds = [$currentSemesterId]; // Default value
         }
         $capacity = 0;
-        foreach ($days as $day) {
-            $day = (int) $day;
-            $totalOccurrences = 0;
-            $semesters = Semester::whereIn('id', $semesterIds)->get();
-            foreach ($semesters as $semester) {
-                $startDate = Carbon::parse($semester->start);
-                $endDate = Carbon::parse($semester->end);
+        $data['percentageDataset'] = [];
+        $data['accumulatedDataset'] = [];
 
-                // Calculate the number of occurrences of the specified day of the week
-                $occurrences = $startDate->diffInDaysFiltered(function (Carbon $date) use ($day) {
-                    return $date->isDayOfWeek($day);
-                }, $endDate);
-
-                $totalOccurrences += $occurrences;
-            }
-
-            $capacity = $capacity + $totalOccurrences * 12;
-
-            $bookings = Booking::where('room_id', $roomId)
-                ->where('status', 1)
-                ->whereNull('conflict_id')
-                ->whereIn('semester_id', $semesterIds)
-                ->whereRaw('DAYOFWEEK(start) = ?', [$day])
-                ->get();
-            // Calculate the total booked hours in the month
+        foreach ($roomIds as $roomId) {
+            $capacity = 0;
             $totalBookedHours = 0;
+
+
+            foreach ($days as $day) {
+                $day = (int) $day;
+                $totalOccurrences = 0;
+                $semesters = Semester::whereIn('id', $semesterIds)->get();
+                foreach ($semesters as $semester) {
+                    $startDate = Carbon::parse($semester->start);
+                    $endDate = Carbon::parse($semester->end);
+
+                    // Calculate the number of occurrences of the specified day of the week
+                    $occurrences = $startDate->diffInDaysFiltered(function (Carbon $date) use ($day) {
+                        return $date->isDayOfWeek($day);
+                    }, $endDate);
+
+                    $totalOccurrences += $occurrences;
+                }
+
+                $capacity = $capacity + $totalOccurrences * 12;
+
+                $bookings = Booking::where('room_id', $roomId)
+                    ->where('status', 1)
+                    ->whereNull('conflict_id')
+                    ->whereIn('semester_id', $semesterIds)
+                    ->whereRaw('DAYOFWEEK(start) = ?', [$day])
+                    ->get();
+                // Calculate the total booked hours in the month
+            }
+            $roomCount = Room::whereIn('id', $roomIds)->count();
+            $capacity = $capacity * $roomCount;
+
             foreach ($bookings as $booking) {
                 $startTime = strtotime($booking->start);
                 $endTime = strtotime($booking->end);
@@ -581,28 +593,33 @@ class StatisticsController extends Controller
             } else {
                 $percentage = 0; // No available hours, so occupancy is 0%
             }
-            $notOccupied = 100 - $percentage;
+
+            $room = Room::where('id', $roomId)->first();
+            $data['labels'][] = $room->name;
+            $data['percentageDataset'][] = $percentage;
+            $data['accumulatedDataset'][] = $totalBookedHours;
         }
-        $data = [
-            'labels' => ['Occupied', 'Not Occupied'],
-            'percentageDataset' => [$percentage, $notOccupied],
-            'accumulatedDataset' => [$totalBookedHours, $capacity - $totalBookedHours],
-        ];
+        $data['accumulatedDataset'][] = $capacity;
+
+        $data['labels'][] = 'Not Occupied';
+
+        $sumOfPercentage = array_sum($data['percentageDataset']);
+
+        // Calculate $notOccupied
+        $notOccupied = 100 - $sumOfPercentage;
+
+        $data['percentageDataset'][] = $notOccupied;
         $result[] = [
-            'room_id' => $roomId,
-            'day' => $day,
+            'roomIds' => $roomIds,
             'data' => $data,
-            'total' => $totalBookedHours,
             'capacity' => $capacity,
-            'occupied' => $percentage,
-            'notOccupied' => $notOccupied,
             'options' => ['chartType' => 'doughnut'],
         ];
         return $result;
     }
     public function roomOccupancyByMonthPercentage(Request $request)
     {
-        $roomId = $request->input('singleRoomId', 1);
+        $roomIds = $request->input('roomIds', [1]);
         $currentMonth = Carbon::now()->month;
         $months = $request->input('months', $currentMonth);
         $currentSemesterId = Semester::where('is_current', true)->first()->id;
@@ -615,33 +632,40 @@ class StatisticsController extends Controller
             $months = [$currentMonth]; // Default value
         }
 
-        $semesterIdsLength = count($semesterIds);
-        if ($roomId == '') {
-            $roomId = 1; // Default value
+        $roomIdsLength = count($roomIds);
+        if ($roomIdsLength <= 0) {
+            $roomIds = [1]; // Default value
         }
 
+        $semesterIdsLength = count($semesterIds);
         if ($semesterIdsLength === 0) {
             $semesterIds = [$currentSemesterId]; // Default value
         }
-        foreach ($months as $month) {
+        $capacity = 0;
+        $data['percentageDataset'] = [];
+        $data['accumulatedDataset'] = [];
+        foreach ($roomIds as $roomId) {
+            $capacity = 0;
+            $totalBookedHours = 0;
+            foreach ($months as $month) {
 
-            // Get the first and last day of the specified month
-            $firstDayOfMonth = Carbon::create(null, $month, 1);
-            $lastDayOfMonth = date('Y-m-t', strtotime($firstDayOfMonth));
+                // Get the first and last day of the specified month
+                $firstDayOfMonth = Carbon::create(null, $month, 1);
+                $lastDayOfMonth = date('Y-m-t', strtotime($firstDayOfMonth));
 
-            // Calculate the total number of days in the month
-            $totalDaysInMonth = (int) date('t', strtotime($firstDayOfMonth));
+                // Calculate the total number of days in the month
+                $totalDaysInMonth = (int) date('t', strtotime($firstDayOfMonth));
 
-            // Retrieve all bookings for the specified room and month
-            $bookings = Booking::where('room_id', $roomId)
-                ->where('status', 1)
-                ->whereNull('conflict_id')
-                ->whereIn('semester_id', $semesterIds)
-                ->whereBetween('start', [$firstDayOfMonth, $lastDayOfMonth])
-                ->get();
+                // Retrieve all bookings for the specified room and month
+                $bookings = Booking::where('room_id', $roomId)
+                    ->where('status', 1)
+                    ->whereNull('conflict_id')
+                    ->whereIn('semester_id', $semesterIds)
+                    ->whereBetween('start', [$firstDayOfMonth, $lastDayOfMonth])
+                    ->get();
+            }
 
             // Calculate the total booked hours in the month
-            $totalBookedHours = 0;
             foreach ($bookings as $booking) {
                 $startTime = strtotime($booking->start);
                 $endTime = strtotime($booking->end);
@@ -650,6 +674,8 @@ class StatisticsController extends Controller
 
             // Calculate the total available hours in the month (assuming 8 hours per day)
             $capacity = $totalDaysInMonth * 12;
+            $roomCount = Room::whereIn('id', $roomIds)->count();
+            $capacity = $capacity * $roomCount;
 
             // Calculate the occupancy percentage
             if ($capacity > 0) {
@@ -657,20 +683,26 @@ class StatisticsController extends Controller
             } else {
                 $percentage = 0; // No available hours, so occupancy is 0%
             }
-            $notOccupied = 100 - $percentage;
+            
+            $room = Room::where('id', $roomId)->first();
+            $data['labels'][] = $room->name;
+            $data['percentageDataset'][] = $percentage;
+            $data['accumulatedDataset'][] = $totalBookedHours;
         }
-        $data = [
-            'labels' => ['Occupied', 'Not Occupied'],
-            'percentageDataset' => [$percentage, $notOccupied],
-            'accumulatedDataset' => [$totalBookedHours, $capacity - $totalBookedHours],
-        ];
+        $data['accumulatedDataset'][] = $capacity;
+
+        $data['labels'][] = 'Not Occupied';
+
+        $sumOfPercentage = array_sum($data['percentageDataset']);
+
+        // Calculate $notOccupied
+        $notOccupied = 100 - $sumOfPercentage;
+
+        $data['percentageDataset'][] = $notOccupied;
         $result[] = [
-            'room_id' => $roomId,
+            'roomIds' => $roomIds,
             'data' => $data,
-            'total' => $totalBookedHours,
             'capacity' => $capacity,
-            'occupied' => $percentage,
-            'notOccupied' => $notOccupied,
             'options' => ['chartType' => 'doughnut'],
         ];
 
@@ -678,58 +710,65 @@ class StatisticsController extends Controller
         return $result;
     }
     public function roomOccupancyBySemester(Request $request)
-    {
-        $roomId = $request->input('singleRoomId', [1]);
+    {        
+        $roomIds = $request->input('roomIds', [1]);
         $currentSemesterId = Semester::where('is_current', true)->first()->id;
         $semesterIds = $request->input('semesterIds', [$currentSemesterId]);
 
-        $semesterIdsLength = count($semesterIds);
-        if ($roomId == '') {
-            $roomId = 1; // Default value
+        $roomIdsLength = count($roomIds);
+        if ($roomIdsLength <= 0) {
+            $roomIds = [1]; // Default value
         }
-
-
+        $semesterIdsLength = count($semesterIds);
         if ($semesterIdsLength === 0) {
             $semesterIds = [$currentSemesterId]; // Default value
         }
-        $capacity = $this->calculateSemesterCapacity($semesterIds);
-        // Retrieve all bookings for the specified room and month
-        $bookings = Booking::where('room_id', $roomId)
-            ->whereIn('semester_id', $semesterIds)
-            ->where('status', 1)
-            ->whereNull('conflict_id')
-            ->get();
-
-        // Calculate the total booked hours in the month
-        $totalBookedHours = 0;
-        foreach ($bookings as $booking) {
-            $startTime = strtotime($booking->start);
-            $endTime = strtotime($booking->end);
-            $totalBookedHours += ($endTime - $startTime) / (60 * 60); // Convert seconds to hours
+        $capacity = ($this->calculateSemesterCapacity($semesterIds))*count($roomIds);
+        $data['percentageDataset'] = [];
+        $data['accumulatedDataset'] = [];
+        foreach ($roomIds as $roomId) {
+            // Retrieve all bookings for the specified room and month
+            $bookings = Booking::where('room_id', $roomId)
+                ->whereIn('semester_id', $semesterIds)
+                ->where('status', 1)
+                ->whereNull('conflict_id')
+                ->get();
+    
+            // Calculate the total booked hours in the month
+            $totalBookedHours = 0;
+            foreach ($bookings as $booking) {
+                $startTime = strtotime($booking->start);
+                $endTime = strtotime($booking->end);
+                $totalBookedHours += ($endTime - $startTime) / (60 * 60); // Convert seconds to hours
+            }
+    
+            // Calculate the occupancy percentage
+            if ($capacity > 0) {
+                $percentage = round(($totalBookedHours / $capacity) * 100);
+            } else {
+                $percentage = 0; // No available hours, so occupancy is 0%
+            }
+            $room = Room::where('id', $roomId)->first();
+            $data['labels'][] = $room->name;
+            $data['percentageDataset'][] = $percentage;
+            $data['accumulatedDataset'][] = $totalBookedHours;
         }
+        $data['accumulatedDataset'][] = $capacity;
 
-        // Calculate the occupancy percentage
-        if ($capacity > 0) {
-            $percentage = round(($totalBookedHours / $capacity) * 100);
-        } else {
-            $percentage = 0; // No available hours, so occupancy is 0%
-        }
-        $notOccupied = 100 - $percentage;
-        $data = [
-            'labels' => ['Occupied', 'Not Occupied'],
-            'percentageDataset' => [$percentage, $notOccupied],
-            'accumulatedDataset' => [$totalBookedHours, $capacity - $totalBookedHours],
-        ];
+        $data['labels'][] = 'Not Occupied';
+
+        $sumOfPercentage = array_sum($data['percentageDataset']);
+
+        // Calculate $notOccupied
+        $notOccupied = 100 - $sumOfPercentage;
+
+        $data['percentageDataset'][] = $notOccupied;
         $result[] = [
-            'room_id' => $roomId,
+            'roomIds' => $roomIds,
             'data' => $data,
-            'total' => $totalBookedHours,
             'capacity' => $capacity,
-            'occupied' => $percentage,
-            'notOccupied' => $notOccupied,
             'options' => ['chartType' => 'doughnut'],
         ];
-
         return $result;
     }
     private function calculateSemesterCapacity($semesterIds)
@@ -743,7 +782,7 @@ class StatisticsController extends Controller
     }
     public function roomOccupancyByDateRange(Request $request)
     {
-        $roomId = $request->input('singleRoomId', 1);
+        $roomIds = $request->input('roomIds', [1]);
         $currentMonthStart = Carbon::now()->startOfMonth();
         $currentMonthEnd = Carbon::now()->endOfMonth();
 
@@ -756,8 +795,9 @@ class StatisticsController extends Controller
         $startDate = isset($dateRange["start"]) ? Carbon::createFromFormat('n/j/Y', $dateRange["start"]) : $currentMonthStart;
         $endDate = isset($dateRange["end"]) ? Carbon::createFromFormat('n/j/Y', $dateRange["end"]) : $currentMonthEnd;
 
-        if ($roomId == '') {
-            $roomId = 1; // Default value
+        $roomIdsLength = count($roomIds);
+        if ($roomIdsLength <= 0) {
+            $roomIds = [1]; // Default value
         }
         $totalDays = $startDate->diffInDaysFiltered(function (Carbon $date) {
             // Exclude weekends (Saturday and Sunday)
@@ -766,38 +806,47 @@ class StatisticsController extends Controller
 
         $totalDays += 1;
 
-        $capacity = $totalDays * 12;
-        $bookings = Booking::where('room_id', $roomId)
-            ->whereBetween('start', [$startDate, $endDate])
-            ->where('status', 1)
-            ->whereNull('conflict_id')
-            ->get();
-        $totalBookedHours = 0;
-        foreach ($bookings as $booking) {
-            $startTime = strtotime($booking->start);
-            $endTime = strtotime($booking->end);
-            $totalBookedHours += ($endTime - $startTime) / (60 * 60); // Convert seconds to hours
+        $capacity =( $totalDays * 12)*count($roomIds);
+        
+        $data['percentageDataset'] = [];
+        $data['accumulatedDataset'] = [];
+        foreach ($roomIds as $roomId) {
+            $bookings = Booking::where('room_id', $roomId)
+                ->whereBetween('start', [$startDate, $endDate])
+                ->where('status', 1)
+                ->whereNull('conflict_id')
+                ->get();
+            $totalBookedHours = 0;
+            foreach ($bookings as $booking) {
+                $startTime = strtotime($booking->start);
+                $endTime = strtotime($booking->end);
+                $totalBookedHours += ($endTime - $startTime) / (60 * 60); // Convert seconds to hours
+            }
+            // Calculate the occupancy percentage
+            if ($capacity > 0) {
+                $percentage = round(($totalBookedHours / $capacity) * 100);
+            } else {
+                $percentage = 0; // No available hours, so occupancy is 0%
+            }            
+            $room = Room::where('id', $roomId)->first();
+            $data['labels'][] = $room->name;
+            $data['percentageDataset'][] = $percentage;
+            $data['accumulatedDataset'][] = $totalBookedHours;
         }
-        // Calculate the occupancy percentage
-        if ($capacity > 0) {
-            $percentage = round(($totalBookedHours / $capacity) * 100);
-        } else {
-            $percentage = 0; // No available hours, so occupancy is 0%
-        }
+        $data['accumulatedDataset'][] = $capacity;
 
-        $notOccupied = 100 - $percentage;
-        $data = [
-            'labels' => ['Occupied', 'Not Occupied'],
-            'percentageDataset' => [$percentage, $notOccupied],
-            'accumulatedDataset' => [$totalBookedHours, $capacity - $totalBookedHours],
-        ];
+        $data['labels'][] = 'Not Occupied';
+
+        $sumOfPercentage = array_sum($data['percentageDataset']);
+
+        // Calculate $notOccupied
+        $notOccupied = 100 - $sumOfPercentage;
+
+        $data['percentageDataset'][] = $notOccupied;
         $result[] = [
-            'room_id' => $roomId,
+            'roomIds' => $roomIds,
             'data' => $data,
-            'total' => $totalBookedHours,
             'capacity' => $capacity,
-            'occupied' => $percentage,
-            'notOccupied' => $notOccupied,
             'options' => ['chartType' => 'doughnut'],
         ];
         return $result;
@@ -911,7 +960,7 @@ class StatisticsController extends Controller
 
 
         $roomIdsLength = count($roomIds);
-        
+
         if ($roomIdsLength === 0) {
             $roomIds = [1]; // Default value
         }
