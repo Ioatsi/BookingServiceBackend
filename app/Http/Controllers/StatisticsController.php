@@ -1139,4 +1139,24 @@ class StatisticsController extends Controller
 
         return $result;
     }
+
+    public function generalStatistics(Request $request){
+        $totals = $this->bookingTotals($request);
+        $meanDuration = $this->meanDuration($request);
+        $bussiestRooms = $this->bussiestRooms($request);
+        $bussiestRoomThisWeek = $this->bussiestRoomThisWeek($request);
+        $weekCapacityIndicator = $this->weekCapacityIndicator($request);
+        $monthCapacityIndicator = $this->monthCapacityIndicator($request);
+        $approvalRate = $this->approvalRate($request);
+        $result = [
+            'totals' => $totals,
+            'meanDuration' => $meanDuration,
+            'bussiestRooms' => $bussiestRooms,
+            'bussiestRoomThisWeek' => $bussiestRoomThisWeek,
+            'weekCapacityIndicator' => $weekCapacityIndicator,
+            'monthCapacityIndicator' => $monthCapacityIndicator,
+            'approvalRate' => $approvalRate
+        ];
+        return $result;
+    }
 }
