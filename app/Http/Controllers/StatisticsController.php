@@ -683,7 +683,7 @@ class StatisticsController extends Controller
             } else {
                 $percentage = 0; // No available hours, so occupancy is 0%
             }
-            
+
             $room = Room::where('id', $roomId)->first();
             $data['labels'][] = $room->name;
             $data['percentageDataset'][] = $percentage;
@@ -710,7 +710,7 @@ class StatisticsController extends Controller
         return $result;
     }
     public function roomOccupancyBySemester(Request $request)
-    {        
+    {
         $roomIds = $request->input('roomIds', [1]);
         $currentSemesterId = Semester::where('is_current', true)->first()->id;
         $semesterIds = $request->input('semesterIds', [$currentSemesterId]);
@@ -723,7 +723,7 @@ class StatisticsController extends Controller
         if ($semesterIdsLength === 0) {
             $semesterIds = [$currentSemesterId]; // Default value
         }
-        $capacity = ($this->calculateSemesterCapacity($semesterIds))*count($roomIds);
+        $capacity = ($this->calculateSemesterCapacity($semesterIds)) * count($roomIds);
         $data['percentageDataset'] = [];
         $data['accumulatedDataset'] = [];
         foreach ($roomIds as $roomId) {
@@ -733,7 +733,7 @@ class StatisticsController extends Controller
                 ->where('status', 1)
                 ->whereNull('conflict_id')
                 ->get();
-    
+
             // Calculate the total booked hours in the month
             $totalBookedHours = 0;
             foreach ($bookings as $booking) {
@@ -741,7 +741,7 @@ class StatisticsController extends Controller
                 $endTime = strtotime($booking->end);
                 $totalBookedHours += ($endTime - $startTime) / (60 * 60); // Convert seconds to hours
             }
-    
+
             // Calculate the occupancy percentage
             if ($capacity > 0) {
                 $percentage = round(($totalBookedHours / $capacity) * 100);
@@ -806,8 +806,8 @@ class StatisticsController extends Controller
 
         $totalDays += 1;
 
-        $capacity =( $totalDays * 12)*count($roomIds);
-        
+        $capacity = ($totalDays * 12) * count($roomIds);
+
         $data['percentageDataset'] = [];
         $data['accumulatedDataset'] = [];
         foreach ($roomIds as $roomId) {
@@ -827,7 +827,7 @@ class StatisticsController extends Controller
                 $percentage = round(($totalBookedHours / $capacity) * 100);
             } else {
                 $percentage = 0; // No available hours, so occupancy is 0%
-            }            
+            }
             $room = Room::where('id', $roomId)->first();
             $data['labels'][] = $room->name;
             $data['percentageDataset'][] = $percentage;
@@ -1013,6 +1013,102 @@ class StatisticsController extends Controller
             ];
         }
 
+        return $result;
+    }
+    public function bookingTotals(Request $request)
+    {
+
+        $semester = Semester::where('is_current', true)->first();
+        $totalSemester = Booking::where('status', 1)->where('semester_id', $semester->id)->count();
+        $totalMonth = Booking::where('status', 1)->whereBetween('start', [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()])->count();
+        $totalWeek = Booking::where('status', 1)->whereBetween('start', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()])->count();
+
+        $result = [
+            'totalSemester' => $totalSemester,
+            'totalMonth' => $totalMonth,
+            'totalWeek' => $totalWeek
+        ];
+
+        return $result;
+    }
+
+    public function approvalRate(Request $request)
+    {
+
+        $semester = Semester::where('is_current', true)->first();
+        $allBookings = Booking::where('semester_id', $semester->id)->count();
+
+        $approvedBookings = Booking::where('status', 1)->where('semester_id', $semester->id)->count();
+        $canceledBookings = Booking::where('status', 2)->where('semester_id', $semester->id)->count();
+
+        $approvalRate = round(($approvedBookings / $allBookings) * 100);
+        $cancelationRate = round(($canceledBookings / $allBookings) * 100);
+
+        $result = [
+            'approvalRate' => $approvalRate,
+            'approvedBookings' => $approvedBookings,
+            'canceledBookings' => $canceledBookings,
+            'cancelationRate' => $cancelationRate
+        ];
+
+        return $result;
+    }
+
+    public function meanDuration(Request $request)
+    {
+        $semester = Semester::where('is_current', true)->first();
+        $startDate = $semester->start;
+        $endDate = $semester->end;
+        $meanDuration = Booking::selectRaw('AVG(TIMESTAMPDIFF(HOUR, start, end)) as duration')
+            ->whereBetween('start', [$startDate, $endDate])
+            ->where('status', 1)
+            ->first(); // Use first() to get a single result
+
+        // Access the 'duration' attribute of the result
+        return round($meanDuration->duration, 0);
+    }
+    public function bussiestRooms(Request $request)
+    {
+        $semester = Semester::where('is_current', true)->first();
+        $startDate = $semester->start;
+        $endDate = $semester->end;
+        $bussiestRooms = Booking::selectRaw('room_id, COUNT(*) as frequency')
+            ->whereBetween('start', [$startDate, $endDate])
+            ->where('status', 1)
+            ->groupBy('room_id')
+            ->orderBy('frequency', 'desc')
+            ->get();
+        return $bussiestRooms;
+    }
+
+    public function bussiestRoomThisWeek(Request $request)
+    {
+
+        $bussiestRoomId = Booking::selectRaw('room_id, COUNT(*) as frequency')
+            ->whereBetween('start', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()])
+            ->where('status', 1)
+            ->groupBy('room_id')
+            ->orderBy('frequency', 'desc')
+            ->first();
+
+        $bussiestRoom = Room::where('id', $bussiestRoomId)->first();
+
+        return $bussiestRoom;
+    }
+
+    public function weekCapacityIndicator(Request $request)
+    {
+        $remainingHoursInWeek = Carbon::now()->endOfWeek()->diffInHours(Carbon::now()->startOfWeek());
+        $remainingHoursInWeek -= (int)(($remainingHoursInWeek / 24) * 12);
+        $remainingBookingsInWeek = Booking::where('status', 1)->whereBetween('start', [Carbon::now(), Carbon::now()->endOfWeek()]);
+        foreach ($remainingBookingsInWeek as $booking) {
+            $remainingHoursInWeek -= $booking->end->diffInHours($booking->start);
+        }
+        $capacityIndicator = round(($remainingHoursInWeek / Carbon::now()->endOfWeek()->diffInHours(Carbon::now()->startOfWeek())) * 100);
+        $result = [
+            'capacityIndicator' => $capacityIndicator,
+            'remainingHoursInWeek' => $remainingHoursInWeek
+        ];
         return $result;
     }
 }
