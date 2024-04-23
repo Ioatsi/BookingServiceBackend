@@ -897,9 +897,6 @@ class StatisticsController extends Controller
     {
         $roomIds = $request->input('roomIds', [1]);
 
-        $currentSemesterId = Semester::where('is_current', true)->first()->id;
-        $semesterIds = $request->input('semester', [$currentSemesterId]);
-
         $currentMonthStart = Carbon::now()->startOfMonth();
         $currentMonthEnd = Carbon::now()->endOfMonth();
 
@@ -914,12 +911,9 @@ class StatisticsController extends Controller
 
 
         $roomIdsLength = count($roomIds);
-        $semesterIdsLength = count($semesterIds);
+        
         if ($roomIdsLength === 0) {
             $roomIds = [1]; // Default value
-        }
-        if ($semesterIdsLength === 0) {
-            $semesterIds = [$currentSemesterId]; // Default value
         }
 
         $result = []; // The return value
@@ -929,7 +923,6 @@ class StatisticsController extends Controller
             $totalBookings = Booking::where('room_id', $roomId)
                 ->where('status', 1)
                 ->whereBetween('start', [$startDate, $endDate])
-                ->whereIn('semester_id', $semesterIds)
                 ->count();
             $frequency = Booking::select(
                 DB::raw('TIMESTAMPDIFF(HOUR, start, end) as duration'),
@@ -937,7 +930,6 @@ class StatisticsController extends Controller
             )
                 ->whereBetween('start', [$startDate, $endDate])
                 ->where('room_id', $roomId)
-                ->whereIn('semester_id', $semesterIds)
                 ->where('status', 1)
                 ->groupBy('duration')
                 ->orderBy('duration')
