@@ -1151,7 +1151,7 @@ class StatisticsController extends Controller
         $result = [
             'totals' => $totals,
             'meanDuration' => $meanDuration,
-            'bussiestRooms' => $bussiestRooms,
+            'bussiestRoomsThisSemester' => $bussiestRooms,
             'bussiestRoomThisWeek' => $bussiestRoomThisWeek,
             'weekCapacityIndicator' => $weekCapacityIndicator,
             'monthCapacityIndicator' => $monthCapacityIndicator,

@@ -76,7 +76,7 @@ Route::post('roomOccupancyBySemester', [StatisticsController::class, 'roomOccupa
 Route::post('roomOccupancyByDateRange', [StatisticsController::class, 'roomOccupancyByDateRange']);
 
 
-Route::post('generalStatistics', [StatisticsController::class, 'generalStatistics']);
+Route::get('generalStatistics', [StatisticsController::class, 'generalStatistics']);
 
 Route::post('bookingTotals', [StatisticsController::class, 'bookingTotals']);
 Route::post('approvalRate', [StatisticsController::class, 'approvalRate']);
