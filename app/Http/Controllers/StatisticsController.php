@@ -45,7 +45,7 @@ class StatisticsController extends Controller
                     DB::raw('DAYOFWEEK(start) as day_of_week'),
                     DB::raw('COUNT(*) as frequency')
                 )->where('room_id', $roomId)
-                    ->whereRaw('DAYOFWEEK(start) = ?', [$day])
+                    //->whereRaw('DAYOFWEEK(start) = ?', [$day])
                     ->whereIn('semester_id', $semesterIds)
                     ->where('status', 1)
                     ->count();
@@ -232,7 +232,7 @@ class StatisticsController extends Controller
                 $totalBookings = Booking::where('room_id', $roomId)
                     ->where('status', 1)
                     ->whereIn('semester_id', $semesterIds)
-                    ->whereMonth('start', '=', $month)
+                    //->whereMonth('start', '=', $month)
                     ->count();
 
                 // Query to get the bookings for the room on the last day of the last elapsed month
@@ -403,7 +403,7 @@ class StatisticsController extends Controller
             foreach ($days as $day) {
                 $totalBookings = Booking::where('room_id', $roomId)
                     ->where('status', 1)
-                    ->whereRaw('DAYOFWEEK(start) = ?', [$day])
+                    //->whereRaw('DAYOFWEEK(start) = ?', [$day])
                     ->whereIn('semester_id', $semesterIds)
                     ->count();
                 $frequency = Booking::select(
@@ -478,7 +478,7 @@ class StatisticsController extends Controller
             foreach ($months as $month) {
                 $totalBookings = Booking::where('room_id', $roomId)
                     ->where('status', 1)
-                    ->whereMonth('start', '=', $month)
+                    //->whereMonth('start', '=', $month)
                     ->whereIn('semester_id', $semesterIds)
                     ->count();
                 $frequency = Booking::select(
@@ -844,7 +844,7 @@ class StatisticsController extends Controller
             // Get the total number of bookings for the date range
             $totalBookings = Booking::where('room_id', $roomId)
                 ->where('status', 1)
-                ->whereBetween(DB::raw('DATE(start)'), [$startDate->toDateString(), $endDate->toDateString()])
+                //->whereBetween(DB::raw('DATE(start)'), [$startDate->toDateString(), $endDate->toDateString()])
                 ->count();
 
             // Query to get the bookings for the room within the date range
@@ -922,7 +922,7 @@ class StatisticsController extends Controller
             $label = '';
             $totalBookings = Booking::where('room_id', $roomId)
                 ->where('status', 1)
-                ->whereBetween('start', [$startDate, $endDate])
+                //->whereBetween('start', [$startDate, $endDate])
                 ->count();
             $frequency = Booking::select(
                 DB::raw('TIMESTAMPDIFF(HOUR, start, end) as duration'),
