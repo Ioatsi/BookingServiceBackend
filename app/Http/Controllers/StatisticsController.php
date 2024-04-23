@@ -1098,17 +1098,45 @@ class StatisticsController extends Controller
 
     public function weekCapacityIndicator(Request $request)
     {
-        $remainingHoursInWeek = Carbon::now()->endOfWeek()->diffInHours(Carbon::now()->startOfWeek());
+        $remainingHoursInWeek = Carbon::now()->endOfWeek()->diffInHours(Carbon::now());
         $remainingHoursInWeek -= (int)(($remainingHoursInWeek / 24) * 12);
         $remainingBookingsInWeek = Booking::where('status', 1)->whereBetween('start', [Carbon::now(), Carbon::now()->endOfWeek()]);
         foreach ($remainingBookingsInWeek as $booking) {
             $remainingHoursInWeek -= $booking->end->diffInHours($booking->start);
         }
-        $capacityIndicator = round(($remainingHoursInWeek / Carbon::now()->endOfWeek()->diffInHours(Carbon::now()->startOfWeek())) * 100);
+        $capacityIndicator = round(($remainingHoursInWeek / Carbon::now()->endOfWeek()->diffInHours(Carbon::now())) * 100);
         $result = [
             'capacityIndicator' => $capacityIndicator,
             'remainingHoursInWeek' => $remainingHoursInWeek
         ];
+        return $result;
+    }
+
+    public function monthCapacityIndicator(Request $request)
+    {
+        // Calculate the remaining hours in the month with 12-hour workdays
+        $remainingHoursInMonth = Carbon::now()->endOfMonth()->diffInHours(Carbon::now());
+        $remainingHoursInMonth -= (int)(($remainingHoursInMonth / 24) * 12);
+
+        // Calculate the remaining bookings in the month
+        $remainingBookingsInMonth = Booking::where('status', 1)
+            ->whereBetween('start', [Carbon::now(), Carbon::now()->endOfMonth()])
+            ->get();
+
+        // Subtract the duration of each booking from the remaining hours in the month
+        foreach ($remainingBookingsInMonth as $booking) {
+            $remainingHoursInMonth -= $booking->end->diffInHours($booking->start);
+        }
+
+        // Calculate the capacity indicator for the month
+        $capacityIndicator = round(($remainingHoursInMonth / Carbon::now()->endOfMonth()->diffInHours(Carbon::now())) * 100);
+
+        // Prepare the result array
+        $result = [
+            'capacityIndicator' => $capacityIndicator,
+            'remainingHoursInMonth' => $remainingHoursInMonth
+        ];
+
         return $result;
     }
 }

@@ -81,3 +81,4 @@ Route::post('meanDuration', [StatisticsController::class, 'meanDuration']);
 Route::post('bussiestRooms', [StatisticsController::class, 'bussiestRooms']);
 Route::post('bussiestRoomThisWeek', [StatisticsController::class, 'bussiestRoomThisWeek']);
 Route::post('weekCapacityIndicator', [StatisticsController::class, 'weekCapacityIndicator']);
+Route::post('monthCapacityIndicator', [StatisticsController::class, 'monthCapacityIndicator']);
