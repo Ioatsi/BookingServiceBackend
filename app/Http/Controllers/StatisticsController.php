@@ -1049,7 +1049,8 @@ class StatisticsController extends Controller
             'approvedBookings' => $approvedBookings,
             'canceledBookings' => $canceledBookings,
             'cancelationRate' => $cancelationRate,
-            'allBookings' => $allBookings
+            'allBookings' => $allBookings,
+            'divident' => 100-$approvalRate
         ];
 
         return $result;
@@ -1116,6 +1117,7 @@ class StatisticsController extends Controller
         $capacityIndicator = round(($remainingHoursInWeek / Carbon::now()->endOfWeek()->diffInHours(Carbon::now())) * 100);
         $result = [
             'capacityIndicator' => $capacityIndicator,
+            'divident' => 100-$capacityIndicator,
             'remainingHoursInWeek' => $remainingHoursInWeek
         ];
         return $result;
@@ -1143,6 +1145,7 @@ class StatisticsController extends Controller
         // Prepare the result array
         $result = [
             'capacityIndicator' => $capacityIndicator,
+            'divident' => 100-$capacityIndicator,
             'remainingHoursInMonth' => $remainingHoursInMonth
         ];
 
@@ -1158,6 +1161,10 @@ class StatisticsController extends Controller
         $weekCapacityIndicator = $this->weekCapacityIndicator($request);
         $monthCapacityIndicator = $this->monthCapacityIndicator($request);
         $approvalRate = $this->approvalRate($request);
+        $charts = $this->getOccupancyCharts($request);
+        $charts[][] = ['data'=>['percentageDataset'=>[$approvalRate['approvalRate'],$approvalRate['divident']]]];
+        $charts[][] = ['data'=>['percentageDataset'=>[$weekCapacityIndicator['capacityIndicator'],$weekCapacityIndicator['divident']]]];
+        $charts[][] = ['data'=>['percentageDataset'=>[$monthCapacityIndicator['capacityIndicator'], $monthCapacityIndicator['divident']]]];
         $result = [
             'totals' => $totals,
             'meanDuration' => $meanDuration,
@@ -1165,7 +1172,8 @@ class StatisticsController extends Controller
             'bussiestRoomsThisWeek' => $bussiestRoomThisWeek,
             'weekCapacityIndicator' => $weekCapacityIndicator,
             'monthCapacityIndicator' => $monthCapacityIndicator,
-            'approvalRate' => $approvalRate
+            'approvalRate' => $approvalRate,
+            'charts' => $charts
         ];
         return $result;
     }
@@ -1181,11 +1189,6 @@ class StatisticsController extends Controller
         $monthOccupancy = $this->roomOccupancyByMonthPercentage($req);
         $semesterOccupancy = $this->roomOccupancyBySemester($req);
       
-        $result = [
-            'weekCapacity' => $weekOccupancy,
-            'monthOccupancy' => $monthOccupancy,
-            'semesterOccupancy' => $semesterOccupancy,
-        ];
-        return $result;
+        return [$weekOccupancy, $monthOccupancy, $semesterOccupancy];
     }
 }
