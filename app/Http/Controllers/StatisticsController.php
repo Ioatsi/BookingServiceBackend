@@ -259,7 +259,9 @@ class StatisticsController extends Controller
                     $percentageMax = round(($item->frequency / $totalBookings) * 100);
                 }
             }
-            $label = $label . ' - ' . Carbon::create()->month($months)->format('F');
+            foreach($months as $month){
+                $label = $label . ' - ' . Carbon::create()->month($month)->format('F');
+            }
 
             $fullFrequency = ['labels' => $labels, 'frequency' => array_values($frequencyMap), 'percentage' => array_values($percentageMap), 'totalBookings' => $totalBookings];
             //For multiple months if implemeted
