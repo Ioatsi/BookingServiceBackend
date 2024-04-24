@@ -1072,26 +1072,34 @@ class StatisticsController extends Controller
         $semester = Semester::where('is_current', true)->first();
         $startDate = $semester->start;
         $endDate = $semester->end;
-        $bussiestRooms = Booking::selectRaw('room_id, COUNT(*) as frequency')
+        $bussiestRoomIds = Booking::selectRaw('room_id, COUNT(*) as frequency')
             ->whereBetween('start', [$startDate, $endDate])
             ->where('status', 1)
             ->groupBy('room_id')
             ->orderBy('frequency', 'desc')
+            ->take(3)
             ->get();
-        return $bussiestRooms;
+
+            $busiestRooms = [];
+            foreach ($bussiestRoomIds as $room) {
+                $room->name = Room::where('id', $room->room_id)->first()->name;
+                $busiestRooms[] = $room;
+            }
+        
+        return $busiestRooms;
     }
 
     public function bussiestRoomThisWeek(Request $request)
     {
 
-        $bussiestRoomId = Booking::selectRaw('room_id, COUNT(*) as frequency')
+        $bussiestRoom = Booking::selectRaw('room_id, COUNT(*) as frequency')
             ->whereBetween('start', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()])
             ->where('status', 1)
             ->groupBy('room_id')
             ->orderBy('frequency', 'desc')
             ->first();
 
-        $bussiestRoom = Room::where('id', $bussiestRoomId)->first();
+        $bussiestRoom->name = Room::where('id', $bussiestRoom->room_id)->first()->name;
 
         return $bussiestRoom;
     }
@@ -1152,7 +1160,7 @@ class StatisticsController extends Controller
             'totals' => $totals,
             'meanDuration' => $meanDuration,
             'bussiestRoomsThisSemester' => $bussiestRooms,
-            'bussiestRoomThisWeek' => $bussiestRoomThisWeek,
+            'bussiestRoomsThisWeek' => $bussiestRoomThisWeek,
             'weekCapacityIndicator' => $weekCapacityIndicator,
             'monthCapacityIndicator' => $monthCapacityIndicator,
             'approvalRate' => $approvalRate
