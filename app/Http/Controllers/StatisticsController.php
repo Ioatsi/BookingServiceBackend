@@ -621,7 +621,7 @@ class StatisticsController extends Controller
     {
         $roomIds = $request->input('roomIds', [1]);
         $currentMonth = Carbon::now()->month;
-        $months = $request->input('months', $currentMonth);
+        $months = $request->input('months', [$currentMonth]);
         $currentSemesterId = Semester::where('is_current', true)->first()->id;
         $semesterIds = $request->input('semesterIds', [$currentSemesterId]);
 
@@ -1048,7 +1048,8 @@ class StatisticsController extends Controller
             'approvalRate' => $approvalRate,
             'approvedBookings' => $approvedBookings,
             'canceledBookings' => $canceledBookings,
-            'cancelationRate' => $cancelationRate
+            'cancelationRate' => $cancelationRate,
+            'allBookings' => $allBookings
         ];
 
         return $result;
@@ -1080,12 +1081,12 @@ class StatisticsController extends Controller
             ->take(3)
             ->get();
 
-            $busiestRooms = [];
-            foreach ($bussiestRoomIds as $room) {
-                $room->name = Room::where('id', $room->room_id)->first()->name;
-                $busiestRooms[] = $room;
-            }
-        
+        $busiestRooms = [];
+        foreach ($bussiestRoomIds as $room) {
+            $room->name = Room::where('id', $room->room_id)->first()->name;
+            $busiestRooms[] = $room;
+        }
+
         return $busiestRooms;
     }
 
@@ -1148,7 +1149,8 @@ class StatisticsController extends Controller
         return $result;
     }
 
-    public function generalStatistics(Request $request){
+    public function generalStatistics(Request $request)
+    {
         $totals = $this->bookingTotals($request);
         $meanDuration = $this->meanDuration($request);
         $bussiestRooms = $this->bussiestRooms($request);
@@ -1164,6 +1166,25 @@ class StatisticsController extends Controller
             'weekCapacityIndicator' => $weekCapacityIndicator,
             'monthCapacityIndicator' => $monthCapacityIndicator,
             'approvalRate' => $approvalRate
+        ];
+        return $result;
+    }
+
+    public function getOccupancyCharts(Request $request)
+    {
+        $roomIds = Room::all()->pluck('id')->toArray();
+        $req = new Request(); // Create a new instance of Illuminate\Http\Request
+        $req->merge([
+            'roomIds' => $roomIds,
+        ]);
+        $weekOccupancy = $this->roomOccupancyByDateRange($req);
+        $monthOccupancy = $this->roomOccupancyByMonthPercentage($req);
+        $semesterOccupancy = $this->roomOccupancyBySemester($req);
+      
+        $result = [
+            'weekCapacity' => $weekOccupancy,
+            'monthOccupancy' => $monthOccupancy,
+            'semesterOccupancy' => $semesterOccupancy,
         ];
         return $result;
     }
