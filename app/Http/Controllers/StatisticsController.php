@@ -217,58 +217,54 @@ class StatisticsController extends Controller
             $roomIds = [1]; // Default value
         }
         if ($monthsLength === 0) {
-            $months = [1]; // Default value
+            $months = [$currentMonth]; // Default value
         }
 
         if ($semesterIdsLength === 0) {
             $semesterIds = [$currentSemesterId]; // Default value
         }
 
+
         foreach ($roomIds as $roomId) {
             $label = '';
-            foreach ($months as $month) {
-                // Get the total number of days in the given month
-                $totalDays = Carbon::createFromDate($month)->daysInMonth;
-                $totalBookings = Booking::where('room_id', $roomId)
-                    ->where('status', 1)
-                    ->whereIn('semester_id', $semesterIds)
-                    //->whereMonth('start', '=', $month)
-                    ->count();
+            $totalBookings = Booking::where('room_id', $roomId)
+                ->where('status', 1)
+                ->whereIn('semester_id', $semesterIds)
+                //->whereMonth('start', '=', $month)
+                ->count();
 
-                // Query to get the bookings for the room on the last day of the last elapsed month
-                $frequency = Booking::select(DB::raw('DAY(start) as day_of_month'), DB::raw('count(*) as frequency'))
-                    ->whereIn('semester_id', $semesterIds)
-                    ->whereMonth('start', '=', $month)
-                    ->where('room_id', $roomId)
-                    ->where('status', 1)
-                    ->groupBy(DB::raw('DAY(start)'))
-                    ->orderBy('day_of_month', 'asc')
-                    ->get();
-
-
-                $frequencyMap = [];
-                $percentageMap = [];
-                $frequencyMax = 0;
-                $percentageMax = 0;
-                for ($i = 1; $i <= $totalDays; $i++) {
-                    $frequencyMap[$i] = 0;
-                    $percentageMap[$i] = 0;
-                    $labels[$i - 1] = $i;
-                }
-                foreach ($frequency as $item) {
-                    $frequencyMap[$item->day_of_month - 1] = $item->frequency;
-                    $percentageMap[$item->day_of_month - 1] = round(($item->frequency / $totalBookings) * 100);
-                    if ($item->frequency > $frequencyMax) {
-                        $frequencyMax = $item->frequency;
-                        $percentageMax = round(($item->frequency / $totalBookings) * 100);
-                    }
-                }
-                $label = $label . ' - ' . Carbon::create()->month($month)->format('F');
-
-                $fullFrequency = ['labels' => $labels, 'frequency' => array_values($frequencyMap), 'percentage' => array_values($percentageMap), 'totalBookings' => $totalBookings];
-                //For multiple months if implemeted
-                //$frequencyMonthMap[] = ['month' => $month, 'frequency' => $frequencyMap[$i]];
+            $frequency = Booking::select(DB::raw('DAY(start) as day_of_month'), DB::raw('count(*) as frequency'))
+                ->whereIn('semester_id', $semesterIds)
+                ->whereIn(DB::raw('MONTH(start)'), $months)
+                ->where('room_id', $roomId)
+                ->where('status', 1)
+                ->groupBy(DB::raw('DAY(start)'))
+                ->orderBy('day_of_month', 'asc')
+                ->get();
+            //dd($frequency);
+            $frequencyMap = [];
+            $percentageMap = [];
+            $frequencyMax = 0;
+            $percentageMax = 0;
+            for ($i = 1; $i <= 31; $i++) {
+                $frequencyMap[$i] = 0;
+                $percentageMap[$i] = 0;
+                $labels[$i - 1] = $i;
             }
+            foreach ($frequency as $item) {
+                $frequencyMap[$item->day_of_month + 1] = $item->frequency;
+                $percentageMap[$item->day_of_month + 1] = round(($item->frequency / $totalBookings) * 100);
+                if ($item->frequency > $frequencyMax) {
+                    $frequencyMax = $item->frequency;
+                    $percentageMax = round(($item->frequency / $totalBookings) * 100);
+                }
+            }
+            $label = $label . ' - ' . Carbon::create()->month($months)->format('F');
+
+            $fullFrequency = ['labels' => $labels, 'frequency' => array_values($frequencyMap), 'percentage' => array_values($percentageMap), 'totalBookings' => $totalBookings];
+            //For multiple months if implemeted
+            //$frequencyMonthMap[] = ['month' => $month, 'frequency' => $frequencyMap[$i]];
+
             $room = Room::where('id', $roomId)->first();
             $label = $room->name . ' ' . $label;
             $result[] = [
@@ -1050,7 +1046,7 @@ class StatisticsController extends Controller
             'canceledBookings' => $canceledBookings,
             'cancelationRate' => $cancelationRate,
             'allBookings' => $allBookings,
-            'divident' => 100-$approvalRate
+            'divident' => 100 - $approvalRate
         ];
 
         return $result;
@@ -1117,7 +1113,7 @@ class StatisticsController extends Controller
         $capacityIndicator = round(($remainingHoursInWeek / Carbon::now()->endOfWeek()->diffInHours(Carbon::now())) * 100);
         $result = [
             'capacityIndicator' => $capacityIndicator,
-            'divident' => 100-$capacityIndicator,
+            'divident' => 100 - $capacityIndicator,
             'remainingHoursInWeek' => $remainingHoursInWeek
         ];
         return $result;
@@ -1145,7 +1141,7 @@ class StatisticsController extends Controller
         // Prepare the result array
         $result = [
             'capacityIndicator' => $capacityIndicator,
-            'divident' => 100-$capacityIndicator,
+            'divident' => 100 - $capacityIndicator,
             'remainingHoursInMonth' => $remainingHoursInMonth
         ];
 
@@ -1162,9 +1158,9 @@ class StatisticsController extends Controller
         $monthCapacityIndicator = $this->monthCapacityIndicator($request);
         $approvalRate = $this->approvalRate($request);
         $charts = $this->getOccupancyCharts($request);
-        $charts[][] = ['data'=>['percentageDataset'=>[$approvalRate['approvalRate'],$approvalRate['divident']]]];
-        $charts[][] = ['data'=>['percentageDataset'=>[$weekCapacityIndicator['capacityIndicator'],$weekCapacityIndicator['divident']]]];
-        $charts[][] = ['data'=>['percentageDataset'=>[$monthCapacityIndicator['capacityIndicator'], $monthCapacityIndicator['divident']]]];
+        $charts[][] = ['data' => ['percentageDataset' => [$approvalRate['approvalRate'], $approvalRate['divident']]]];
+        $charts[][] = ['data' => ['percentageDataset' => [$weekCapacityIndicator['capacityIndicator'], $weekCapacityIndicator['divident']]]];
+        $charts[][] = ['data' => ['percentageDataset' => [$monthCapacityIndicator['capacityIndicator'], $monthCapacityIndicator['divident']]]];
         $result = [
             'totals' => $totals,
             'meanDuration' => $meanDuration,
@@ -1188,7 +1184,7 @@ class StatisticsController extends Controller
         $weekOccupancy = $this->roomOccupancyByDateRange($req);
         $monthOccupancy = $this->roomOccupancyByMonthPercentage($req);
         $semesterOccupancy = $this->roomOccupancyBySemester($req);
-      
+
         return [$weekOccupancy, $monthOccupancy, $semesterOccupancy];
     }
 }
