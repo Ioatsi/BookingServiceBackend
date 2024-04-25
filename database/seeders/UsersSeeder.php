@@ -6,6 +6,7 @@ use App\Models\User;
 use GuzzleHttp\Promise\Create;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Faker\Factory as Faker;
 
 class UsersSeeder extends Seeder
 {
@@ -16,34 +17,18 @@ class UsersSeeder extends Seeder
     {
         //
         User::create([
-            'name' => 'Admin',
+            'username' => 'Admin',
         ]);
-        User::create([
-            'name' => 'user1',
-        ]);
-User::create([
-            'name' => 'user2',
-        ]);
-        User::create([
-            'name' => 'user3',
-        ]);
-        User::create([
-            'name' => 'user4',
-        ]);
-        User::create([
-            'name' => 'user5',
-        ]);
-        User::create([
-            'name' => 'user6',
-        ]);
-        User::create([
-            'name' => 'user7',
-        ]);
-        User::create([
-            'name' => 'user8',
-        ]);
-        User::create([
-            'name' => 'user9',
-        ]);
+        $faker = Faker::create();
+
+        foreach (range(1, 10) as $index) {
+            User::create([
+                'username' => 'user' . $index,
+                'first_name' => $faker->firstName,
+                'last_name' => $faker->lastName,
+                'email' => $faker->email,
+                'AM' => $faker->randomNumber(6)
+            ]);
+        }
     }
 }

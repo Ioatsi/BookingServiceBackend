@@ -55,6 +55,7 @@ Route::get('getAllRooms', [RoomController::class, 'getAllRooms'])->name('getAllR
 Route::post('createRoom', [RoomController::class, 'store']);
 
 Route::get('getModeratedRooms/{id}', [RoomController::class, 'getModeratedRooms']);
+Route::get('getPossibleModerators/', [RoomController::class, 'getPossibleModerators']);
 
 //Semester
 Route::get('getAllSemesters', [SemesterController::class, 'getAllSemesters']);

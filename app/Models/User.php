@@ -19,6 +19,15 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'username',
+        'email',
+        'first_name',
+        'last_name',
+    ];
+    protected $attributes = [
+        'email'=>'no email',
+        'AM'=>0,
+        'first_name'=>'no  first name',
+        'last_name'=>'no last name',
     ];
 
     public function bookings()

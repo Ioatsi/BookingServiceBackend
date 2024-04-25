@@ -104,18 +104,35 @@ class RoomController extends Controller
         return response()->json($buildings);
     }
 
+    public function getPossibleModerators(Request $request)
+{
+    $possibleModerators = User::join('role_user', 'users.id', '=', 'role_user.user_id')
+        ->where('role_user.role_id', 2)
+        ->select('users.*')
+        ->get();
+
+    return response()->json($possibleModerators);
+}
     public function store(Request $request)
     {
         $validatedData = $request->validate([
             'name' => 'required',
             'info' => 'required',
-            'capacity' => 'required',
             'department_id' => 'required',
             'building_id' => 'required',
+            'moderator_ids'=> 'required',
             'color' => 'required',
-            'number' => 'required',
         ]);
         $room = Room::create($validatedData);
+        $moderatorIds = $request->input('moderator_ids');
+
+        foreach ($moderatorIds as $moderatorId) {
+            DB::table('moderator_room')->insert([
+                'user_id' => $moderatorId,
+                'room_id' => $room->id
+            ]);
+        }
+
         return response()->json(['message' => 'Booking created successfully.', 'booking' => $room], 201);
     }
 }
