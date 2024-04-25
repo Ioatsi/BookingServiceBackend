@@ -63,6 +63,8 @@ class RoomController extends Controller
                 'capacity' => $room->capacity,
                 'info' => $room->info,
                 'department' => $room->department,
+                'department_id' => $room->department_id,
+                'building_id' => $room->building_id,
                 'building' => $room->building,
                 'isRoom' => true
             ]);
