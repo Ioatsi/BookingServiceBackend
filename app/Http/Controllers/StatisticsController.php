@@ -40,6 +40,18 @@ class StatisticsController extends Controller
 
         foreach ($roomIds as $roomId) {
             $label = '';
+            $frequencyMap = [];
+                $percentageMap = [];
+                $fullFrequency = [];
+                // Initialize the frequency map with all hours between 8 and 20 and set the frequency to 0
+                for ($i = 8; $i <= 20; $i++) {
+                    $labels[$i - 8] = $i;
+                    //$frequencyMap[] = ['label' => $i, 'datasetFrequency' => 0, 'datasetPercentage' => 0];
+                    $frequencyMap[] = 0;
+                    $percentageMap[] = 0;
+                }
+                $frequencyMax = 0;
+                $percentageMax = 0;
             foreach ($days as $day) {
                 $totalBookings = Booking::select(
                     DB::raw('DAYOFWEEK(start) as day_of_week'),
@@ -62,18 +74,7 @@ class StatisticsController extends Controller
                     ->orderBy('day_of_week')
                     ->orderBy('hour_of_day')
                     ->get();
-                $frequencyMap = [];
-                $percentageMap = [];
-                $fullFrequency = [];
-                // Initialize the frequency map with all hours between 8 and 20 and set the frequency to 0
-                for ($i = 8; $i <= 20; $i++) {
-                    $labels[$i - 8] = $i;
-                    //$frequencyMap[] = ['label' => $i, 'datasetFrequency' => 0, 'datasetPercentage' => 0];
-                    $frequencyMap[] = 0;
-                    $percentageMap[] = 0;
-                }
-                $frequencyMax = 0;
-                $percentageMax = 0;
+                
                 // Iterate over the frequencies and update the corresponding hour in the frequency map
                 foreach ($frequency as $item) {
                     if ($item->frequency > $frequencyMax) {
@@ -81,13 +82,8 @@ class StatisticsController extends Controller
                         $percentageMax = round(($item->frequency / $totalBookings) * 100);
                     }
                     $hourOfDay = $item->hour_of_day;
-                    $frequencyMap[$hourOfDay - 8] = $item->frequency;
-                    $percentageMap[$hourOfDay - 8] = round(($item->frequency / $totalBookings) * 100);
-                    /* $frequencyMap[$hourOfDay-8] = [
-                        //'label' => $hourOfDay, //Use this to check for data integrity
-                        'datasetFrequency' => $item->frequency,
-                        //'datasetPercentage' => round(($item->frequency / $totalBookings) * 100)
-                    ]; */
+                    $frequencyMap[$hourOfDay - 8] += $item->frequency;
+                    $percentageMap[$hourOfDay - 8] += round(($item->frequency / $totalBookings) * 100);
                 }
                 $label = $label . ' - ' . Carbon::create()->startOfWeek()->addDays($day - 1)->format('l');
                 $fullFrequency = ['labels' => $labels, 'frequency' => $frequencyMap, 'percentage' => $percentageMap, 'totalBookings' => $totalBookings];
