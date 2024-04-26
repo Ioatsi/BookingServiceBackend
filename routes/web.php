@@ -53,12 +53,13 @@ Route::post('getBuildings', [RoomController::class, 'getBuildings']);
 Route::get('getAllRooms', [RoomController::class, 'getAllRooms'])->name('getAllRooms');
 
 Route::post('createRoom', [RoomController::class, 'store']);
+Route::post('deleteRoom', [RoomController::class, 'deleteRoom']);
 
 Route::get('getModeratedRooms/{id}', [RoomController::class, 'getModeratedRooms']);
 Route::get('getPossibleModerators/', [RoomController::class, 'getPossibleModerators']);
 
 //Semester
-Route::get('getAllSemesters', [SemesterController::class, 'getAllSemesters']);
+Route::post('getAllSemesters', [SemesterController::class, 'getAllSemesters']);
 
 //Statistics
 Route::post('roomHourOfDayOfWeekFrequency', [StatisticsController::class, 'roomHourOfDayOfWeekFrequency']);

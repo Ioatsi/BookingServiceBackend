@@ -38,6 +38,7 @@ class BookingController extends Controller
         $perPage = $request->input('perPage', 1); // You can adjust this number as needed
         $allRoomIds = Room::join('moderator_room', 'rooms.id', '=', 'moderator_room.room_id')
             ->where('moderator_room.user_id', $request->user_id)
+            ->where('status', 1)
             ->pluck('rooms.id')
             ->toArray();
         $roomIds = $request->input('room_id');
@@ -75,7 +76,7 @@ class BookingController extends Controller
             
             $booking_groups = new Collection();
             $bookings->each(function ($booking) use ($booking_groups) {
-            $rooms = Room::where('id', $booking->room_id)->get();
+            $rooms = Room::where('id', $booking->room_id)->where('status', 1)->get();
             $booking_groups->push((object) [
                 'id' => $booking->id,
                 'title' => $booking->title,
@@ -112,6 +113,7 @@ class BookingController extends Controller
         $perPage = $request->input('perPage', 1); // You can adjust this number as needed
         $allRoomIds = Room::join('moderator_room', 'rooms.id', '=', 'moderator_room.room_id')
             ->where('moderator_room.user_id', $request->user_id)
+            ->where('status', 1)
             ->pluck('rooms.id')
             ->toArray();
         $roomIds = $request->input('room_id');
@@ -139,7 +141,7 @@ class BookingController extends Controller
             $days = Day::where('recurring_id', $recurring->id)
                 ->where('status', '!=', 2)
                 ->get();
-            $rooms = Room::whereIn('id', $days->pluck('room_id'))->get();
+            $rooms = Room::whereIn('id', $days->pluck('room_id'))->where('status', 1)->get();
             $recurring_groups->push((object) [
                 'id' => $recurring->id,
                 'title' => $recurring->title,
@@ -249,6 +251,7 @@ class BookingController extends Controller
             ->where('bookings.semester_id', $semester->id)
             ->where('bookings.status', 1)
             ->where('bookings.publicity', 1)
+            ->where('rooms.status', 1)
             ->orderBy('bookings.start', 'asc')
             ->select('bookings.*', 'rooms.name as room_name', 'rooms.color as color', 'rooms.building_id as building_id')
             ->where(function ($query) use ($startOfMonth, $endOfMonth, $startOfPreviousMonth, $endOfPreviousMonth, $startOfNextMonth, $endOfNextMonth) {
@@ -287,6 +290,7 @@ class BookingController extends Controller
 
         $allRoomIds = Room::join('moderator_room', 'rooms.id', '=', 'moderator_room.room_id')
             ->where('moderator_room.user_id', $request->user_id)
+            ->where('rooms.status', 1)
             ->pluck('rooms.id')
             ->toArray();
         $roomIds = $request->input('room_id');
@@ -298,6 +302,7 @@ class BookingController extends Controller
         $query = Booking::join('rooms', 'bookings.room_id', '=', 'rooms.id')
             ->where('semester_id', $semester->id)
             ->whereIn('room_id', $roomIds)
+            ->where('rooms.status', 1)
             ->whereNotIn('bookings.status', [2])
             ->whereIn('bookings.type', $type)
             ->whereNotNull('conflict_id')
@@ -373,6 +378,7 @@ class BookingController extends Controller
 
         $allRoomIds = Room::join('moderator_room', 'rooms.id', '=', 'moderator_room.room_id')
             ->where('moderator_room.user_id', $request->user_id)
+            ->where('rooms.status', 1)
             ->pluck('rooms.id')
             ->toArray();
         $roomIds = $request->input('room_id');
@@ -406,6 +412,7 @@ class BookingController extends Controller
                 $days = Day::join('rooms', 'days.room_id', '=', 'rooms.id')
                     ->where('days.status', '!=', 2)
                     ->where('days.recurring_id', $recurring->id)
+                    ->where('rooms.status', 1)
                     ->select('days.*', 'rooms.id as room_id', 'rooms.name as room_name')
                     ->get();
                 $recurring->days = $days;
@@ -416,7 +423,7 @@ class BookingController extends Controller
                 ->where('semester_id', $semester->id)
                 ->get();
 
-            $conflictingRooms = Room::whereIn('id', $conflictingDays->pluck('room_id'))->get();
+            $conflictingRooms = Room::whereIn('id', $conflictingDays->where('status', 1)->pluck('room_id'))->get();
             $conflictingRecurrings->push((object) [
                 'id' => $recurring[0]->conflict_id,
                 'bookings' => $recurring,

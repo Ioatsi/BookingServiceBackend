@@ -33,7 +33,7 @@ class RoomController extends Controller
     
             $query = Room::whereIn('rooms.id', $roomsIds->pluck('room_id'))
                 ->join('departments', 'rooms.department_id', '=', 'departments.id')
-                ->join('buildings', 'rooms.building_id', '=', 'buildings.id')
+                ->join('buildings', 'rooms.building_id', '=', 'buildings.id')->where('rooms.status', 1)
                 ->select('rooms.*', 'departments.name as department', 'buildings.name as building');
             
         }else{
@@ -138,5 +138,16 @@ class RoomController extends Controller
         }
 
         return response()->json(['message' => 'Booking created successfully.', 'booking' => $room], 201);
+    }
+
+    public function deleteRoom(Request $request)
+    {
+        $id = $request->input('id');
+        $rooms = Room::whereIn('id',$id)->get();
+        foreach ($rooms as $room) {
+            $room->status = 0;
+            $room->save();
+        }
+        return response()->json(['message' => 'Room deleted successfully.']);
     }
 }
