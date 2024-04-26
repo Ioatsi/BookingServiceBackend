@@ -52,9 +52,10 @@ class RoomController extends Controller
 
         $rooms = $query->get();
 
-
+        
         $room_groups = new Collection();
         $rooms->each(function ($room) use ($room_groups) {
+            $moderators = DB::table('moderator_room')->where('room_id', '=', $room->id)->join('users', 'moderator_room.user_id', '=', 'users.id')->select('users.*')->get();
             $room_groups->push((object) [
                 'id' => $room->id,
                 'name' => $room->name,
@@ -66,6 +67,7 @@ class RoomController extends Controller
                 'department_id' => $room->department_id,
                 'building_id' => $room->building_id,
                 'building' => $room->building,
+                'moderators' => $moderators,
                 'isRoom' => true
             ]);
         });
