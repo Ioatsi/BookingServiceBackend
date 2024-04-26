@@ -28,6 +28,9 @@ class Semester extends Model
 
         return $totalCapacity;
     }
+    protected $attributes = [
+        'status' => 1,
+    ];
 
     public function bookings()
     {

@@ -12,7 +12,7 @@ class SemesterController extends Controller
     public function getAllSemesters(Request $request)
     {
         $perPage = $request->input('perPage', 10); // Set the number of items per page, default is 10
-        $semesters = Semester::orderBy('start','desc')->paginate($perPage);
+        $semesters = Semester::where('status', 1)->orderBy('start','desc')->paginate($perPage);
         
         // You can also apply additional transformations or modifications to each semester if needed
         foreach ($semesters as $semester) {
@@ -35,6 +35,7 @@ class SemesterController extends Controller
         $semester->start = $request->start;
         $semester->end = $request->end;
         $semester->is_current = $request->is_current;
+        $semester->status = 1;
         $semester->save();
         return response()->json($semester);
     }
@@ -52,7 +53,21 @@ class SemesterController extends Controller
         $semester->start = $request->start;
         $semester->end = $request->end;
         $semester->is_current = $request->is_current;
+        $semester->status = 1;
         $semester->save();
         return response()->json($semester);
+    }
+    public function deleteSemester(Request $request)
+    {
+        $request->validate([
+            'id' => 'required',
+        ]);
+        $semesters = Semester::whereIn('id',$request->id)->get();
+        foreach ($semesters as $semester) {
+            $semester->status = 0;
+            $semester->save();
+        }
+        
+        return response()->json($semesters);
     }
 }

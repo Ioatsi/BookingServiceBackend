@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('type');
             $table->date('start');
             $table->date('end');
+            $table->string('status');
             $table->string('is_current');
             $table->timestamps();
         });
