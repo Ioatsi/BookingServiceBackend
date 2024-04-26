@@ -9,13 +9,17 @@ use Illuminate\Http\Request;
 
 class SemesterController extends Controller
 {
-    public function getAllSemesters()
+    public function getAllSemesters(Request $request)
     {
-        $semesters = Semester::all()->sortBy('start');
+        $perPage = $request->input('perPage', 10); // Set the number of items per page, default is 10
+        $semesters = Semester::orderBy('start')->paginate($perPage);
+        
+        // You can also apply additional transformations or modifications to each semester if needed
         foreach ($semesters as $semester) {
-            $semester->name=$semester->type.' '.Carbon::parse($semester->start)->year;
+            $semester->name = $semester->type . ' ' . Carbon::parse($semester->start)->year;
+            $semester->isSemester = true;
         }
+    
         return response()->json($semesters);
     }
-
 }

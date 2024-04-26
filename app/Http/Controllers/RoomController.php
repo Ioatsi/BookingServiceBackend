@@ -150,4 +150,11 @@ class RoomController extends Controller
         }
         return response()->json(['message' => 'Room deleted successfully.']);
     }
+    public function updateRoom(Request $request)
+    {
+        $id = $request->input('id');
+        $room = Room::find($id);
+        $room->update($request->all());
+        return response()->json(['message' => 'Room updated successfully.']);
+    }
 }

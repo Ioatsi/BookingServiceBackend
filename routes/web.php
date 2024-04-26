@@ -54,6 +54,7 @@ Route::get('getAllRooms', [RoomController::class, 'getAllRooms'])->name('getAllR
 
 Route::post('createRoom', [RoomController::class, 'store']);
 Route::post('deleteRoom', [RoomController::class, 'deleteRoom']);
+Route::post('editRoom', [RoomController::class, 'updateRoom']);
 
 Route::get('getModeratedRooms/{id}', [RoomController::class, 'getModeratedRooms']);
 Route::get('getPossibleModerators/', [RoomController::class, 'getPossibleModerators']);
