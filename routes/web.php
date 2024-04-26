@@ -61,6 +61,7 @@ Route::get('getPossibleModerators/', [RoomController::class, 'getPossibleModerat
 
 //Semester
 Route::post('getAllSemesters', [SemesterController::class, 'getAllSemesters']);
+Route::post('createSemester', [SemesterController::class, 'store']);
 
 //Statistics
 Route::post('roomHourOfDayOfWeekFrequency', [StatisticsController::class, 'roomHourOfDayOfWeekFrequency']);

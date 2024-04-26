@@ -22,4 +22,20 @@ class SemesterController extends Controller
     
         return response()->json($semesters);
     }
+    public function store(Request $request)
+    {
+        $request->validate([
+            'type' => 'required',   
+            'start' => 'required',
+            'end' => 'required',
+            'is_current' => 'required',
+        ]);
+        $semester = new Semester();
+        $semester->type = $request->type;
+        $semester->start = $request->start;
+        $semester->end = $request->end;
+        $semester->is_current = $request->is_current;
+        $semester->save();
+        return response()->json($semester);
+    }
 }
