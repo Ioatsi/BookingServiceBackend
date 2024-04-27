@@ -22,6 +22,8 @@ return new class extends Migration
             $table->foreignId('semester_id')->constrained('semesters');
             $table->string('info')->nullable();
             $table->string('participants')->nullable();
+            $table->string('lecture_type');
+            $table->string('expected_attendance')->nullable();
             $table->timestamps();
         });
     }

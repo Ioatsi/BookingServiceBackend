@@ -23,7 +23,9 @@ class Booking extends Model
         'participants',
         'type',
         'publicity',
-        'url'
+        'url',
+        'lecture_type',
+        'expected_attendance'
     ];
 
     protected static function boot()

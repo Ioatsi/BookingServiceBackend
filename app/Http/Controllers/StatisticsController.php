@@ -18,6 +18,7 @@ class StatisticsController extends Controller
 {
     public function roomHourOfDayOfWeekFrequency(Request $request)
     {
+        $lecture_type = $request->input('lecture_type', ['lecture', 'teleconference', 'seminar', 'other']);
         $roomIds = $request->input('roomIds', [1]);
         $days = $request->input('days', [1]);
         $currentSemesterId = Semester::where('is_current', true)->first()->id;
@@ -67,6 +68,7 @@ class StatisticsController extends Controller
                     DB::raw('COUNT(*) as frequency')
                 )
                     ->whereIn('semester_id', $semesterIds)
+                    ->whereIn('lecture_type', $lecture_type)
                     ->where('room_id', $roomId)
                     ->where('status', 1)
                     ->whereRaw('DAYOFWEEK(start) = ?', [$day]) // Filter by the given day of the week
@@ -112,6 +114,7 @@ class StatisticsController extends Controller
          *               The frequency is the number of bookings on that day of the week.
          *               The frequency is an array with day_of_week as the key and frequency as the value.
          */
+        $lecture_type = $request->input('lecture_type', ['lecture', 'teleconference', 'seminar', 'other']);
 
         // Get the room IDs from the request
         $roomIds = $request->input('roomIds', [1]);
@@ -139,6 +142,7 @@ class StatisticsController extends Controller
             $frequency = Booking::select(DB::raw('DAYOFWEEK(start) as day_of_week'), DB::raw('count(*) as frequency'))
                 ->whereIn('semester_id', $semesterIds)
                 ->where('room_id', $roomId)
+                ->whereIn('lecture_type', $lecture_type)
                 ->where('status', 1)
                 ->groupBy(DB::raw('DAYOFWEEK(start)'))
                 ->orderBy('day_of_week', 'asc')
@@ -192,6 +196,7 @@ class StatisticsController extends Controller
          *               The frequency is the number of bookings on that day of the month.
          *               The frequency is an array with day_of_month as the key and frequency as the value.
          */
+        $lecture_type = $request->input('lecture_type', ['lecture', 'teleconference', 'seminar', 'other']);
 
         // Get the room IDs from the request
         $roomIds = $request->input('roomIds', [1]);
@@ -232,6 +237,7 @@ class StatisticsController extends Controller
             $frequency = Booking::select(DB::raw('DAY(start) as day_of_month'), DB::raw('count(*) as frequency'))
                 ->whereIn('semester_id', $semesterIds)
                 ->whereIn(DB::raw('MONTH(start)'), $months)
+                ->whereIn('lecture_type', $lecture_type)
                 ->where('room_id', $roomId)
                 ->where('status', 1)
                 ->groupBy(DB::raw('DAY(start)'))
@@ -285,6 +291,7 @@ class StatisticsController extends Controller
          *               The frequency is the number of bookings in that month of the semester.
          *               The frequency is an array with month as the key and frequency as the value.
          */
+        $lecture_type = $request->input('lecture_type', ['lecture', 'teleconference', 'seminar', 'other']);
 
         // Get the room IDs from the request
         $roomIds = $request->input('roomIds', [1]);
@@ -323,6 +330,7 @@ class StatisticsController extends Controller
                 // Query to get the bookings for the room in the given month
                 $frequency = Booking::whereMonth('start', $month)
                     ->where('room_id', $roomId)
+                    ->whereIn('lecture_type', $lecture_type)
                     ->where('status', 1)
                     ->count();
 
@@ -370,6 +378,7 @@ class StatisticsController extends Controller
     //Room Booking Duration Frequency by Range with percentage and dynamic samples(to be implemented) 
     public function roomDayOfWeekDurationFrequency(Request $request)
     {
+        $lecture_type = $request->input('lecture_type', ['lecture', 'teleconference', 'seminar', 'other']);
         $roomIds = $request->input('roomIds', [1]);
 
         $days = $request->input('days', [1]);
@@ -405,6 +414,7 @@ class StatisticsController extends Controller
                     DB::raw('COUNT(*) as frequency')
                 )
                     ->whereRaw('DAYOFWEEK(start) = ?', [$day])
+                    ->whereIn('lecture_type', $lecture_type)
                     ->where('room_id', $roomId)
                     ->whereIn('semester_id', $semesterIds)
                     ->where('status', 1)
@@ -455,6 +465,8 @@ class StatisticsController extends Controller
         $currentSemesterId = Semester::where('is_current', true)->first()->id;
         $semesterIds = $request->input('semester', [$currentSemesterId]);
 
+        $lecture_type = $request->input('lecture_type', ['lecture', 'teleconference', 'seminar', 'other']);
+
         $roomIdsLength = count($roomIds);
         $semesterIdsLength = count($semesterIds);
         $monthsLength = count($months);
@@ -483,6 +495,7 @@ class StatisticsController extends Controller
                     ->where('room_id', $roomId)
                     ->whereIn('semester_id', $semesterIds)
                     ->where('status', 1)
+                    ->whereIn('lecture_type', $lecture_type)
                     ->groupBy('duration')
                     ->orderBy('duration')
                     ->get();
@@ -521,6 +534,7 @@ class StatisticsController extends Controller
     }
     public function roomOccupancyByDayOfWeekPercentage(Request $request)
     {
+        $lecture_type = $request->input('lecture_type', ['lecture', 'teleconference', 'seminar', 'other']);
         $roomIds = $request->input('roomIds', [1]);
         $days = $request->input('days', [1]);
         $currentSemesterId = Semester::where('is_current', true)->first()->id;
@@ -571,6 +585,7 @@ class StatisticsController extends Controller
                     ->whereNull('conflict_id')
                     ->whereIn('semester_id', $semesterIds)
                     ->whereRaw('DAYOFWEEK(start) = ?', [$day])
+                    ->whereIn('lecture_type', $lecture_type)
                     ->get();
                 // Calculate the total booked hours in the month
             }
@@ -619,6 +634,7 @@ class StatisticsController extends Controller
         $currentSemesterId = Semester::where('is_current', true)->first()->id;
         $semesterIds = $request->input('semesterIds', [$currentSemesterId]);
 
+        $lecture_type = $request->input('lecture_type', ['lecture', 'teleconference', 'seminar', 'other']);
 
         $monthsLength = count($months);
 
@@ -654,6 +670,7 @@ class StatisticsController extends Controller
                 $bookings = Booking::where('room_id', $roomId)
                     ->where('status', 1)
                     ->whereNull('conflict_id')
+                    ->whereIn('lecture_type', $lecture_type)
                     ->whereIn('semester_id', $semesterIds)
                     ->whereBetween('start', [$firstDayOfMonth, $lastDayOfMonth])
                     ->get();
@@ -705,6 +722,7 @@ class StatisticsController extends Controller
     }
     public function roomOccupancyBySemester(Request $request)
     {
+        $lecture_type = $request->input('lecture_type', ['lecture', 'teleconference', 'seminar', 'other']);
         $roomIds = $request->input('roomIds', [1]);
         $currentSemesterId = Semester::where('is_current', true)->first()->id;
         $semesterIds = $request->input('semesterIds', [$currentSemesterId]);
@@ -724,6 +742,7 @@ class StatisticsController extends Controller
             // Retrieve all bookings for the specified room and month
             $bookings = Booking::where('room_id', $roomId)
                 ->whereIn('semester_id', $semesterIds)
+                ->whereIn('lecture_type', $lecture_type)
                 ->where('status', 1)
                 ->whereNull('conflict_id')
                 ->get();
@@ -776,6 +795,7 @@ class StatisticsController extends Controller
     }
     public function roomOccupancyByDateRange(Request $request)
     {
+        $lecture_type = $request->input('lecture_type', ['lecture', 'teleconference', 'seminar', 'other']);
         $roomIds = $request->input('roomIds', [1]);
         $currentMonthStart = Carbon::now()->startOfMonth();
         $currentMonthEnd = Carbon::now()->endOfMonth();
@@ -809,6 +829,7 @@ class StatisticsController extends Controller
                 ->whereBetween('start', [$startDate, $endDate])
                 ->where('status', 1)
                 ->whereNull('conflict_id')
+                ->whereIn('lecture_type', $lecture_type)
                 ->get();
             $totalBookedHours = 0;
             foreach ($bookings as $booking) {
@@ -855,6 +876,7 @@ class StatisticsController extends Controller
          *               The frequency is the number of bookings on that day of the month.
          *               The frequency is an array with day_of_month as the key and frequency as the value.
          */
+        $lecture_type = $request->input('lecture_type', ['lecture', 'teleconference', 'seminar', 'other']);
 
         // Get the room IDs from the request
         $roomIds = $request->input('roomIds', [1]);
@@ -894,6 +916,8 @@ class StatisticsController extends Controller
             $frequency = Booking::select(DB::raw('DAY(start) as day_of_month'), DB::raw('count(*) as frequency'))
                 ->whereBetween(DB::raw('DATE(start)'), [$startDate->toDateString(), $endDate->toDateString()])
                 ->where('room_id', $roomId)
+                ->where('conflict_id', null)
+                ->whereIn('lecture_type', $lecture_type)
                 ->where('status', 1)
                 ->groupBy(DB::raw('DAY(start)'))
                 ->orderBy('day_of_month', 'asc')
@@ -951,7 +975,8 @@ class StatisticsController extends Controller
 
         $startDate = isset($dateRange["start"]) ? Carbon::createFromFormat('n/j/Y', $dateRange["start"]) : $currentMonthStart;
         $endDate = isset($dateRange["end"]) ? Carbon::createFromFormat('n/j/Y', $dateRange["end"]) : $currentMonthEnd;
-
+        
+        $lecture_type = $request->input('lecture_type', ['lecture', 'teleconference', 'seminar', 'other']);
 
         $roomIdsLength = count($roomIds);
 
@@ -974,6 +999,7 @@ class StatisticsController extends Controller
                 ->whereBetween('start', [$startDate, $endDate])
                 ->where('room_id', $roomId)
                 ->where('status', 1)
+                ->whereIn('lecture_type', $lecture_type)
                 ->groupBy('duration')
                 ->orderBy('duration')
                 ->get();

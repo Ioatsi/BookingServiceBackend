@@ -23,6 +23,6 @@ class Building extends Model
 
     public function departments()
     {
-        return $this->belongsTo(Department::class);
+        return $this->belongsToMany(Department::class);
     }
 }

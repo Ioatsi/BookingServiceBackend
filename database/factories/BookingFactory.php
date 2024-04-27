@@ -67,6 +67,7 @@ class BookingFactory extends Factory
             'room_id' => $this->faker->randomElement($roomId),
             'status' => $this->faker->randomElement([0, 1]),
             'publicity' => $this->faker->randomElement([0, 1]),
+            'type' => $this->faker->randomElement(['normal', 'group', 'recurring']),
             'title' => 'Κράτηση ' . $incrementingName++,
             'start' => $startDate,
             'semester_id' => $semesterId,
@@ -76,6 +77,8 @@ class BookingFactory extends Factory
             'group_id' => null,
             'recurring_id' => null,
             'type' => 'normal',
+            'lecture_type' => $this->faker->randomElement(['lecture', 'teleconference', 'seminar', 'other']),
+            'expected_attendance' => $this->faker->numberBetween(1, 100),
         ];
     }
 }

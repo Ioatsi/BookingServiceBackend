@@ -28,6 +28,8 @@ return new class extends Migration
             $table->string('participants')->nullable();
             $table->string('type');
             $table->string('url')->nullable();
+            $table->string('lecture_type');
+            $table->string('expected_attendance')->nullable();
             $table->timestamps();
         });
     }

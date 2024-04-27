@@ -27,6 +27,8 @@ class BookingController extends Controller
         $sortBy = $request->input('sortBy', 'created_at');
         $sortOrder = $request->input('sortOrder', 'desc');
 
+        $lecture_type = $request->input('lecture_type', ['lecture', 'teleconference', 'seminar', 'other']);
+
         $page = $request->input('page', 1);
         $status = $request->input('status', [0, 1]);
         $months = $request->input('start');
@@ -51,6 +53,7 @@ class BookingController extends Controller
             ->where('bookings.semester_id', $semester->id)
             ->whereIn('bookings.status', $status)
             ->whereIn('bookings.type', $type)
+            ->whereIn('bookings.lecture_type', $lecture_type)
             ->whereIn('bookings.publicity', $publicity)
             ->whereNull('bookings.conflict_id')
             ->whereIn('bookings.room_id', $roomIds);
@@ -73,9 +76,9 @@ class BookingController extends Controller
         $bookings = $query->orderBy($sortBy, $sortOrder)
             ->select('bookings.*', 'rooms.name as room_name', 'rooms.color as color', 'rooms.id as room')
             ->paginate($perPage, ['*'], 'page', $page);
-            
-            $booking_groups = new Collection();
-            $bookings->each(function ($booking) use ($booking_groups) {
+
+        $booking_groups = new Collection();
+        $bookings->each(function ($booking) use ($booking_groups) {
             $rooms = Room::where('id', $booking->room_id)->where('status', 1)->get();
             $booking_groups->push((object) [
                 'id' => $booking->id,
@@ -103,6 +106,8 @@ class BookingController extends Controller
     {
         $sortBy = $request->input('sortBy', 'created_at');
         $sortOrder = $request->input('sortOrder', 'desc');
+
+        $lecture_type = $request->input('lecture_type', ['lecture', 'teleconference', 'seminar', 'other']);
 
         $page = $request->input('page', 1);
         $status = $request->input('status', [0, 1]);
@@ -132,6 +137,7 @@ class BookingController extends Controller
             ->whereIn('id', $recurringIds)
             ->whereIn('status', $status)
             ->whereIn('publicity', $publicity)
+            ->whereIn('lecture_type', $lecture_type)
             ->where('conflict_id', null)
             ->orderBy($sortBy, $sortOrder)
             ->paginate($perPage, ['*'], 'page', $page);
@@ -183,6 +189,8 @@ class BookingController extends Controller
             'days' => 'nullable',
             'room_id' => 'nullable',
             'url' => 'nullable',
+            'type' => 'required',
+            'expected_attendance' => 'nullable',
         ]);
         /* if (!Gate::forUser($request->input('booker_id'))->allows('create-booking')) {
             abort(403);
@@ -206,6 +214,8 @@ class BookingController extends Controller
         $recurring->status = 0;
         $recurring->publicity = $validatedData['publicity'];
         $recurring->url = $validatedData['url'];
+        $recurring->type = $validatedData['type'];
+        $recurring->expected_attendance = $validatedData['expected_attendance'];
         $recurring->semester_id = $semester->id;
         $recurring->save();
         $days = $validatedData['days'];
@@ -233,6 +243,8 @@ class BookingController extends Controller
         $date = $request->input('date', now()->toDateString());
         $dateCarbon = Carbon::parse($date);
 
+        $lecture_type = $request->input('lecture_type', ['lecture', 'teleconference', 'seminar', 'other']);
+
         // Get the start and end dates of the month
         $startOfMonth = $dateCarbon->copy()->startOfMonth();
         $endOfMonth = $dateCarbon->copy()->endOfMonth();
@@ -252,6 +264,7 @@ class BookingController extends Controller
             ->where('bookings.status', 1)
             ->where('bookings.publicity', 1)
             ->where('rooms.status', 1)
+            ->whereIn('bookings.type', $lecture_type)
             ->orderBy('bookings.start', 'asc')
             ->select('bookings.*', 'rooms.name as room_name', 'rooms.color as color', 'rooms.building_id as building_id')
             ->where(function ($query) use ($startOfMonth, $endOfMonth, $startOfPreviousMonth, $endOfPreviousMonth, $startOfNextMonth, $endOfNextMonth) {

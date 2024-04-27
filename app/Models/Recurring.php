@@ -22,7 +22,9 @@ class Recurring extends Model
         'title',
         'info',
         'participants',
-        'url'
+        'url',
+        'lecture_type',
+        'expected_attendance'
     ];
     public function semester()
     {

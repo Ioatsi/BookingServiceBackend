@@ -14,7 +14,7 @@ class Department extends Model
 
     public function buildings()
     {
-        return $this->hasMany(Building::class);
+        return $this->belongsToMany(Building::class);
     }
     public function rooms()
     {
