@@ -113,7 +113,7 @@ class BookingController extends Controller
         $page = $request->input('page', 1);
         $status = $request->input('status', [0, 1]);
         $publicity = $request->input('publicity', [0, 1]);
-        $dayInputs = $request->input('days', [1, 2, 3, 4, 5]);
+        $dayInputs = $request->input('days', [1, 2, 3, 4, 5, 6, 7]);
 
         $semester = Semester::where('is_current', true)->first();
         $perPage = $request->input('perPage', 1); // You can adjust this number as needed
@@ -190,7 +190,7 @@ class BookingController extends Controller
             'days' => 'nullable',
             'room_id' => 'nullable',
             'url' => 'nullable',
-            'type' => 'required',
+            'lecture_type' => 'required',
             'expected_attendance' => 'nullable',
         ]);
         /* if (!Gate::forUser($request->input('booker_id'))->allows('create-booking')) {
@@ -215,7 +215,7 @@ class BookingController extends Controller
         $recurring->status = 0;
         $recurring->publicity = $validatedData['publicity'];
         $recurring->url = $validatedData['url'];
-        $recurring->type = $validatedData['type'];
+        $recurring->lecture_type = $validatedData['lecture_type'];
         $recurring->expected_attendance = $validatedData['expected_attendance'];
         $recurring->semester_id = $semester->id;
         $recurring->save();
