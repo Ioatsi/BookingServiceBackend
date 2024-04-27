@@ -34,9 +34,14 @@ class StatisticsController extends Controller
         if ($daysLength === 0) {
             $days = [1]; // Default value
         }
-
+        
         if ($semesterIdsLength === 0) {
             $semesterIds = [$currentSemesterId]; // Default value
+        }
+        
+        $lecture_typeLength = count($lecture_type);
+        if ($lecture_typeLength === 0) {
+            $lecture_type =  ['lecture', 'teleconference', 'seminar', 'other']; // Default value
         }
 
         foreach ($roomIds as $roomId) {
@@ -133,7 +138,10 @@ class StatisticsController extends Controller
         if ($semesterIdsLength === 0) {
             $semesterIds = [$currentSemesterId]; // Default value
         }
-
+        $lecture_typeLength = count($lecture_type);
+        if ($lecture_typeLength === 0) {
+            $lecture_type =  ['lecture', 'teleconference', 'seminar', 'other']; // Default value
+        }
         foreach ($roomIds as $roomId) {
             // Get the total number of bookings for the room in the current semester
             $totalBookings = Booking::where('room_id', $roomId)->whereIn('semester_id', $semesterIds)->count();
@@ -213,7 +221,10 @@ class StatisticsController extends Controller
         $roomIdsLength = count($roomIds);
         $semesterIdsLength = count($semesterIds);
         $monthsLength = count($months);
-
+        $lecture_typeLength = count($lecture_type);
+        if ($lecture_typeLength === 0) {
+            $lecture_type =  ['lecture', 'teleconference', 'seminar', 'other']; // Default value
+        }
         if ($roomIdsLength === 0) {
             $roomIds = [1]; // Default value
         }
@@ -307,6 +318,11 @@ class StatisticsController extends Controller
         if ($semesterIdsLength === 0) {
             $semesterIds = [$currentSemesterId]; // Default value
         }
+
+        $lecture_typeLength = count($lecture_type);
+        if ($lecture_typeLength === 0) {
+            $lecture_type =  ['lecture', 'teleconference', 'seminar', 'other']; // Default value
+        }
         $result = []; // The return value
         $semesters = Semester::whereIn('id', $semesterIds)->get();
         $months = [];
@@ -382,6 +398,11 @@ class StatisticsController extends Controller
         $roomIds = $request->input('roomIds', [1]);
 
         $days = $request->input('days', [1]);
+
+        $lecture_typeLength = count($lecture_type);
+        if ($lecture_typeLength === 0) {
+            $lecture_type =  ['lecture', 'teleconference', 'seminar', 'other']; // Default value
+        }
 
         // Get the sample size from the request
         $currentSemesterId = Semester::where('is_current', true)->first()->id;
@@ -467,6 +488,11 @@ class StatisticsController extends Controller
 
         $lecture_type = $request->input('lecture_type', ['lecture', 'teleconference', 'seminar', 'other']);
 
+        $lecture_typeLength = count($lecture_type);
+        if ($lecture_typeLength === 0) {
+            $lecture_type =  ['lecture', 'teleconference', 'seminar', 'other']; // Default value
+        }
+
         $roomIdsLength = count($roomIds);
         $semesterIdsLength = count($semesterIds);
         $monthsLength = count($months);
@@ -539,6 +565,11 @@ class StatisticsController extends Controller
         $days = $request->input('days', [1]);
         $currentSemesterId = Semester::where('is_current', true)->first()->id;
         $semesterIds = $request->input('semesterIds', [$currentSemesterId]);
+
+        $lecture_typeLength = count($lecture_type);
+        if ($lecture_typeLength === 0) {
+            $lecture_type =  ['lecture', 'teleconference', 'seminar', 'other']; // Default value
+        }
 
         $daysLength = count($days);
         $semesterIdsLength = count($semesterIds);
@@ -638,6 +669,11 @@ class StatisticsController extends Controller
 
         $monthsLength = count($months);
 
+        $lecture_typeLength = count($lecture_type);
+        if ($lecture_typeLength === 0) {
+            $lecture_type =  ['lecture', 'teleconference', 'seminar', 'other']; // Default value
+        }
+
         if ($monthsLength === 0) {
             $months = [$currentMonth]; // Default value
         }
@@ -727,6 +763,11 @@ class StatisticsController extends Controller
         $currentSemesterId = Semester::where('is_current', true)->first()->id;
         $semesterIds = $request->input('semesterIds', [$currentSemesterId]);
 
+        $lecture_typeLength = count($lecture_type);
+        if ($lecture_typeLength === 0) {
+            $lecture_type =  ['lecture', 'teleconference', 'seminar', 'other']; // Default value
+        }
+
         $roomIdsLength = count($roomIds);
         if ($roomIdsLength <= 0) {
             $roomIds = [1]; // Default value
@@ -800,6 +841,11 @@ class StatisticsController extends Controller
         $currentMonthStart = Carbon::now()->startOfMonth();
         $currentMonthEnd = Carbon::now()->endOfMonth();
 
+        $lecture_typeLength = count($lecture_type);
+        if ($lecture_typeLength === 0) {
+            $lecture_type =  ['lecture', 'teleconference', 'seminar', 'other']; // Default value
+        }
+        
         $dateRange = $request->input('dateRange', [$currentMonthStart->format('Y-m-d'), $currentMonthEnd->format('Y-m-d')]);
 
         if ($dateRange == null) {
@@ -877,7 +923,10 @@ class StatisticsController extends Controller
          *               The frequency is an array with day_of_month as the key and frequency as the value.
          */
         $lecture_type = $request->input('lecture_type', ['lecture', 'teleconference', 'seminar', 'other']);
-
+        $lecture_typeLength = count($lecture_type);
+        if ($lecture_typeLength === 0) {
+            $lecture_type =  ['lecture', 'teleconference', 'seminar', 'other']; // Default value
+        }
         // Get the room IDs from the request
         $roomIds = $request->input('roomIds', [1]);
 
@@ -963,7 +1012,11 @@ class StatisticsController extends Controller
     public function roomDateRangeDurationFrequency(Request $request)
     {
         $roomIds = $request->input('roomIds', [1]);
-
+        $lecture_type = $request->input('lecture_type', ['lecture', 'teleconference', 'seminar', 'other']);
+        $lecture_typeLength = count($lecture_type);
+        if ($lecture_typeLength === 0) {
+            $lecture_type =  ['lecture', 'teleconference', 'seminar', 'other']; // Default value
+        }
         $currentMonthStart = Carbon::now()->startOfMonth();
         $currentMonthEnd = Carbon::now()->endOfMonth();
 
@@ -976,8 +1029,6 @@ class StatisticsController extends Controller
         $startDate = isset($dateRange["start"]) ? Carbon::createFromFormat('n/j/Y', $dateRange["start"]) : $currentMonthStart;
         $endDate = isset($dateRange["end"]) ? Carbon::createFromFormat('n/j/Y', $dateRange["end"]) : $currentMonthEnd;
         
-        $lecture_type = $request->input('lecture_type', ['lecture', 'teleconference', 'seminar', 'other']);
-
         $roomIdsLength = count($roomIds);
 
         if ($roomIdsLength === 0) {
