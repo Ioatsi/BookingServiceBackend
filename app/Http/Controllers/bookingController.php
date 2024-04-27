@@ -73,10 +73,10 @@ class BookingController extends Controller
             $query->whereIn(DB::raw('DAYOFWEEK(bookings.start)'), $adjustedDays);
         }
 
-        
+
         $bookings = $query->orderBy($sortBy, $sortOrder)
-        ->select('bookings.*', 'rooms.name as room_name', 'rooms.color as color', 'rooms.id as room')
-        ->paginate($perPage, ['*'], 'page', $page);
+            ->select('bookings.*', 'rooms.name as room_name', 'rooms.color as color', 'rooms.id as room')
+            ->paginate($perPage, ['*'], 'page', $page);
 
         $booking_groups = new Collection();
         $bookings->each(function ($booking) use ($booking_groups) {
@@ -281,6 +281,15 @@ class BookingController extends Controller
         if ($request->input('room_id') != null) {
             $query->whereIn('bookings.room_id', $request->input('room_id'));
         }
+
+        // Add subquery to filter out conflicting bookings
+        $query->whereNotExists(function ($subquery) {
+            $subquery->select(DB::raw(1))
+                ->from('bookings as b2')
+                ->whereRaw('bookings.conflict_id = b2.conflict_id')
+                ->whereRaw('bookings.created_at > b2.created_at');
+        });
+
 
         $query = $query->get();
 
