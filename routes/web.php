@@ -35,7 +35,7 @@ Route::post('/resolveRecurringConflict', [BookingController::class,'resolveRecur
 Route::post('/getActiveBookings', [BookingController::class, 'getActiveBookings']);
 
 //For user
-Route::get('/getUserBookings/{id}', [BookingController::class, 'getUserBookings']);
+Route::post('/getUserBookings', [BookingController::class, 'getUserBookings']);
 
 
 Route::post('/createBooking', [BookingController::class, 'store']);

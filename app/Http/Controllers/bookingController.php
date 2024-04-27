@@ -229,13 +229,44 @@ class BookingController extends Controller
         $conflicting = Recurring::conflicts($recurring);
     }
 
-    public function getUserBookings($id)
+    public function getUserBookings(Request $request)
     {
         $semester = Semester::where('is_current', true)->first();
-        $bookings = Booking::where('semester_id', $semester->id)
-            ->where('booker_id', $id)
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $query = Booking::join('rooms', 'bookings.room_id', '=', 'rooms.id')
+            ->where('semester_id', $semester->id)
+            ->where('booker_id', $request->input('booker_id', ''))
+            ->orderBy('created_at', 'desc');
+
+        $perPage = $request->input('perPage', 1); // You can adjust this number as needed
+        $page = $request->input('page', 1);
+
+        $bookings = $query->select('bookings.*', 'rooms.name as room_name', 'rooms.color as color', 'rooms.id as room')
+            ->paginate($perPage, ['*'], 'page', $page);
+
+        $booking_groups = new Collection();
+        $bookings->each(function ($booking) use ($booking_groups) {
+            $rooms = Room::where('id', $booking->room_id)->where('status', 1)->get();
+            $booking_groups->push((object) [
+                'id' => $booking->id,
+                'title' => $booking->title,
+                'start' => $booking->start,
+                'end' => $booking->end,
+                'info' => $booking->info,
+                'status' => $booking->status,
+                'type' => $booking->type,
+                'publicity' => $booking->publicity,
+                'room_name' => $booking->room_name,
+                'room_id' => $booking->room,
+                'rooms' => $rooms
+            ]);
+        });
+        if ($request->input('ical') == true) {
+            return $this->generateICal($booking_groups);
+        }
+        return response()->json([
+            'bookings' => $booking_groups,
+            'total' => $bookings->total(),
+        ]);
         return response()->json($bookings);
     }
 
