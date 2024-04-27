@@ -97,7 +97,7 @@ class Booking extends Model
         'end' => 'datetime',
     ];
     protected $attributes = [
-        'status' => 0,
+        'status' => 1,
         'participants' => 'No participants',
         'publicity' => 0,
         'url' => null,

@@ -73,9 +73,10 @@ class BookingController extends Controller
             $query->whereIn(DB::raw('DAYOFWEEK(bookings.start)'), $adjustedDays);
         }
 
+        
         $bookings = $query->orderBy($sortBy, $sortOrder)
-            ->select('bookings.*', 'rooms.name as room_name', 'rooms.color as color', 'rooms.id as room')
-            ->paginate($perPage, ['*'], 'page', $page);
+        ->select('bookings.*', 'rooms.name as room_name', 'rooms.color as color', 'rooms.id as room')
+        ->paginate($perPage, ['*'], 'page', $page);
 
         $booking_groups = new Collection();
         $bookings->each(function ($booking) use ($booking_groups) {
@@ -264,7 +265,7 @@ class BookingController extends Controller
             ->where('bookings.status', 1)
             ->where('bookings.publicity', 1)
             ->where('rooms.status', 1)
-            ->whereIn('bookings.type', $lecture_type)
+            ->whereIn('bookings.lecture_type', $lecture_type)
             ->orderBy('bookings.start', 'asc')
             ->select('bookings.*', 'rooms.name as room_name', 'rooms.color as color', 'rooms.building_id as building_id')
             ->where(function ($query) use ($startOfMonth, $endOfMonth, $startOfPreviousMonth, $endOfPreviousMonth, $startOfNextMonth, $endOfNextMonth) {
