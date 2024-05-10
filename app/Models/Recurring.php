@@ -90,7 +90,7 @@ class Recurring extends Model
                     $existingRecurringDayStart = Carbon::createFromTimeString($existingRecurringDay->start);
                     $existingRecurringDayEnd = Carbon::createFromTimeString($existingRecurringDay->end);
 
-                    // Check if the days are the same day of the week
+                    // Check if the days are the same day of the week for the same room
                     if ($recurringDay->name == $existingRecurringDay->name && $recurringDay->room_id == $existingRecurringDay->room_id) {
                         // Check if the times overlap
                         if ($recurringDayStart->between($existingRecurringDayStart, $existingRecurringDayEnd) || $recurringDayEnd->between($existingRecurringDayStart, $existingRecurringDayEnd)) {

@@ -197,6 +197,7 @@ class BookingController extends Controller
             abort(403);
         } */
         if ($request->input('is_recurring')) {
+            
             $this->createRecurringBookingGroup($validatedData);
             return response()->json(['message' => 'Recurring booking created successfully.'], 201);
         }
@@ -206,6 +207,7 @@ class BookingController extends Controller
 
     public function createRecurringBookingGroup($validatedData)
     {
+        
         $semester = Semester::where('is_current', true)->first();
         $recurring = new Recurring();
         $recurring->title = $validatedData['title'];
@@ -313,7 +315,7 @@ class BookingController extends Controller
             $query->whereIn('bookings.room_id', $request->input('room_id'));
         }
 
-        // Add subquery to filter out conflicting bookings
+        // Add subquery to filter out conflicting bookings and leave the most recent one
         $query->whereNotExists(function ($subquery) {
             $subquery->select(DB::raw(1))
                 ->from('bookings as b2')
