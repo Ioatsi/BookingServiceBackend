@@ -14,11 +14,8 @@ return new class extends Migration
         Schema::create('building_department', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
-            $table->unsignedBigInteger('department_id');
-            $table->unsignedBigInteger('building_id');
-
-            $table->foreign('department_id')->references('id')->on('Departments')->onDelete('cascade');
-            $table->foreign('building_id')->references('id')->on('Buildings')->onDelete('cascade');
+            $table->foreignId('department_id')->constrained('departments');
+            $table->foreignId('building_id')->constrained('buildings');
         });
     }
 
