@@ -99,6 +99,7 @@ class Booking extends Model
     protected $attributes = [
         'status' => 1,
         'participants' => 'No participants',
+        'lecture_type' => 'lecture',
         'publicity' => 0,
         'url' => null,
         "info" => 'No info provided',
