@@ -38,6 +38,8 @@ class Recurring extends Model
     protected $attributes = [
         'publicity' => 0,
         'url' => null,
+        'lecture_type' => 'lecture',
+        'participants' => 'No participants',
         "info" => 'No info provided',
     ];
     //give current semester id
