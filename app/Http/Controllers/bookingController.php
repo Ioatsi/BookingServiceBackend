@@ -91,6 +91,9 @@ class BookingController extends Controller
                 'type' => $booking->type,
                 'publicity' => $booking->publicity,
                 'room_name' => $booking->room_name,
+                'lecture_type' => $booking->lecture_type,
+                'expected_attendance' => $booking->expected_attendance,
+                'url' => $booking->url,
                 'room_id' => $booking->room,
                 'rooms' => $rooms
             ]);
@@ -156,6 +159,9 @@ class BookingController extends Controller
                 'info' => $recurring->info,
                 'status' => $recurring->status,
                 'publicity' => $recurring->publicity,
+                'lecture_type' => $recurring->lecture_type,
+                'expected_attendance' => $recurring->expected_attendance,
+                'url' => $recurring->url,
                 'type' => 'recurringGroup',
                 'days' => $days,
                 'rooms' => $rooms,
@@ -258,6 +264,9 @@ class BookingController extends Controller
                 'type' => $booking->type,
                 'publicity' => $booking->publicity,
                 'room_name' => $booking->room_name,
+                'url' => $booking->url,
+                'lecture_type' => $booking->lecture_type,
+                'expected_attendance' => $booking->expected_attendance,
                 'room_id' => $booking->room,
                 'rooms' => $rooms
             ]);
@@ -564,6 +573,9 @@ class BookingController extends Controller
                         $booking->title = $recurring->title;
                         $booking->info = $recurring->info;
                         $booking->publicity = $recurring->publicity;
+                        $booking->url = $recurring->url;
+                        $booking->lecture_type = $recurring->lecture_type;
+                        $booking->expected_attendance = $recurring->expected_attendance;
                         $booking->room_id = $day->room_id;
                         $booking->participants = $recurring->participants;
                         $booking->type = 'recurring';
@@ -617,12 +629,14 @@ class BookingController extends Controller
         $validatedData = $request->validate([
             'id' => 'required',
             'title' => 'required',
-            'info' => 'required',
+            'info' => 'nullable',
             'start' => 'required|date',
             'end' => 'required|date',
             'participants' => 'nullable',
             'type' => 'required',
             'publicity' => 'required',
+            'lecture_type' => 'required',
+            'expected_attendance' => 'required',
             'days' => 'nullable',
             'is_recurring' => 'nullable',
             'status' => 'required',
@@ -640,6 +654,8 @@ class BookingController extends Controller
 
         $booking->room_id = $validatedData['room_id'];
         $booking->publicity = $validatedData['publicity'];
+        $booking->lecture_type = $validatedData['lecture_type'];
+        $booking->expected_attendance = $validatedData['expected_attendance'];
         $booking->url = $validatedData['url'];
         $booking->title = $validatedData['title'];
         $booking->info = $validatedData['info'];
