@@ -24,11 +24,9 @@ class DepartmentSeeder extends Seeder
         //
         Department::create([
             'name' => 'IEE',
-            'info' => $this->faker->text
         ]);
         Department::create([
             'name' => 'IEM',
-            'info' => $this->faker->text
         ]);
     }
 }

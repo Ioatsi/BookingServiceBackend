@@ -11,6 +11,9 @@ class Department extends Model
     protected $fillable = [
         'name',
     ];
+    protected $attributes = [
+        'info' => 'No Info',
+    ];
 
     public function buildings()
     {
