@@ -563,6 +563,7 @@ class BookingController extends Controller
                         $booking->booker_id = $recurring->booker_id;
                         $booking->title = $recurring->title;
                         $booking->info = $recurring->info;
+                        $booking->publicity = $recurring->publicity;
                         $booking->room_id = $day->room_id;
                         $booking->participants = $recurring->participants;
                         $booking->type = 'recurring';
