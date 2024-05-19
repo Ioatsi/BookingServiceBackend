@@ -34,11 +34,11 @@ class StatisticsController extends Controller
         if ($daysLength === 0) {
             $days = [1]; // Default value
         }
-        
+
         if ($semesterIdsLength === 0) {
             $semesterIds = [$currentSemesterId]; // Default value
         }
-        
+
         $lecture_typeLength = count($lecture_type);
         if ($lecture_typeLength === 0) {
             $lecture_type =  ['lecture', 'teleconference', 'seminar', 'other']; // Default value
@@ -47,17 +47,17 @@ class StatisticsController extends Controller
         foreach ($roomIds as $roomId) {
             $label = '';
             $frequencyMap = [];
-                $percentageMap = [];
-                $fullFrequency = [];
-                // Initialize the frequency map with all hours between 8 and 20 and set the frequency to 0
-                for ($i = 8; $i <= 20; $i++) {
-                    $labels[$i - 8] = $i;
-                    //$frequencyMap[] = ['label' => $i, 'datasetFrequency' => 0, 'datasetPercentage' => 0];
-                    $frequencyMap[] = 0;
-                    $percentageMap[] = 0;
-                }
-                $frequencyMax = 0;
-                $percentageMax = 0;
+            $percentageMap = [];
+            $fullFrequency = [];
+            // Initialize the frequency map with all hours between 8 and 20 and set the frequency to 0
+            for ($i = 8; $i <= 20; $i++) {
+                $labels[$i - 8] = $i;
+                //$frequencyMap[] = ['label' => $i, 'datasetFrequency' => 0, 'datasetPercentage' => 0];
+                $frequencyMap[] = 0;
+                $percentageMap[] = 0;
+            }
+            $frequencyMax = 0;
+            $percentageMax = 0;
             foreach ($days as $day) {
                 $totalBookings = Booking::select(
                     DB::raw('DAYOFWEEK(start) as day_of_week'),
@@ -81,7 +81,7 @@ class StatisticsController extends Controller
                     ->orderBy('day_of_week')
                     ->orderBy('hour_of_day')
                     ->get();
-                
+
                 // Iterate over the frequencies and update the corresponding hour in the frequency map
                 foreach ($frequency as $item) {
                     if ($item->frequency > $frequencyMax) {
@@ -272,7 +272,7 @@ class StatisticsController extends Controller
                     $percentageMax = round(($item->frequency / $totalBookings) * 100);
                 }
             }
-            foreach($months as $month){
+            foreach ($months as $month) {
                 $label = $label . ' - ' . Carbon::create()->month($month)->format('F');
             }
 
@@ -845,7 +845,7 @@ class StatisticsController extends Controller
         if ($lecture_typeLength === 0) {
             $lecture_type =  ['lecture', 'teleconference', 'seminar', 'other']; // Default value
         }
-        
+
         $dateRange = $request->input('dateRange', [$currentMonthStart->format('Y-m-d'), $currentMonthEnd->format('Y-m-d')]);
 
         if ($dateRange == null) {
@@ -1028,7 +1028,7 @@ class StatisticsController extends Controller
 
         $startDate = isset($dateRange["start"]) ? Carbon::createFromFormat('n/j/Y', $dateRange["start"]) : $currentMonthStart;
         $endDate = isset($dateRange["end"]) ? Carbon::createFromFormat('n/j/Y', $dateRange["end"]) : $currentMonthEnd;
-        
+
         $roomIdsLength = count($roomIds);
 
         if ($roomIdsLength === 0) {
@@ -1185,7 +1185,18 @@ class StatisticsController extends Controller
         foreach ($remainingBookingsInWeek as $booking) {
             $remainingHoursInWeek -= $booking->end->diffInHours($booking->start);
         }
-        $capacityIndicator = round(($remainingHoursInWeek / Carbon::now()->endOfWeek()->diffInHours(Carbon::now())) * 100);
+        $now = Carbon::now();
+        $endOfWeek = $now->endOfWeek();
+        $hoursUntilEndOfWeek = $endOfWeek->diffInHours($now);
+
+        // Ensure hoursUntilEndOfWeek is not zero to prevent division by zero
+        if ($hoursUntilEndOfWeek > 0) {
+            $capacityIndicator = round(($remainingHoursInWeek / $hoursUntilEndOfWeek) * 100);
+        } else {
+            // Handle the case where the difference is zero
+            $capacityIndicator = 99; // or any default value you deem appropriate
+        }
+
         $result = [
             'capacityIndicator' => $capacityIndicator,
             'divident' => 100 - $capacityIndicator,
