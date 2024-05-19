@@ -13,8 +13,7 @@ class Building extends Model
         'name',
     ];
     protected $attributes = [
-        'info' => 'noInfo',
-        'department_id' => 1,
+        'info' => 'No Info',
     ];
     public function rooms()
     {

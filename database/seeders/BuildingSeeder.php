@@ -15,16 +15,13 @@ class BuildingSeeder extends Seeder
     {
         //\App\Models\Building::factory(5)->create();
         \App\Models\Building::create([
-            'name' => 'Κεντρικο κτήριο Αλεξάνδρειας Πανειστημιούπολης',
-            'department_id' =>1
+            'name' => 'Κεντρικο κτήριο Αλεξάνδρειας Πανειστημιούπολης'
         ]);
         \App\Models\Building::create([
-            'name' => 'Κτήριο-αμφιθέατρο Αλεξάνδρειας Πανειστημιούπολης',
-            'department_id' =>1
+            'name' => 'Κτήριο-αμφιθέατρο Αλεξάνδρειας Πανειστημιούπολης'
         ]);
         \App\Models\Building::create([
-            'name' => 'Κτήριο Τμήματος Μηχανικών Παραγωγής και Διοίκησης',
-            'department_id' =>1
+            'name' => 'Κτήριο Τμήματος Μηχανικών Παραγωγής και Διοίκησης'
         ]);
     }
 
