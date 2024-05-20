@@ -1172,8 +1172,17 @@ class StatisticsController extends Controller
             ->orderBy('frequency', 'desc')
             ->first();
 
-        $bussiestRoom->name = Room::where('id', $bussiestRoom->room_id)->first()->name;
-
+            if ($bussiestRoom) {
+                // Fetch the name of the busiest room
+                $bussiestRoom->name = Room::where('id', $bussiestRoom->room_id)->first()->name;
+            } else {
+                // Handle the case when no bookings were found
+                $bussiestRoom = (object) [
+                    'room_id' => null,
+                    'frequency' => 0,
+                    'name' => 'No bookings this week'
+                ];
+            }
         return $bussiestRoom;
     }
 
