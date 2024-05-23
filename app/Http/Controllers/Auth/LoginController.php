@@ -26,9 +26,23 @@ class LoginController extends Controller
             'password' => $request->password,
         ]);
 
-        // Handle CAS server response and user authentication
+        // Check if the CAS authentication was successful
+        if ($response->successful()) {
+            // Extract the user information or token from the response
+            $userData = $response->json();
+            
+            // Optionally, you can store user information in session or database
+            // Example:
+            // session(['user' => $userData]);
+            
+            // Return a JSON response indicating successful authentication
+            return response()->json(['message' => 'Authentication successful', 'user' => $userData], 200);
+        } else {
+            // CAS authentication failed
+            // Return a JSON response with error message
+            return response()->json(['error' => 'Invalid username or password'], 401);
+        }
     }
-
     /**
      * Handle CAS logout.
      *
