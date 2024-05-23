@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 
+use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\SemesterController;
@@ -31,8 +32,14 @@ Route::post('/checkConflict', [BookingController::class,'checkConflict']);
 Route::post('/resolveConflict', [BookingController::class,'resolveConflict']);
 Route::post('/resolveRecurringConflict', [BookingController::class,'resolveRecurringConflict']);
 
-//For calendar
 Route::post('/getActiveBookings', [BookingController::class, 'getActiveBookings']);
+Route::group(['middleware' => 'cas.auth'], function () {
+    //For calendar
+    Route::post('/login', [LoginController::class, 'login']);
+
+    Route::get('/logout', [LoginController::class, 'logout'])->name('logout');
+
+});
 
 //For user
 Route::post('/getUserBookings', [BookingController::class, 'getUserBookings']);
