@@ -33,9 +33,9 @@ Route::post('/resolveConflict', [BookingController::class,'resolveConflict']);
 Route::post('/resolveRecurringConflict', [BookingController::class,'resolveRecurringConflict']);
 
 Route::post('/getActiveBookings', [BookingController::class, 'getActiveBookings']);
+Route::post('/login', [LoginController::class, 'login']);
 Route::group(['middleware' => 'cas.auth'], function () {
     //For calendar
-    Route::post('/login', [LoginController::class, 'login']);
 
     Route::get('/logout', [LoginController::class, 'logout'])->name('logout');
 
