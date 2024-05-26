@@ -26,7 +26,7 @@ class LoginController extends Controller
             $casValidateUrl = 'https://sso.ihu.gr/serviceValidate';
 
             $params = [
-                'service' => 'http://booking.iee.ihu.gr/cas/callback',
+                'service' => 'booking.iee.ihu.gr',
                 'ticket' => $ticket
             ];
 
@@ -39,7 +39,7 @@ class LoginController extends Controller
             $xml->registerXPathNamespace('cas', 'http://www.yale.edu/tp/cas');
             
             // Check if authentication is successful
-            if ($xml->xpath('//cas:authenticationSuccess/cas:user')) {
+            if ($xml && $xml->authenticationSuccess) {
                 // Extract user attributes
                 $userAttributes = [];
                 foreach ($xml->authenticationSuccess->attributes() as $key => $value) {
@@ -63,6 +63,7 @@ class LoginController extends Controller
                     'redirect_url' => '/',
                     'xml' => $xml,
                     'xmlResponse' => $xmlResponse,
+                    'path' => $xml->xpath('//cas:authenticationSuccess/cas:user')
                 ]);
             }
         } else {
