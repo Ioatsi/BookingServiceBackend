@@ -25,14 +25,13 @@ class LoginController extends Controller
             // Validate ticket with CAS server
             $casValidateUrl = config('cas.base_url') . '/serviceValidate';
 
-            $client = new Client(['debug' => true]);
+            $params = [
+                'service' => 'http://booking.iee.ihu.gr',
+                'ticket' => $ticket
+            ];
 
-            $response = $client->request('GET', $casValidateUrl, [
-                'query' => [
-                    'ticket' => $ticket,
-                    'service' => 'http://booking.iee.ihu.gr'
-                ]
-            ]);
+            $client = new Client();
+            $response = $client->request('GET', $casValidateUrl, ['query' => $params]);
 
             // Parse CAS server response
             $xmlResponse = $response->getBody()->getContents();
