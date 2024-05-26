@@ -40,22 +40,22 @@ class LoginController extends Controller
             $xml = simplexml_load_string($xmlResponse);
             $xml->registerXPathNamespace('cas', 'http://www.yale.edu/tp/cas');
 
-            $user = new stdClass();
-
-            // Extract the username
-            $username = $xml->xpath('//cas:authenticationSuccess/cas:user');
-            $user->username = (string) $username[0];
-
-            // Extract and map attributes to object properties
-            $attributes = $xml->xpath('//cas:authenticationSuccess/cas:attributes/*');
-            foreach ($attributes as $attribute) {
-                $name = $attribute->getName();
-                $value = (string) $attribute;
-                $user->$name = $value;
-            }
-            $attr = $xml->xpath('//cas:authenticationSuccess/*');
             // Check if authentication is successful
-            if ($xml && $xml->authenticationSuccess) {
+            if ($xml->xpath('//cas:authenticationSuccess/cas:user')) {
+                
+                $user = new stdClass();
+    
+                // Extract the username
+                $username = $xml->xpath('//cas:authenticationSuccess/cas:user');
+                $user->username = (string) $username[0];
+    
+                // Extract and map attributes to object properties
+                $attributes = $xml->xpath('//cas:authenticationSuccess/cas:attributes/*');
+                foreach ($attributes as $attribute) {
+                    $name = $attribute->getName();
+                    $value = (string) $attribute;
+                    $user->$name = $value;
+                }
                 // Extract user attributes
                 $userAttributes = [];
                 foreach ($xml->authenticationSuccess->attributes() as $key => $value) {
@@ -69,7 +69,8 @@ class LoginController extends Controller
                 return response()->json([
                     'status' => 'success',
                     'message' => 'Authentication successful',
-                    'redirect_url' => '/'
+                    'redirect_url' => '/',
+                    'user' => $user
                 ]);
             } else {
                 // CAS authentication failed
@@ -77,9 +78,6 @@ class LoginController extends Controller
                     'status' => 'fail',
                     'message' => 'Authentication failed',
                     'redirect_url' => '/',
-                    'xml' => $xml->authenticationSuccess,
-                    'xmlResponse' => $xmlResponse,
-                    'user' => $user
                 ]);
             }
         } else {
