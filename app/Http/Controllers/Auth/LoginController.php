@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use Subfission\Cas\Facades\Cas;
 use App\Models\User;
 
+use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Request;
 
@@ -18,37 +19,57 @@ class LoginController extends Controller
     }
     public function handleCasCallback(Request $request)
     {
-        $ticket = $request->input('ticket');
+        $ticket = $request->query('ticket');
+
         if ($ticket) {
-            $casServiceUrl = config('cas.base_url') . '/' . config('cas.service_url');
-            $response = file_get_contents($casServiceUrl . '?ticket=' . $ticket . '&service=' . urlencode(route('cas.callback')));
+            // Validate ticket with CAS server
+            $casValidateUrl = config('cas.base_url') . '/serviceValidate';
+            $casServiceUrl = route('cas.callback'); // URL to handle CAS callback
 
-            // Parse CAS response using SimpleXML
-            $xml = simplexml_load_string($response);
-            if ($xml && isset($xml->authenticationSuccess)) {
-                $username = (string) $xml->authenticationSuccess->user;
+            $client = new Client();
+            $response = $client->request('GET', $casValidateUrl, [
+                'query' => [
+                    'ticket' => $ticket,
+                    'service' => $casServiceUrl
+                ]
+            ]);
 
-                // Dynamically create or update user
-                $user = User::firstOrCreate(
-                    ['username' => $username],
-                    ['email' => $username . '@example.com'] // Add other fields as necessary
-                );
+            // Parse CAS server response
+            $xmlResponse = $response->getBody()->getContents();
+            $xml = simplexml_load_string($xmlResponse);
+            
+            // Check if authentication is successful
+            if ($xml && $xml->authenticationSuccess) {
+                // Extract user attributes
+                $userAttributes = [];
+                foreach ($xml->authenticationSuccess->attributes() as $key => $value) {
+                    $userAttributes[$key] = (string) $value;
+                }
 
-                // Authenticate the user
-                Auth::login($user);
+                // Here, you can authenticate the user in your Laravel application using the user attributes.
+                // For example, you can check if the user exists in your database or create a new user.
 
+                // After authentication, you can redirect the user to the desired route
                 return response()->json([
                     'status' => 'success',
                     'message' => 'Authentication successful',
                     'redirect_url' => '/'
                 ]);
+            } else {
+                // CAS authentication failed
+                return response()->json([
+                    'status' => 'fail',
+                    'message' => 'Authentication failed',
+                    'redirect_url' => '/'
+                ]);
             }
+        } else {
+            // CAS authentication failed
+            return response()->json([
+                'status' => 'fail',
+                'message' => 'Ticket not found',
+                'redirect_url' => '/'
+            ]);
         }
-
-        return response()->json([
-            'status' => 'error',
-            'message' => 'CAS authentication failed',
-            'redirect_url' => '/login'
-        ]);
     }
 }
