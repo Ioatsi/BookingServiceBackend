@@ -77,7 +77,7 @@ class LoginController extends Controller
                     'status' => 'fail',
                     'message' => 'Authentication failed',
                     'redirect_url' => '/',
-                    'xml' => $xml,
+                    'xml' => $xml->authenticationSuccess,
                     'xmlResponse' => $xmlResponse,
                     'user' => $user
                 ]);
