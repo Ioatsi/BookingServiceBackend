@@ -24,9 +24,9 @@ class LoginController extends Controller
         if ($ticket) {
             // Validate ticket with CAS server
             $casValidateUrl = config('cas.base_url') . '/serviceValidate';
-            $casServiceUrl = route('cas.callback'); // URL to handle CAS callback
 
-            $client = new Client();
+            $client = new Client(['debug' => true]);
+
             $response = $client->request('GET', $casValidateUrl, [
                 'query' => [
                     'ticket' => $ticket,
