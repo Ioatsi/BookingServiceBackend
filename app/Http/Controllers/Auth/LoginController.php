@@ -56,11 +56,6 @@ class LoginController extends Controller
                     $value = (string) $attribute;
                     $user->$name = $value;
                 }
-                // Extract user attributes
-                $userAttributes = [];
-                foreach ($xml->authenticationSuccess->attributes() as $key => $value) {
-                    $userAttributes[$key] = (string) $value;
-                }
 
                 // Here, you can authenticate the user in your Laravel application using the user attributes.
                 // For example, you can check if the user exists in your database or create a new user.
