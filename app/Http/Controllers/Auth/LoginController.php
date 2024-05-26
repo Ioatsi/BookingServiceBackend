@@ -26,7 +26,7 @@ class LoginController extends Controller
             $casValidateUrl = 'https://sso.ihu.gr/serviceValidate';
 
             $params = [
-                'service' => 'booking.iee.ihu.gr',
+                'service' => 'http://booking.iee.ihu.gr/cas/callback',
                 'ticket' => $ticket
             ];
 
