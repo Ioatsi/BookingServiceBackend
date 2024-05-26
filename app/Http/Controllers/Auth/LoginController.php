@@ -38,7 +38,7 @@ class LoginController extends Controller
             libxml_use_internal_errors(true);
             $xml = simplexml_load_string($xmlResponse);
             $xml->registerXPathNamespace('cas', 'http://www.yale.edu/tp/cas');
-            $user = $xml->xpath('//cas:authenticationSuccess/');
+            $user = $xml->xpath('*');
             // Check if authentication is successful
             if ($xml && $xml->authenticationSuccess) {
                 // Extract user attributes
