@@ -69,7 +69,7 @@ class LoginController extends Controller
                     'status' => 'fail',
                     'message' => 'Authentication failed',
                     'redirect_url' => '/',
-                    'resp' => $response
+                    'resp' => $jsonResponse
                     /* 'xml' => $xml,
                     'xmlResponse' => $xmlResponse,
                     'path' => $xml->xpath('//cas:authenticationSuccess/cas:user') */
