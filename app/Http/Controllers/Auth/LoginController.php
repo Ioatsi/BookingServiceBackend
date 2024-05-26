@@ -59,7 +59,9 @@ class LoginController extends Controller
                 return response()->json([
                     'status' => 'fail',
                     'message' => 'Authentication failed',
-                    'redirect_url' => '/'
+                    'redirect_url' => '/',
+                    'xml' => $xml,
+                    'xmlResponse' => $xmlResponse,
                 ]);
             }
         } else {
