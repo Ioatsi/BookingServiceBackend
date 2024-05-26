@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Subfission\Cas\Facades\Cas;
+use App\Models\User;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Request;
@@ -17,28 +18,37 @@ class LoginController extends Controller
     }
     public function handleCasCallback(Request $request)
     {
-        // Extract the ticket parameter from the request
         $ticket = $request->input('ticket');
+        if ($ticket) {
+            $casServiceUrl = config('cas.base_url') . '/' . config('cas.service_url');
+            $response = file_get_contents($casServiceUrl . '?ticket=' . $ticket . '&service=' . urlencode(route('cas.callback')));
 
-        // Validate the ticket with the CAS server
-        // You can use a CAS client library or make an HTTP request to the CAS server
-        // Once validated, retrieve user attributes from the CAS server response
+            // Parse CAS response using SimpleXML
+            $xml = simplexml_load_string($response);
+            if ($xml && isset($xml->authenticationSuccess)) {
+                $username = (string) $xml->authenticationSuccess->user;
 
-        // Authenticate the user in your Laravel application
-        // This may involve creating a session for the user or storing user information
+                // Dynamically create or update user
+                $user = User::firstOrCreate(
+                    ['username' => $username],
+                    ['email' => $username . '@example.com'] // Add other fields as necessary
+                );
 
-        // Redirect the user to the appropriate route or return a response indicating successful authentication
-    }
-    /**
-     * Handle CAS logout.
-     *
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    
-    public function logout()
-    {
-        Cas::logout(); // Perform CAS logout
-        Auth::logout(); // Perform local logout
-        return redirect('/'); // Redirect to home page or any other page
+                // Authenticate the user
+                Auth::login($user);
+
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Authentication successful',
+                    'redirect_url' => '/'
+                ]);
+            }
+        }
+
+        return response()->json([
+            'status' => 'error',
+            'message' => 'CAS authentication failed',
+            'redirect_url' => '/login'
+        ]);
     }
 }
