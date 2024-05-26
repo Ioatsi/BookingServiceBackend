@@ -23,7 +23,7 @@ class LoginController extends Controller
 
         if ($ticket) {
             // Validate ticket with CAS server
-            $casValidateUrl = config('cas.base_url') . '/serviceValidate';
+            $casValidateUrl = 'https://sso.ihu.gr/serviceValidate';
 
             $params = [
                 'service' => 'http://booking.iee.ihu.gr',
