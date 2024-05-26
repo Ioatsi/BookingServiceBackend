@@ -37,8 +37,9 @@ class LoginController extends Controller
             $xmlResponse = $response->getBody()->getContents();
             $xml = simplexml_load_string($xmlResponse);
             $xml->registerXPathNamespace('cas', 'http://www.yale.edu/tp/cas');
+            
             // Check if authentication is successful
-            if ($xml && $xml->authenticationSuccess) {
+            if ($xml->xpath('//cas:authenticationSuccess/cas:user')) {
                 // Extract user attributes
                 $userAttributes = [];
                 foreach ($xml->authenticationSuccess->attributes() as $key => $value) {
