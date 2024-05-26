@@ -38,11 +38,7 @@ class LoginController extends Controller
             libxml_use_internal_errors(true);
             $xml = simplexml_load_string($xmlResponse);
             $xml->registerXPathNamespace('cas', 'http://www.yale.edu/tp/cas');
-            if (!$xml) {
-                foreach (libxml_get_errors() as $error) {
-                    echo $error->message;
-                }
-            }
+            $user = $xml->xpath('//cas:authenticationSuccess/*');
             // Check if authentication is successful
             if ($xml && $xml->authenticationSuccess) {
                 // Extract user attributes
@@ -68,7 +64,7 @@ class LoginController extends Controller
                     'redirect_url' => '/',
                     'xml' => $xml,
                     'xmlResponse' => $xmlResponse,
-                    'path' => $xml->xpath('//cas:authenticationSuccess/cas:user')
+                    'user' => $user
                 ]);
             }
         } else {
