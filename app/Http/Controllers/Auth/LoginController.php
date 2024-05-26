@@ -11,6 +11,10 @@ use Illuminate\Http\Request;
 
 class LoginController extends Controller
 {
+    public function login(){
+        $casLoginUrl = config('https://sso.ihu.gr') . '/' . config('login') . '?service=' . urlencode(route('http://booking.iee.ihu.gr/cas/callback'));
+        return redirect($casLoginUrl);
+    }
     public function handleCasCallback(Request $request)
     {
         // Extract the ticket parameter from the request
@@ -30,6 +34,7 @@ class LoginController extends Controller
      *
      * @return \Illuminate\Http\RedirectResponse
      */
+    
     public function logout()
     {
         Cas::logout(); // Perform CAS logout
