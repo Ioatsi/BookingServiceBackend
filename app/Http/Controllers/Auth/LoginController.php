@@ -12,7 +12,7 @@ use Illuminate\Http\Request;
 class LoginController extends Controller
 {
     public function login(){
-        $casLoginUrl = config('https://sso.ihu.gr') . '/' . config('login') . '?service=' . urlencode(route('http://booking.iee.ihu.gr/cas/callback'));
+        $casLoginUrl = config('https://sso.ihu.gr') . '/' . config('login') . '?service=' . urlencode(route('cas.callback'));
         return redirect($casLoginUrl);
     }
     public function handleCasCallback(Request $request)

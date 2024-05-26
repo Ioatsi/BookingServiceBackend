@@ -33,7 +33,6 @@ Route::post('/resolveConflict', [BookingController::class,'resolveConflict']);
 Route::post('/resolveRecurringConflict', [BookingController::class,'resolveRecurringConflict']);
 
 Route::post('/getActiveBookings', [BookingController::class, 'getActiveBookings']);
-Route::get('/cas/callback', 'AuthController@handleCasCallback')->name('cas.callback');
 
 Route::group(['middleware' => 'cas.auth'], function () {
     //For calendar
@@ -43,7 +42,7 @@ Route::group(['middleware' => 'cas.auth'], function () {
 });
 
 Route::get('/login', [LoginController::class, 'login']);
-Route::get('/cas/callback', [LoginController::class, 'casCallback']);
+Route::get('/cas/callback', [LoginController::class, 'casCallback'])->name('cas.callback');
 
 //For user
 Route::post('/getUserBookings', [BookingController::class, 'getUserBookings']);
