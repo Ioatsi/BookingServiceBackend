@@ -42,7 +42,7 @@ Route::group(['middleware' => 'cas.auth'], function () {
 });
 
 Route::get('/login', [LoginController::class, 'login']);
-Route::get('/cas/callback', [LoginController::class, 'casCallback'])->name('cas.callback');
+Route::get('/cas/callback', [LoginController::class, 'casCallback']);
 
 //For user
 Route::post('/getUserBookings', [BookingController::class, 'getUserBookings']);
