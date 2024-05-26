@@ -35,9 +35,14 @@ class LoginController extends Controller
 
             // Parse CAS server response
             $xmlResponse = $response->getBody()->getContents();
+            libxml_use_internal_errors(true);
             $xml = simplexml_load_string($xmlResponse);
             $xml->registerXPathNamespace('cas', 'http://www.yale.edu/tp/cas');
-            
+            if (!$xml) {
+                foreach (libxml_get_errors() as $error) {
+                    echo $error->message;
+                }
+            }
             // Check if authentication is successful
             if ($xml && $xml->authenticationSuccess) {
                 // Extract user attributes
