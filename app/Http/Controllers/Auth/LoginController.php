@@ -30,7 +30,7 @@ class LoginController extends Controller
             $response = $client->request('GET', $casValidateUrl, [
                 'query' => [
                     'ticket' => $ticket,
-                    'service' => $casServiceUrl
+                    'service' => 'http://booking.iee.ihu.gr'
                 ]
             ]);
 
