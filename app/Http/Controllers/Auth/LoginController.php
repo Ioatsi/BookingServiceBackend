@@ -10,7 +10,7 @@ use stdClass;
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Request;
-
+use Tymon\JWTAuth\Facades\JWTAuth;
 class LoginController extends Controller
 {
     public function login()
@@ -69,7 +69,7 @@ class LoginController extends Controller
                     $sn = $user->{'sn-lang-el'} ?? null;
                     $newUser = new User();
                     $newUser->username = $user->username;
-                    $newUser->email = $user->mail; 
+                    $newUser->email = $user->mail;
                     $newUser->first_name = $givenName;
                     $newUser->last_name = $sn;
 
@@ -96,11 +96,16 @@ class LoginController extends Controller
                 // Log in the user
                 Auth::login($existingUser);
 
-                // After authentication, you can redirect the user to the desired route
+                $user = Auth::user(); // Retrieve the authenticated user
+
+                // Generate JWT token for the user
+                $token = JWTAuth::fromUser($user);
+
                 return response()->json([
                     'status' => 'success',
                     'message' => 'Authentication successful',
                     'redirect_url' => '/',
+                    'token' => $token,
                     'user' => $existingUser
                 ]);
             } else {
@@ -119,5 +124,16 @@ class LoginController extends Controller
                 'redirect_url' => '/'
             ]);
         }
+    }
+
+    public function logout(Request $request)
+    {
+        Auth::logout();
+
+        // Optionally, you can clear the user's session data
+        $request->session()->invalidate();
+
+        // Redirect to a desired route after logout
+        return redirect('/');
     }
 }
