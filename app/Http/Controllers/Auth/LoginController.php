@@ -42,13 +42,13 @@ class LoginController extends Controller
 
             // Check if authentication is successful
             if ($xml->xpath('//cas:authenticationSuccess/cas:user')) {
-                
+
                 $user = new stdClass();
-    
+
                 // Extract the username
                 $username = $xml->xpath('//cas:authenticationSuccess/cas:user');
                 $user->username = (string) $username[0];
-    
+
                 // Extract and map attributes to object properties
                 $attributes = $xml->xpath('//cas:authenticationSuccess/cas:attributes/*');
                 foreach ($attributes as $attribute) {
@@ -57,15 +57,52 @@ class LoginController extends Controller
                     $user->$name = $value;
                 }
 
-                // Here, you can authenticate the user in your Laravel application using the user attributes.
-                // For example, you can check if the user exists in your database or create a new user.
+                // Determine role based on 'eduPersonPrimaryAffiliation'
+                $casRole = $user->eduPersonPrimaryAffiliation;
+
+                // Check if user exists in the database
+                $existingUser = User::where('username', $user->username)->first();
+
+                if (!$existingUser) {
+                    // Create new user
+                    $newUser = new User();
+                    $newUser->username = $user->username;
+                    $newUser->email = $user->mail; // Assuming 'email' is one of the attributes
+                    // Add other attributes as needed
+                    $newUser->save();
+
+                    if ($casRole == 'faculty' || $casRole == 'staff') {
+                        $newUser->roles()->attach(3);
+                    } else {
+                        $newUser->roles()->attach(4);
+                    }
+
+                    $existingUser = $newUser;
+                } else {
+                    // Update existing user information if needed
+                    $existingUser->email = $user->email; // Assuming 'email' is one of the attributes
+                    // Update other attributes as needed
+                    $existingUser->save();
+                }
+
+                // Check if the user should be an admin
+                $adminUsernames = explode(',', env('ADMIN_USERNAMES'));
+                if (in_array($existingUser->username, $adminUsernames)) {
+                    // Assuming 1 is the ID for the admin role
+                    if (!$existingUser->roles->contains(1)) {
+                        $existingUser->roles()->attach(1);
+                    }
+                }
+
+                // Log in the user
+                Auth::login($existingUser);
 
                 // After authentication, you can redirect the user to the desired route
                 return response()->json([
                     'status' => 'success',
                     'message' => 'Authentication successful',
                     'redirect_url' => '/',
-                    'user' => $user
+                    'user' => $existingUser
                 ]);
             } else {
                 // CAS authentication failed
