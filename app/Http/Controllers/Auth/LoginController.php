@@ -55,6 +55,7 @@ class LoginController extends Controller
                     $name = $attribute->getName();
                     $value = (string) $attribute;
                     $user->$name = $value;
+                    $user->$name = json_decode('"' . $value . '"');
                 }
 
                 // Determine role based on 'eduPersonPrimaryAffiliation'
@@ -65,10 +66,14 @@ class LoginController extends Controller
 
                 if (!$existingUser) {
                     // Create new user
+                    $givenName = $user->{'givenName-lang-el'} ?? null;
+                    $sn = $user->{'sn-lang-el'} ?? null;
                     $newUser = new User();
                     $newUser->username = $user->username;
-                    $newUser->email = $user->mail; // Assuming 'email' is one of the attributes
-                    // Add other attributes as needed
+                    $newUser->email = $user->mail; 
+                    $newUser->first_name = $givenName;
+                    $newUser->last_name = $sn;
+
                     $newUser->save();
 
                     if ($casRole == 'faculty' || $casRole == 'staff') {
