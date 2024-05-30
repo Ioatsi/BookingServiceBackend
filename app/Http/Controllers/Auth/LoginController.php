@@ -54,7 +54,6 @@ class LoginController extends Controller
                 foreach ($attributes as $attribute) {
                     $name = $attribute->getName();
                     $value = (string) $attribute;
-                    $user->$name = $value;
                     $user->$name = json_decode('"' . $value . '"');
                 }
 
@@ -83,11 +82,6 @@ class LoginController extends Controller
                     }
 
                     $existingUser = $newUser;
-                } else {
-                    // Update existing user information if needed
-                    $existingUser->email = $user->email; // Assuming 'email' is one of the attributes
-                    // Update other attributes as needed
-                    $existingUser->save();
                 }
 
                 // Check if the user should be an admin
