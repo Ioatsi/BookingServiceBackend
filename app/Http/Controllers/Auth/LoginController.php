@@ -128,6 +128,7 @@ class LoginController extends Controller
 
     public function logout(Request $request)
     {
+        echo('here');
         Auth::logout();
 
         // Optionally, you can clear the user's session data
