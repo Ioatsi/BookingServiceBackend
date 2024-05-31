@@ -134,7 +134,7 @@ class LoginController extends Controller
         $request->session()->invalidate();
 
         // Redirect to a desired route after logout
-        return response()->json(['authenticated' => Auth::check()]);
+        return redirect('/');
     }
     public function authenticated()
     {
