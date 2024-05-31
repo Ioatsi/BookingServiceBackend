@@ -41,6 +41,7 @@ Route::group(['middleware' => 'cas.auth'], function () {
 });
 
 Route::get('/login', [LoginController::class, 'login']);
+Route::get('/authenticated', [LoginController::class, 'authenticated']);
 Route::get('/cas/callback', [LoginController::class, 'handleCasCallback'])->name('cas.callback');
 
 

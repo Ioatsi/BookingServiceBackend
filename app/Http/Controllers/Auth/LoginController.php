@@ -136,4 +136,8 @@ class LoginController extends Controller
         // Redirect to a desired route after logout
         return redirect('/');
     }
+    public function authenticated()
+    {
+        return response()->json(['authenticated' => Auth::check()]);
+    }
 }
