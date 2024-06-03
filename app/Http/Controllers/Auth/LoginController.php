@@ -74,6 +74,7 @@ class LoginController extends Controller
                     $newUser->first_name = $givenName;
                     $newUser->last_name = $sn;
 
+                    $newUser->save(); // Save the user first
 
                     if ($casRole == 'faculty' || $casRole == 'staff') {
                         $newUser->roles()->attach(3);
