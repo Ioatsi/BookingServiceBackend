@@ -33,13 +33,13 @@ Route::post('/resolveConflict', [BookingController::class,'resolveConflict']);
 Route::post('/resolveRecurringConflict', [BookingController::class,'resolveRecurringConflict']);
 
 Route::post('/getActiveBookings', [BookingController::class, 'getActiveBookings']);
+Route::post('/getUserBookings', [BookingController::class, 'getUserBookings'])->name('getUserBookings');
 
 Route::group(['middleware' => 'cas.auth'], function () {
     
     Route::get('/logout', [LoginController::class, 'logout'])->name('logout');
     
 });
-Route::post('/getUserBookings', [BookingController::class, 'getUserBookings'])->name('getUserBookings');
 
 Route::get('/login', [LoginController::class, 'login']);
 Route::get('/authenticated', [LoginController::class, 'authenticated']);
