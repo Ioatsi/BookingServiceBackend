@@ -11,6 +11,7 @@ use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Request;
 use Tymon\JWTAuth\Facades\JWTAuth;
+
 class LoginController extends Controller
 {
     public function login()
@@ -73,13 +74,16 @@ class LoginController extends Controller
                     $newUser->first_name = $givenName;
                     $newUser->last_name = $sn;
 
-                    $newUser->save();
 
                     if ($casRole == 'faculty' || $casRole == 'staff') {
                         $newUser->roles()->attach(3);
                     } else {
                         $newUser->roles()->attach(4);
                     }
+
+                    // Load roles relationship
+                    $newUser->load('roles');
+
 
                     $existingUser = $newUser;
                 }
