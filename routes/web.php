@@ -36,9 +36,9 @@ Route::post('/getActiveBookings', [BookingController::class, 'getActiveBookings'
 
 Route::group(['middleware' => 'cas.auth'], function () {
     
+    Route::get('/logout', [LoginController::class, 'logout'])->name('logout');
     
 });
-Route::get('/logout', [LoginController::class, 'logout'])->name('logout');
 
 Route::get('/login', [LoginController::class, 'login']);
 Route::get('/authenticated', [LoginController::class, 'authenticated']);
