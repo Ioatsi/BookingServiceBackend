@@ -239,45 +239,7 @@ class BookingController extends Controller
 
     public function getUserBookings(Request $request)
     {
-        $semester = Semester::where('is_current', true)->first();
-        $query = Booking::join('rooms', 'bookings.room_id', '=', 'rooms.id')
-            ->where('semester_id', $semester->id)
-            ->where('booker_id', $request->input('booker_id', ''))
-            ->orderBy('created_at', 'desc');
-
-        $perPage = $request->input('perPage', 1); // You can adjust this number as needed
-        $page = $request->input('page', 1);
-
-        $bookings = $query->select('bookings.*', 'rooms.name as room_name', 'rooms.color as color', 'rooms.id as room')
-            ->paginate($perPage, ['*'], 'page', $page);
-
-        $booking_groups = new Collection();
-        $bookings->each(function ($booking) use ($booking_groups) {
-            $rooms = Room::where('id', $booking->room_id)->where('status', 1)->get();
-            $booking_groups->push((object) [
-                'id' => $booking->id,
-                'title' => $booking->title,
-                'start' => $booking->start,
-                'end' => $booking->end,
-                'info' => $booking->info,
-                'status' => $booking->status,
-                'type' => $booking->type,
-                'publicity' => $booking->publicity,
-                'room_name' => $booking->room_name,
-                'url' => $booking->url,
-                'lecture_type' => $booking->lecture_type,
-                'expected_attendance' => $booking->expected_attendance,
-                'room_id' => $booking->room,
-                'rooms' => $rooms
-            ]);
-        });
-        if ($request->input('ical') == true) {
-            return $this->generateICal($booking_groups);
-        }
-        return response()->json([
-            'bookings' => $booking_groups,
-            'total' => $bookings->total(),
-        ]);
+        
     }
 
     public function getActiveBookings(Request $request)
@@ -432,7 +394,99 @@ class BookingController extends Controller
     }
     public function getRecurringConflicts(Request $request)
     {
+        // Get the current user ID from the authenticated user
+        //$currentUserId = Auth::id();
 
+        $sortBy = $request->input('sortBy', 'created_at');
+        $sortOrder = $request->input('sortOrder', 'desc');
+
+        $dayInputs = $request->input('days', [1, 2, 3, 4, 5]);
+
+        $allRoomIds = Room::join('moderator_room', 'rooms.id', '=', 'moderator_room.room_id')
+            ->where('moderator_room.user_id', $request->user_id)
+            ->where('rooms.status', 1)
+            ->pluck('rooms.id')
+            ->toArray();
+        $roomIds = $request->input('room_id');
+        if ($request->input('room_id') == null) {
+            $roomIds = $allRoomIds;
+        }
+
+        $semester = Semester::where('is_current', true)->first();
+        $days = Day::whereIn('room_id', $roomIds)
+            ->where('status', '!=', 2)
+            ->whereIn('name', $dayInputs)
+            ->where('semester_id', $semester->id)->get();
+        $recurringIds = new Collection();
+        foreach ($days as $day) {
+            $recurringIds->push($day->recurring_id);
+        }
+
+        $recurrings = Recurring::where('semester_id', $semester->id)
+            ->whereIn('id', $recurringIds)
+            ->whereNotIn('status', [2])
+            ->whereNotNull('conflict_id')
+            ->orderBy($sortBy, $sortOrder)
+            ->get();
+        if ($recurrings->count() > 0) {
+            $recurrings = $recurrings->groupBy('conflict_id');
+        }
+        $conflictingRecurrings = new Collection();
+        $recurrings->each(function ($recurring) use ($conflictingRecurrings, $semester) {
+            $days = new Collection();
+            $recurring->each(function ($recurring) use ($days) {
+                $days = Day::join('rooms', 'days.room_id', '=', 'rooms.id')
+                    ->where('days.status', '!=', 2)
+                    ->where('days.recurring_id', $recurring->id)
+                    ->where('rooms.status', 1)
+                    ->select('days.*', 'rooms.id as room_id', 'rooms.name as room_name')
+                    ->get();
+                $recurring->days = $days;
+            });
+            $conflictingDays = Day::whereIn('recurring_id', $recurring->pluck('id'))
+                ->where('status', '!=', 2)
+                ->whereNotNull('conflict_id')
+                ->where('semester_id', $semester->id)
+                ->get();
+
+            $conflictingRooms = Room::whereIn('id', $conflictingDays->where('status', 1)->pluck('room_id'))->get();
+            $conflictingRecurrings->push((object) [
+                'id' => $recurring[0]->conflict_id,
+                'bookings' => $recurring,
+                'type' => 'recurringGroup',
+                'conflictingDays' => $conflictingDays,
+                'conflictingRooms' => $conflictingRooms,
+            ]);
+        });
+
+        $page = $request->input('page', 1);
+        // Define the number of items per page
+        $perPage = $request->input('perPage', 1); // You can adjust this number as needed
+
+        $conflictsPaginated = new LengthAwarePaginator(
+            $conflictingRecurrings->forPage($page, $perPage),
+            $conflictingRecurrings->count(),
+            $perPage,
+            $page,
+            ['path' => route('getConflicts')]
+        );
+
+        // Convert the array back to a collection
+        $conflictsCollection = collect($conflictsPaginated->items());
+
+        // Extract items without keys
+        $mappedConflicts = $conflictsCollection->values();
+        // Combine mapped conflicts with pagination data
+        $mergedData = [
+            'data' => $mappedConflicts,
+            'total' => $conflictsPaginated->total(),
+            'per_page' => $conflictsPaginated->perPage(),
+            'current_page' => $conflictsPaginated->currentPage(),
+            'last_page' => $conflictsPaginated->lastPage(),
+            'path' => $conflictsPaginated->path(),
+        ];
+
+        return response()->json($mergedData);
     }
 
     public function approveBooking(Request $request)
