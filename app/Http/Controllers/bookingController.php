@@ -239,45 +239,62 @@ class BookingController extends Controller
 
     public function getUserBookings(Request $request)
     {
+        $date = $request->input('date', now()->toDateString());
+        $dateCarbon = Carbon::parse($date);
+
+        $lecture_type = $request->input('lecture_type', ['lecture', 'teleconference', 'seminar', 'other']);
+
+        // Get the start and end dates of the month
+        $startOfMonth = $dateCarbon->copy()->startOfMonth();
+        $endOfMonth = $dateCarbon->copy()->endOfMonth();
+
+        // Get the start and end dates of the previous month
+        $startOfPreviousMonth = $dateCarbon->copy()->subMonth()->startOfMonth();
+        $endOfPreviousMonth = $dateCarbon->copy()->subMonth()->endOfMonth();
+
+        // Get the start and end dates of the next month
+        $startOfNextMonth = $dateCarbon->copy()->addMonth()->startOfMonth();
+        $endOfNextMonth = $dateCarbon->copy()->addMonth()->endOfMonth();
+
         $semester = Semester::where('is_current', true)->first();
+
         $query = Booking::join('rooms', 'bookings.room_id', '=', 'rooms.id')
-            ->where('semester_id', $semester->id)
-            ->where('booker_id', $request->input('booker_id', ''))
-            ->orderBy('created_at', 'desc');
+            ->where('bookings.semester_id', $semester->id)
+            ->where('bookings.status', 1)
+            ->where('bookings.publicity', 1)
+            ->where('rooms.status', 1)
+            ->whereIn('bookings.lecture_type', $lecture_type)
+            ->orderBy('bookings.start', 'asc')
+            ->select('bookings.*', 'rooms.name as room_name', 'rooms.color as color', 'rooms.building_id as building_id')
+            ->where(function ($query) use ($startOfMonth, $endOfMonth, $startOfPreviousMonth, $endOfPreviousMonth, $startOfNextMonth, $endOfNextMonth) {
+                $query->whereBetween('start', [$startOfMonth, $endOfMonth])
+                    ->orWhereBetween('start', [$startOfPreviousMonth, $endOfPreviousMonth])
+                    ->orWhereBetween('start', [$startOfNextMonth, $endOfNextMonth]);
+            });
 
-        $perPage = $request->input('perPage', 1); // You can adjust this number as needed
-        $page = $request->input('page', 1);
-
-        $bookings = $query->select('bookings.*', 'rooms.name as room_name', 'rooms.color as color', 'rooms.id as room')
-            ->paginate($perPage, ['*'], 'page', $page);
-
-        $booking_groups = new Collection();
-        $bookings->each(function ($booking) use ($booking_groups) {
-            $rooms = Room::where('id', $booking->room_id)->where('status', 1)->get();
-            $booking_groups->push((object) [
-                'id' => $booking->id,
-                'title' => $booking->title,
-                'start' => $booking->start,
-                'end' => $booking->end,
-                'info' => $booking->info,
-                'status' => $booking->status,
-                'type' => $booking->type,
-                'publicity' => $booking->publicity,
-                'room_name' => $booking->room_name,
-                'url' => $booking->url,
-                'lecture_type' => $booking->lecture_type,
-                'expected_attendance' => $booking->expected_attendance,
-                'room_id' => $booking->room,
-                'rooms' => $rooms
-            ]);
-        });
-        if ($request->input('ical') == true) {
-            return $this->generateICal($booking_groups);
+        if ($request->input('building') != null) {
+            $query->whereIn('building_id', $request->input('building'));
         }
-        return response()->json([
-            'bookings' => $booking_groups,
-            'total' => $bookings->total(),
-        ]);
+
+        if ($request->input('room_id') != null) {
+            $query->whereIn('bookings.room_id', $request->input('room_id'));
+        }
+
+        // Add subquery to filter out conflicting bookings and leave the most recent one
+        $query->whereNotExists(function ($subquery) {
+            $subquery->select(DB::raw(1))
+                ->from('bookings as b2')
+                ->whereRaw('bookings.conflict_id = b2.conflict_id')
+                ->whereRaw('bookings.created_at > b2.created_at');
+        });
+
+
+        $query = $query->get();
+
+        if ($request->input('ical') == true) {
+            return $this->generateICal($query);
+        }
+        return response()->json($query);
     }
 
     public function getActiveBookings(Request $request)
