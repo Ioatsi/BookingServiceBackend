@@ -546,7 +546,82 @@ class BookingController extends Controller
 
     public function approveRecurringBooking(Request $request)
     {
-        return response()->json(['message' => 'Booking not found.']);       
+        $semester = Semester::where('is_current', true)->first();
+        $recurrings = Recurring::whereIn('id', $request->input('id'))->get();
+
+        if (!$recurrings) {
+            return response()->json(['message' => 'Booking not found.'], 404);
+        }
+
+        foreach ($recurrings as $recurring) {
+            $recurring->status = 1;
+            $recurring->save();
+
+            $days = Day::where('recurring_id', $recurring->id)->get();
+
+            $endDate = $semester->end;
+            foreach ($days as $day) {
+                $currentDate = Carbon::today();
+                $daystart = Carbon::parse($day['start']);
+                $dayend = Carbon::parse($day['end']);
+                while ($currentDate <= Carbon::parse($endDate)) {
+                    if ($currentDate->dayOfWeekIso == $day['name']) {
+                        $booking = new Booking();
+                        $booking->recurring_id = $recurring->id;
+                        $booking->booker_id = $recurring->booker_id;
+                        $booking->title = $recurring->title;
+                        $booking->info = $recurring->info;
+                        $booking->publicity = $recurring->publicity;
+                        $booking->url = $recurring->url;
+                        $booking->lecture_type = $recurring->lecture_type;
+                        $booking->expected_attendance = $recurring->expected_attendance;
+                        $booking->room_id = $day->room_id;
+                        $booking->participants = $recurring->participants;
+                        $booking->type = 'recurring';
+                        $booking->start = $currentDate->copy()->setTime($daystart->hour, $daystart->minute);
+                        $booking->status = 1;
+                        $booking->end = $currentDate->copy()->setTime($dayend->hour, $dayend->minute);
+                        $booking->save();
+                    }
+                    $currentDate->addDay();
+                }
+            }
+        }
+    }
+    public function cancelBooking(Request $request)
+    {
+        if ($request->input('type') == 'recurringGroup') {
+            $this->cancelRecurringBooking($request);
+            return response()->json(['message' => 'Recurring booking canceled successfully.']);
+        }
+        $bookings = Booking::whereIn('id', $request->input('id'))->get();
+        if (!$bookings) {
+            return response()->json(['message' => 'Booking not found.'], 404);
+        }
+        foreach ($bookings as $booking) {
+            $booking->status = 2;
+            $booking->save();
+            $this->updateConflicts($booking);
+        }
+        return response()->json(['message' => 'Booking canceled successfully.']);
+    }
+    public function cancelRecurringBooking(Request $request)
+    {
+        $recurrings = Recurring::whereIn('id', $request->input('id'))->get();
+        if (!$recurrings) {
+            return response()->json(['message' => 'Booking not found.'], 404);
+        }
+        foreach ($recurrings as $recurring) {
+            $recurring->status = 2;
+            $recurring->save();
+            $bookings = Booking::where('recurring_id', $recurring->id)->get();
+            foreach ($bookings as $booking) {
+                $booking->status = 2;
+                $booking->save();
+                $this->updateConflicts($booking);
+            }
+        }
+        return response()->json(['message' => 'Booking canceled successfully.']);
     }
     public function editBooking(Request $request)
     {
