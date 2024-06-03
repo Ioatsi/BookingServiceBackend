@@ -237,19 +237,19 @@ class BookingController extends Controller
         $conflicting = Recurring::conflicts($recurring);
     }
 
-    public function getUserBookings(Request $request)
+    public function getUserBookings()
     {
         $semester = Semester::where('is_current', true)->first();
         $query = Booking::join('rooms', 'bookings.room_id', '=', 'rooms.id')
            // ->where('semester_id', $semester->id)
-            ->where('booker_id', $request->input('booker_id', ''))
+            //->where('booker_id', $request->input('booker_id', ''))
             ->orderBy('created_at', 'desc');
 
-        $perPage = $request->input('perPage', 1); // You can adjust this number as needed
-        $page = $request->input('page', 1);
+        //$perPage = $request->input('perPage', 1); // You can adjust this number as needed
+        //$page = $request->input('page', 1);
 
-        $bookings = $query->select('bookings.*', 'rooms.name as room_name', 'rooms.color as color', 'rooms.id as room')
-            ->paginate($perPage, ['*'], 'page', $page);
+        $bookings = $query->select('bookings.*', 'rooms.name as room_name', 'rooms.color as color', 'rooms.id as room');
+            //->paginate($perPage, ['*'], 'page', $page);
 
         $booking_groups = new Collection();
         $bookings->each(function ($booking) use ($booking_groups) {
