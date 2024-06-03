@@ -32,7 +32,7 @@ Route::post('/checkConflict', [BookingController::class,'checkConflict']);
 Route::post('/resolveConflict', [BookingController::class,'resolveConflict']);
 Route::post('/resolveRecurringConflict', [BookingController::class,'resolveRecurringConflict']);
 
-Route::post('/getActiveBookings', [BookingController::class, 'getCallBookings']);
+Route::post('/getActiveBookings', [BookingController::class, 'getActiveBookings']);
 Route::post('/getUserBookings', [BookingController::class, 'getUserBookings']);
 
 Route::group(['middleware' => 'cas.auth'], function () {

@@ -280,9 +280,8 @@ class BookingController extends Controller
         ]);
     }
 
-    public function getCallBookings(Request $request)
+    public function getActiveBookings(Request $request)
     {
-        //test
         $date = $request->input('date', now()->toDateString());
         $dateCarbon = Carbon::parse($date);
 
