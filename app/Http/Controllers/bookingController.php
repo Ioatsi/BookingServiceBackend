@@ -241,7 +241,7 @@ class BookingController extends Controller
     {
         $semester = Semester::where('is_current', true)->first();
         $query = Booking::join('rooms', 'bookings.room_id', '=', 'rooms.id')
-            ->where('semester_id', $semester->id)
+           // ->where('semester_id', $semester->id)
             ->where('booker_id', $request->input('booker_id', ''))
             ->orderBy('created_at', 'desc');
 
@@ -271,9 +271,9 @@ class BookingController extends Controller
                 'rooms' => $rooms
             ]);
         });
-        if ($request->input('ical') == true) {
+       /*  if ($request->input('ical') == true) {
             return $this->generateICal($booking_groups);
-        }
+        } */
         return response()->json([
             'bookings' => $booking_groups,
             'total' => $bookings->total(),
