@@ -237,7 +237,7 @@ class BookingController extends Controller
         $conflicting = Recurring::conflicts($recurring);
     }
 
-    public function getBookings(Request $request)
+    public function getUserBookings(Request $request)
     {
         $semester = Semester::where('is_current', true)->first();
         $query = Booking::join('rooms', 'bookings.room_id', '=', 'rooms.id')
