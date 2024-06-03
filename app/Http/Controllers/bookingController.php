@@ -237,7 +237,7 @@ class BookingController extends Controller
         $conflicting = Recurring::conflicts($recurring);
     }
 
-    public function getUserBookings(Request $request = null)
+    public function getUserBookings(Request $request)
     {
         $semester = Semester::where('is_current', true)->first();
         $query = Booking::join('rooms', 'bookings.room_id', '=', 'rooms.id')
@@ -278,7 +278,6 @@ class BookingController extends Controller
             'bookings' => $booking_groups,
             'total' => $bookings->total(),
         ]);
-        return response()->json($bookings);
     }
 
     public function getActiveBookings(Request $request)
