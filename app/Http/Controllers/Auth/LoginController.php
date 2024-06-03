@@ -82,10 +82,6 @@ class LoginController extends Controller
                         $newUser->roles()->attach(4);
                     }
 
-                    // Load roles relationship
-                    $newUser->load('roles');
-
-
                     $existingUser = $newUser;
                 }
 
@@ -97,6 +93,9 @@ class LoginController extends Controller
                         $existingUser->roles()->attach(1);
                     }
                 }
+
+                // Reload roles for the existing user
+                $existingUser->load('roles');
 
                 // Log in the user
                 Auth::login($existingUser);
