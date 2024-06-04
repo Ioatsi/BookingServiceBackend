@@ -482,15 +482,17 @@ class BookingController extends Controller
             ->pluck('rooms.id')
             ->toArray();
         $roomIds = $request->input('room_id');
-        if ($request->input('room_id') == null) {
-            $roomIds = $allRoomIds;
-        }
+        
 
         foreach ($userRoles as $role) {
             if ($role->name == 'admin') {
                 $allRoomIds = Room::pluck('rooms.id')
                     ->toArray();
             }
+        }
+        
+        if ($request->input('room_id') == null) {
+            $roomIds = $allRoomIds;
         }
 
         $semester = Semester::where('is_current', true)->first();
