@@ -9,6 +9,8 @@ use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+use Illuminate\Support\Facades\Auth;
+
 class Recurring extends Model
 {
     use HasFactory;
@@ -119,5 +121,13 @@ class Recurring extends Model
         }
 
         return $conflictingRecurrings;
+    }
+    protected static function boot()
+    {
+        parent::boot();
+        static::creating(function ($recurring) {
+            
+            $recurring->booker_id = Auth::id();
+        });
     }
 }

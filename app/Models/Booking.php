@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+use Illuminate\Support\Facades\Auth;
 class Booking extends Model
 {
     use HasFactory;
@@ -32,6 +33,8 @@ class Booking extends Model
     {
         parent::boot();
         static::creating(function ($booking) {
+
+            $booking->booker_id = Auth::id();
             $conflicting = Booking::conflicts($booking);
 
 

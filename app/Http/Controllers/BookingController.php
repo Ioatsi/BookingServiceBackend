@@ -224,9 +224,9 @@ class BookingController extends Controller
             'lecture_type' => 'required',
             'expected_attendance' => 'nullable',
         ]);
-        /* if (!Gate::forUser($request->input('booker_id'))->allows('create-booking')) {
-            abort(403);
-        } */
+        if (Gate::denies('create-booking')) {
+            abort(403, 'Unauthorized action.');
+        }
         if ($request->input('is_recurring')) {
 
             $this->createRecurringBookingGroup($validatedData);
