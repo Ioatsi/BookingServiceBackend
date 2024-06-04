@@ -58,7 +58,7 @@ class BookingController extends Controller
             }
         }
         $roomIds = $request->input('room_id');
-        if ($request->input('room_id') == null) {
+        if ($request->input('room_id') == null || $request->input('room_id') == []) {
             $roomIds = $allRoomIds;
         }
         $semester = Semester::where('is_current', true)->first();
