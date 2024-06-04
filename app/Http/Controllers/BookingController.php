@@ -118,7 +118,7 @@ class BookingController extends Controller
         return response()->json([
             'bookings' => $booking_groups,
             'total' => $bookings->total(),
-            'roles' => $userRoles
+            'roomIds' => $roomIds
         ]);
     }
     public function getRecurring(Request $request)
