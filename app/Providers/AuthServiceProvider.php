@@ -51,5 +51,19 @@ class AuthServiceProvider extends ServiceProvider
             // Allow editing if any of the conditions are true
             return $isAdmin || $isBooker || $isRoomModerator;
         });
+
+        // Gate for resolving conflicts
+        Gate::define('resolve-conflict', function ($user, $bookings) {
+            // Extract room IDs from the bookings
+            $roomIds = collect($bookings)->pluck('room_id')->unique();
+
+            // Check if the user moderates at least one of the rooms
+            $moderatesAnyRoom = DB::table('moderator_room')
+                ->where('user_id', $user->id)
+                ->whereIn('room_id', $roomIds)
+                ->exists();
+
+            return $moderatesAnyRoom;
+        });
     }
 }

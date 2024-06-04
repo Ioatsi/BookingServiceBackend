@@ -701,7 +701,7 @@ class BookingController extends Controller
             $this->editRecurringBooking($validatedData);
             return response()->json(['message' => 'Recurring booking updated successfully.']);
         }
-        
+
         if (!$booking) {
             return response()->json(['message' => 'Booking not found.'], 404);
         }
@@ -940,6 +940,11 @@ class BookingController extends Controller
 
         $bookings = $request->input('bookings');
 
+         // Check if the user is authorized to resolve the conflict
+         if (Gate::denies('resolve-conflict', $bookings)) {
+            return response()->json(['message' => 'Unauthorized action.'], 403);
+        }
+
         foreach ($bookings as $bookingData) {
             // Extract data from each booking object
             $bookingId = $bookingData['id'];
@@ -975,6 +980,10 @@ class BookingController extends Controller
     {
         $recurings = $request->input('bookings');
 
+         // Check if the user is authorized to resolve the conflict
+         if (Gate::denies('resolve-conflict', $recurings)) {
+            return response()->json(['message' => 'Unauthorized action.'], 403);
+        }
         foreach ($recurings as $recuringData) {
             // Extract data from each booking object
             $recuringId = $recuringData['id'];
