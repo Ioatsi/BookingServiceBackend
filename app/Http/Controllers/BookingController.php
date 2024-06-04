@@ -11,6 +11,7 @@ use App\Models\Recurring;
 use App\Models\Room;
 use App\Models\Semester;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -21,8 +22,13 @@ class BookingController extends Controller
 {
     public function index(Request $request)
     {
+        //Get bookings for morderation
+
         // Get the current user ID from the authenticated user
-        //$currentUserId = Auth::id();
+        $currentUserId = Auth::id();
+        $userRoles = Auth::user()->roles;
+
+
 
         $sortBy = $request->input('sortBy', 'created_at');
         $sortOrder = $request->input('sortOrder', 'desc');
@@ -39,10 +45,18 @@ class BookingController extends Controller
         // Define the number of items per page
         $perPage = $request->input('perPage', 1); // You can adjust this number as needed
         $allRoomIds = Room::join('moderator_room', 'rooms.id', '=', 'moderator_room.room_id')
-            ->where('moderator_room.user_id', $request->user_id)
+            ->where('moderator_room.user_id', $currentUserId)
             ->where('status', 1)
             ->pluck('rooms.id')
             ->toArray();
+
+        foreach ($userRoles as $role) {
+            if ($role->name == 'admin') {
+                $allRoomIds = Room::join('moderator_room', 'rooms.id', '=', 'moderator_room.room_id')
+                    ->pluck('rooms.id')
+                    ->toArray();
+            }
+        }
         $roomIds = $request->input('room_id');
         if ($request->input('room_id') == null) {
             $roomIds = $allRoomIds;
@@ -203,7 +217,7 @@ class BookingController extends Controller
             abort(403);
         } */
         if ($request->input('is_recurring')) {
-            
+
             $this->createRecurringBookingGroup($validatedData);
             return response()->json(['message' => 'Recurring booking created successfully.'], 201);
         }
@@ -213,7 +227,7 @@ class BookingController extends Controller
 
     public function createRecurringBookingGroup($validatedData)
     {
-        
+
         $semester = Semester::where('is_current', true)->first();
         $recurring = new Recurring();
         $recurring->title = $validatedData['title'];
@@ -1045,4 +1059,3 @@ class BookingController extends Controller
         return $ical;
     }
 }
-
