@@ -57,13 +57,16 @@ class AuthServiceProvider extends ServiceProvider
             // Extract room IDs from the bookings
             $roomIds = collect($bookings)->pluck('room_id')->unique();
 
+             // Check if the user is an admin
+             $isAdmin = $user->roles->contains('name', 'admin');
+
             // Check if the user moderates at least one of the rooms
             $moderatesAnyRoom = DB::table('moderator_room')
                 ->where('user_id', $user->id)
                 ->whereIn('room_id', $roomIds)
                 ->exists();
 
-            return $moderatesAnyRoom;
+            return $isAdmin || $moderatesAnyRoom;
         });
     }
 }
