@@ -54,8 +54,7 @@ class BookingController extends Controller
             if ($role->name == 'admin') {
                 $allRoomIds = Room::join('moderator_room', 'rooms.id', '=', 'moderator_room.room_id')
                     ->pluck('rooms.id')
-                    ->toArray();
-                    
+                    ->toArray();                    
             }
         }
         $roomIds = $request->input('room_id');
@@ -119,6 +118,7 @@ class BookingController extends Controller
         return response()->json([
             'bookings' => $booking_groups,
             'total' => $bookings->total(),
+            'roles' => $userRoles
         ]);
     }
     public function getRecurring(Request $request)
