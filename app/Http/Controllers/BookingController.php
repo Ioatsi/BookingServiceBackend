@@ -52,8 +52,7 @@ class BookingController extends Controller
 
         foreach ($userRoles as $role) {
             if ($role->name == 'admin') {
-                $allRoomIds = Room::join('moderator_room', 'rooms.id', '=', 'moderator_room.room_id')
-                    ->pluck('rooms.id')
+                $allRoomIds = Room::pluck('rooms.id')
                     ->toArray();                    
             }
         }
