@@ -23,7 +23,7 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::group(['middleware' => 'cas.auth'], function () {
+
     //For moderator and admin
     Route::post('/getBookings', [BookingController::class, 'index']);
     Route::post('/getRecurring', [BookingController::class, 'getRecurring']);
@@ -91,7 +91,7 @@ Route::group(['middleware' => 'cas.auth'], function () {
     Route::post('bussiestRoomThisWeek', [StatisticsController::class, 'bussiestRoomThisWeek']);
     Route::post('weekCapacityIndicator', [StatisticsController::class, 'weekCapacityIndicator']);
     Route::post('monthCapacityIndicator', [StatisticsController::class, 'monthCapacityIndicator']);
-});
+    Route::group(['middleware' => 'cas.auth'], function () {});
 
 Route::get('/login', [LoginController::class, 'login']);
 Route::get('/authenticated', [LoginController::class, 'authenticated']);
