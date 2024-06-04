@@ -687,11 +687,21 @@ class BookingController extends Controller
             'room_id' => 'nullable',
             'url' => 'nullable',
         ]);
+
+         // Find the booking
+         $booking = Booking::findOrFail($validatedData['id']);
+
+         // Check if the user is authorized to edit the booking
+         if (Gate::denies('edit-booking', $booking)) {
+             return response()->json(['message' => 'Unauthorized action.'], 403);
+         }
+ 
+
         if ($request->input('is_recurring')) {
             $this->editRecurringBooking($validatedData);
             return response()->json(['message' => 'Recurring booking updated successfully.']);
         }
-        $booking = Booking::find($validatedData['id']);
+        
         if (!$booking) {
             return response()->json(['message' => 'Booking not found.'], 404);
         }

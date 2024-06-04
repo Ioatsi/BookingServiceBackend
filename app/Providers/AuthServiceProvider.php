@@ -1,9 +1,11 @@
 <?php
 
 namespace App\Providers;
+
 use Illuminate\Support\Facades\Gate;
 use App\Models\User; // Import the User model if not already imported
 
+use App\Models\Booking;
 // use Illuminate\Support\Facades\Gate;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 
@@ -31,5 +33,19 @@ class AuthServiceProvider extends ServiceProvider
             });
         });
 
+        // Gate for editing a booking
+        Gate::define('edit-booking', function ($user, Booking $booking) {
+            // Check if the user is an admin
+            $isAdmin = $user->roles->contains('name', 'admin');
+
+            // Check if the user is the booker of the booking
+            $isBooker = $booking->booker_id === $user->id;
+
+            // Check if the user moderates the room where the booking takes place
+            $isRoomModerator = $booking->room_id && $user->moderatedRooms->contains('id', $booking->room_id);
+
+            // Allow editing if any of the conditions are true
+            return $isAdmin || $isBooker || $isRoomModerator;
+        });
     }
 }
