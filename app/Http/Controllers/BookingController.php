@@ -460,6 +460,7 @@ class BookingController extends Controller
             'current_page' => $conflictsPaginated->currentPage(),
             'last_page' => $conflictsPaginated->lastPage(),
             'path' => $conflictsPaginated->path(),
+            'allRoomIds'=>$allRoomIds
         ];
 
         return response()->json($mergedData);
