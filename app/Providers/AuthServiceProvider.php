@@ -23,11 +23,13 @@ class AuthServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $this->registerPolicies();
         //
-        Gate::define('create-booking', function ($userId) {            
-            return User::where('users.id', $userId)->whereHas('roles', function ($query) {
-                $query->where('roles.id', 1); // Assuming role_id 1 represents Faculty
-            })->exists();
+        Gate::define('create-booking', function ($user) {
+            return $user->roles->contains(function ($role) {
+                return in_array($role->name, ['admin', 'faculty']);
+            });
         });
+
     }
 }
