@@ -68,5 +68,11 @@ class AuthServiceProvider extends ServiceProvider
 
             return $isAdmin || $moderatesAnyRoom;
         });
+
+        Gate::define('access-statistics', function (User $user) {
+            return $user->roles->contains(function ($role) {
+                return in_array($role->name, ['admin', 'faculty']);
+            });
+        });
     }
 }

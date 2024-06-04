@@ -23,6 +23,7 @@ class Kernel extends HttpKernel
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,    
         \Illuminate\Session\Middleware\StartSession::class, 
         \App\Http\Middleware\CustomCorsMiddleware::class,
+        'check.statistics.access' => \App\Http\Middleware\CheckStatisticsAccess::class,
     ];
 
     /**

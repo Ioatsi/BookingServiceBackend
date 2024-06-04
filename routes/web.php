@@ -64,34 +64,38 @@ Route::get('/', function () {
     Route::post('updateSemester', [SemesterController::class, 'updateSemester']);
     Route::post('deleteSemester', [SemesterController::class, 'deleteSemester']);
 
-    //Statistics
-    Route::post('roomHourOfDayOfWeekFrequency', [StatisticsController::class, 'roomHourOfDayOfWeekFrequency']);
-    Route::post('roomDayOfWeekFrequency', [StatisticsController::class, 'roomDayOfWeekFrequency']);
-    Route::post('roomDayOfMonthFrequency', [StatisticsController::class, 'roomDayOfMonthFrequency']);
-    Route::post('roomMonthOfSemesterFrequency', [StatisticsController::class, 'roomMonthOfSemesterFrequency']);
-    Route::post('roomDateRangeFrequency', [StatisticsController::class, 'roomDateRangeFrequency']);
 
-    Route::post('roomDayOfWeekDurationFrequency', [StatisticsController::class, 'roomDayOfWeekDurationFrequency']);
-    Route::post('roomMonthDurationFrequency', [StatisticsController::class, 'roomMonthDurationFrequency']);
-    Route::post('roomDateRangeDurationFrequency', [StatisticsController::class, 'roomDateRangeDurationFrequency']);
+    Route::middleware(['check.statistics.access'])->group(function () {
 
-    Route::post('roomOccupancyByDayOfWeekPercentage', [StatisticsController::class, 'roomOccupancyByDayOfWeekPercentage']);
-    Route::post('roomOccupancyByMonthPercentage', [StatisticsController::class, 'roomOccupancyByMonthPercentage']);
-    Route::post('roomOccupancyBySemester', [StatisticsController::class, 'roomOccupancyBySemester']);
-    Route::post('roomOccupancyByDateRange', [StatisticsController::class, 'roomOccupancyByDateRange']);
-
-
-    Route::get('generalStatistics', [StatisticsController::class, 'generalStatistics']);
-    Route::get('getOccupancyCharts', [StatisticsController::class, 'getOccupancyCharts']);
-
-    Route::post('bookingTotals', [StatisticsController::class, 'bookingTotals']);
-    Route::post('approvalRate', [StatisticsController::class, 'approvalRate']);
-    Route::post('meanDuration', [StatisticsController::class, 'meanDuration']);
-    Route::post('bussiestRooms', [StatisticsController::class, 'bussiestRooms']);
-    Route::post('bussiestRoomThisWeek', [StatisticsController::class, 'bussiestRoomThisWeek']);
-    Route::post('weekCapacityIndicator', [StatisticsController::class, 'weekCapacityIndicator']);
-    Route::post('monthCapacityIndicator', [StatisticsController::class, 'monthCapacityIndicator']);
-    Route::group(['middleware' => 'cas.auth'], function () {});
+        //Statistics
+        Route::post('roomHourOfDayOfWeekFrequency', [StatisticsController::class, 'roomHourOfDayOfWeekFrequency']);
+        Route::post('roomDayOfWeekFrequency', [StatisticsController::class, 'roomDayOfWeekFrequency']);
+        Route::post('roomDayOfMonthFrequency', [StatisticsController::class, 'roomDayOfMonthFrequency']);
+        Route::post('roomMonthOfSemesterFrequency', [StatisticsController::class, 'roomMonthOfSemesterFrequency']);
+        Route::post('roomDateRangeFrequency', [StatisticsController::class, 'roomDateRangeFrequency']);
+    
+        Route::post('roomDayOfWeekDurationFrequency', [StatisticsController::class, 'roomDayOfWeekDurationFrequency']);
+        Route::post('roomMonthDurationFrequency', [StatisticsController::class, 'roomMonthDurationFrequency']);
+        Route::post('roomDateRangeDurationFrequency', [StatisticsController::class, 'roomDateRangeDurationFrequency']);
+    
+        Route::post('roomOccupancyByDayOfWeekPercentage', [StatisticsController::class, 'roomOccupancyByDayOfWeekPercentage']);
+        Route::post('roomOccupancyByMonthPercentage', [StatisticsController::class, 'roomOccupancyByMonthPercentage']);
+        Route::post('roomOccupancyBySemester', [StatisticsController::class, 'roomOccupancyBySemester']);
+        Route::post('roomOccupancyByDateRange', [StatisticsController::class, 'roomOccupancyByDateRange']);
+    
+    
+        Route::get('generalStatistics', [StatisticsController::class, 'generalStatistics']);
+        Route::get('getOccupancyCharts', [StatisticsController::class, 'getOccupancyCharts']);
+    
+        Route::post('bookingTotals', [StatisticsController::class, 'bookingTotals']);
+        Route::post('approvalRate', [StatisticsController::class, 'approvalRate']);
+        Route::post('meanDuration', [StatisticsController::class, 'meanDuration']);
+        Route::post('bussiestRooms', [StatisticsController::class, 'bussiestRooms']);
+        Route::post('bussiestRoomThisWeek', [StatisticsController::class, 'bussiestRoomThisWeek']);
+        Route::post('weekCapacityIndicator', [StatisticsController::class, 'weekCapacityIndicator']);
+        Route::post('monthCapacityIndicator', [StatisticsController::class, 'monthCapacityIndicator']);
+        Route::group(['middleware' => 'cas.auth'], function () {});
+    });
 
 Route::get('/login', [LoginController::class, 'login']);
 Route::get('/authenticated', [LoginController::class, 'authenticated']);
