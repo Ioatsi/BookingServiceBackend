@@ -55,6 +55,7 @@ class BookingController extends Controller
                 $allRoomIds = Room::join('moderator_room', 'rooms.id', '=', 'moderator_room.room_id')
                     ->pluck('rooms.id')
                     ->toArray();
+                    
             }
         }
         $roomIds = $request->input('room_id');
