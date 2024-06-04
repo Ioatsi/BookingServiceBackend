@@ -53,7 +53,7 @@ class BookingController extends Controller
         foreach ($userRoles as $role) {
             if ($role->name == 'admin') {
                 $allRoomIds = Room::pluck('rooms.id')
-                    ->toArray();                    
+                    ->toArray();
             }
         }
         $roomIds = $request->input('room_id');
@@ -117,11 +117,14 @@ class BookingController extends Controller
         return response()->json([
             'bookings' => $booking_groups,
             'total' => $bookings->total(),
-            'roomIds' => $allRoomIds
         ]);
     }
     public function getRecurring(Request $request)
     {
+        // Get the current user ID from the authenticated user
+        $currentUserId = Auth::id();
+        $userRoles = Auth::user()->roles;
+
         $sortBy = $request->input('sortBy', 'created_at');
         $sortOrder = $request->input('sortOrder', 'desc');
 
@@ -135,10 +138,18 @@ class BookingController extends Controller
         $semester = Semester::where('is_current', true)->first();
         $perPage = $request->input('perPage', 1); // You can adjust this number as needed
         $allRoomIds = Room::join('moderator_room', 'rooms.id', '=', 'moderator_room.room_id')
-            ->where('moderator_room.user_id', $request->user_id)
+            ->where('moderator_room.user_id', $currentUserId)
             ->where('status', 1)
             ->pluck('rooms.id')
             ->toArray();
+
+        foreach ($userRoles as $role) {
+            if ($role->name == 'admin') {
+                $allRoomIds = Room::pluck('rooms.id')
+                    ->toArray();
+            }
+        }
+
         $roomIds = $request->input('room_id');
         if ($request->input('room_id') == null) {
             $roomIds = $allRoomIds;
@@ -253,10 +264,13 @@ class BookingController extends Controller
 
     public function getUserBookings(Request $request)
     {
+        // Get the current user ID from the authenticated user
+        $currentUserId = Auth::id();
+
         $semester = Semester::where('is_current', true)->first();
         $query = Booking::join('rooms', 'bookings.room_id', '=', 'rooms.id')
             ->where('semester_id', $semester->id)
-            ->where('booker_id', $request->input('booker_id', ''))
+            ->where('booker_id', $currentUserId)
             ->orderBy('created_at', 'desc');
 
         $perPage = $request->input('perPage', 1); // You can adjust this number as needed
@@ -357,7 +371,8 @@ class BookingController extends Controller
     public function getConflicts(Request $request)
     {
         // Get the current user ID from the authenticated user
-        //$currentUserId = Auth::id();
+        $currentUserId = Auth::id();
+        $userRoles = Auth::user()->roles;
 
         $sortBy = $request->input('sortBy', 'created_at');
         $sortOrder = $request->input('sortOrder', 'desc');
@@ -367,7 +382,7 @@ class BookingController extends Controller
         $type = $request->input('type', ['normal', 'recurring']);
 
         $allRoomIds = Room::join('moderator_room', 'rooms.id', '=', 'moderator_room.room_id')
-            ->where('moderator_room.user_id', $request->user_id)
+            ->where('moderator_room.user_id', $currentUserId)
             ->where('rooms.status', 1)
             ->pluck('rooms.id')
             ->toArray();
@@ -375,7 +390,12 @@ class BookingController extends Controller
         if ($request->input('room_id') == null) {
             $roomIds = $allRoomIds;
         }
-
+        foreach ($userRoles as $role) {
+            if ($role->name == 'admin') {
+                $allRoomIds = Room::pluck('rooms.id')
+                    ->toArray();
+            }
+        }
         $semester = Semester::where('is_current', true)->first();
         $query = Booking::join('rooms', 'bookings.room_id', '=', 'rooms.id')
             ->where('semester_id', $semester->id)
@@ -447,7 +467,8 @@ class BookingController extends Controller
     public function getRecurringConflicts(Request $request)
     {
         // Get the current user ID from the authenticated user
-        //$currentUserId = Auth::id();
+        $currentUserId = Auth::id();
+        $userRoles = Auth::user()->roles;
 
         $sortBy = $request->input('sortBy', 'created_at');
         $sortOrder = $request->input('sortOrder', 'desc');
@@ -455,13 +476,20 @@ class BookingController extends Controller
         $dayInputs = $request->input('days', [1, 2, 3, 4, 5]);
 
         $allRoomIds = Room::join('moderator_room', 'rooms.id', '=', 'moderator_room.room_id')
-            ->where('moderator_room.user_id', $request->user_id)
+            ->where('moderator_room.user_id', $currentUserId)
             ->where('rooms.status', 1)
             ->pluck('rooms.id')
             ->toArray();
         $roomIds = $request->input('room_id');
         if ($request->input('room_id') == null) {
             $roomIds = $allRoomIds;
+        }
+
+        foreach ($userRoles as $role) {
+            if ($role->name == 'admin') {
+                $allRoomIds = Room::pluck('rooms.id')
+                    ->toArray();
+            }
         }
 
         $semester = Semester::where('is_current', true)->first();
