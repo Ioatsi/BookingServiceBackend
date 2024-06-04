@@ -23,7 +23,6 @@ class Kernel extends HttpKernel
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,    
         \Illuminate\Session\Middleware\StartSession::class, 
         \App\Http\Middleware\CustomCorsMiddleware::class,
-        'check.statistics.access' => \App\Http\Middleware\CheckStatisticsAccess::class,
     ];
 
     /**
@@ -66,6 +65,7 @@ class Kernel extends HttpKernel
         'signed' => \App\Http\Middleware\ValidateSignature::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
-        'cas.auth' => \App\Http\Middleware\CasAuth::class,
+        'cas.auth' => \App\Http\Middleware\CasAuth::class,        
+        'check.statistics.access' => \App\Http\Middleware\CheckStatisticsAccess::class,
     ];
 }
