@@ -5,6 +5,7 @@ namespace App\Providers;
 use Illuminate\Support\Facades\Gate;
 use App\Models\User; // Import the User model if not already imported
 
+use Illuminate\Support\Facades\DB;
 use App\Models\Booking;
 // use Illuminate\Support\Facades\Gate;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
@@ -42,7 +43,10 @@ class AuthServiceProvider extends ServiceProvider
             $isBooker = $booking->booker_id === $user->id;
 
             // Check if the user moderates the room where the booking takes place
-            $isRoomModerator = $booking->room_id && $user->moderatedRooms->contains('id', $booking->room_id);
+            $isRoomModerator = DB::table('moderator_room')
+            ->where('user_id', $user->id)
+            ->where('room_id', $booking->room_id)
+            ->exists();
 
             // Allow editing if any of the conditions are true
             return $isAdmin || $isBooker || $isRoomModerator;
