@@ -67,5 +67,6 @@ class Kernel extends HttpKernel
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'cas.auth' => \App\Http\Middleware\CasAuth::class,        
         'check.statistics.access' => \App\Http\Middleware\CheckStatisticsAccess::class,
+        'check.admin.access' => \App\Http\Middleware\CheckAdminAccess::class,
     ];
 }

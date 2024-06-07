@@ -49,23 +49,26 @@ Route::get('/', function () {
     Route::post('getRooms', [RoomController::class, 'index']);
     Route::post('getDepartments', [RoomController::class, 'getDepartments']);
     Route::post('getBuildings', [RoomController::class, 'getBuildings']);
+    
     Route::get('getAllRooms', [RoomController::class, 'getAllRooms'])->name('getAllRooms');
 
-    Route::post('createRoom', [RoomController::class, 'store']);
-    Route::post('deleteRoom', [RoomController::class, 'deleteRoom']);
-    Route::post('editRoom', [RoomController::class, 'updateRoom']);
-
-    Route::get('getModeratedRooms/{id}', [RoomController::class, 'getModeratedRooms']);
-    Route::get('getPossibleModerators/', [RoomController::class, 'getPossibleModerators']);
-
-    //Semester
     Route::post('getAllSemesters', [SemesterController::class, 'getAllSemesters']);
-    Route::post('createSemester', [SemesterController::class, 'store']);
-    Route::post('updateSemester', [SemesterController::class, 'updateSemester']);
-    Route::post('deleteSemester', [SemesterController::class, 'deleteSemester']);
+    
+    Route::middleware(['check.admin.access'])->group(function () {
+        Route::post('createRoom', [RoomController::class, 'store']);
+        Route::post('deleteRoom', [RoomController::class, 'deleteRoom']);
+        Route::post('editRoom', [RoomController::class, 'updateRoom']);
+        Route::get('getPossibleModerators/', [RoomController::class, 'getPossibleModerators']);
+        //Semester
+        Route::post('createSemester', [SemesterController::class, 'store']);
+        Route::post('updateSemester', [SemesterController::class, 'updateSemester']);
+        Route::post('deleteSemester', [SemesterController::class, 'deleteSemester']);
 
+    });
 
     Route::middleware(['check.statistics.access'])->group(function () {
+
+        Route::get('getModeratedRooms/{id}', [RoomController::class, 'getModeratedRooms']);
 
         //Statistics
         Route::post('roomHourOfDayOfWeekFrequency', [StatisticsController::class, 'roomHourOfDayOfWeekFrequency']);
