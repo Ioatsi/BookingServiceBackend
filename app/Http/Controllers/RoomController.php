@@ -27,14 +27,13 @@ class RoomController extends Controller
         $department = $request->input('department');
         $building = $request->input('building');
 
-        if($request->input('id')) {
+        if ($request->input('id')) {
             $id = $request->input('id');
-    
+
             $query = Room::join('departments', 'rooms.department_id', '=', 'departments.id')
                 ->join('buildings', 'rooms.building_id', '=', 'buildings.id')->where('rooms.status', 1)
                 ->select('rooms.*', 'departments.name as department', 'buildings.name as building');
-            
-        }else{
+        } else {
             $query = Room::join('departments', 'rooms.department_id', '=', 'departments.id')
                 ->join('buildings', 'rooms.building_id', '=', 'buildings.id')
                 ->select('rooms.*', 'departments.name as department', 'buildings.name as building');
@@ -50,7 +49,7 @@ class RoomController extends Controller
 
         $rooms = $query->get();
 
-        
+
         $room_groups = new Collection();
         $rooms->each(function ($room) use ($room_groups) {
             $moderators = DB::table('moderator_room')->where('room_id', '=', $room->id)->join('users', 'moderator_room.user_id', '=', 'users.id')->select('users.*')->get();
@@ -70,7 +69,7 @@ class RoomController extends Controller
             ]);
         });
         return response()->json([
-            'rooms' => $room_groups 
+            'rooms' => $room_groups
         ]);
     }
 
@@ -116,14 +115,14 @@ class RoomController extends Controller
     }
 
     public function getPossibleModerators(Request $request)
-{
-    $possibleModerators = User::join('role_user', 'users.id', '=', 'role_user.user_id')
-        ->where('role_user.role_id', 2)
-        ->select('users.*')
-        ->get();
+    {
+        $possibleModerators = User::join('role_user', 'users.id', '=', 'role_user.user_id')
+            ->where('role_user.role_id', 3)
+            ->select('users.*')
+            ->get();
 
-    return response()->json($possibleModerators);
-}
+        return response()->json($possibleModerators);
+    }
     public function store(Request $request)
     {
         $validatedData = $request->validate([
@@ -131,7 +130,7 @@ class RoomController extends Controller
             'info' => 'required',
             'department_id' => 'required',
             'building_id' => 'required',
-            'moderator_ids'=> 'required',
+            'moderator_ids' => 'required',
             'color' => 'required',
         ]);
         $room = Room::create($validatedData);
@@ -150,7 +149,7 @@ class RoomController extends Controller
     public function deleteRoom(Request $request)
     {
         $id = $request->input('id');
-        $rooms = Room::whereIn('id',$id)->get();
+        $rooms = Room::whereIn('id', $id)->get();
         foreach ($rooms as $room) {
             $room->status = 0;
             $room->save();
