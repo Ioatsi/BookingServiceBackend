@@ -74,7 +74,7 @@ class AuthServiceProvider extends ServiceProvider
                 return in_array($role->name, ['admin', 'faculty']);
             });
         });
-        Gate::define('access-statistics', function (User $user) {
+        Gate::define('access-admin', function (User $user) {
             return $user->roles->contains(function ($role) {
                 return in_array($role->name, ['admin']);
             });
