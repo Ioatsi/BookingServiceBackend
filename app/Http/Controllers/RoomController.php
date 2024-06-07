@@ -30,10 +30,7 @@ class RoomController extends Controller
         if($request->input('id')) {
             $id = $request->input('id');
     
-            $roomsIds = DB::table('moderator_room')->where('user_id', $id)->get();
-    
-            $query = Room::whereIn('rooms.id', $roomsIds->pluck('room_id'))
-                ->join('departments', 'rooms.department_id', '=', 'departments.id')
+            $query = Room::join('departments', 'rooms.department_id', '=', 'departments.id')
                 ->join('buildings', 'rooms.building_id', '=', 'buildings.id')->where('rooms.status', 1)
                 ->select('rooms.*', 'departments.name as department', 'buildings.name as building');
             
