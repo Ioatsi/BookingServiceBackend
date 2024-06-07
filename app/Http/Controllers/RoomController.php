@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
+use Illuminate\Support\Facades\Auth;
 
 use Illuminate\Support\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -78,8 +79,17 @@ class RoomController extends Controller
 
     public function getModeratedRooms($id)
     {
-        $roomsIds = DB::table('moderator_room')->where('user_id', $id)->get();
+        $currentUserId = Auth::id();
+        $userRoles = Auth::user()->roles;
+        $roomsIds = DB::table('moderator_room')->where('user_id', $currentUserId)->get();
         $rooms = Room::whereIn('id', $roomsIds->pluck('room_id'))->get();
+        foreach ($userRoles as $role) {
+            if ($role->name == 'admin') {
+                $allRoomIds = Room::pluck('rooms.id')
+                    ->toArray();
+                $rooms = Room::whereIn('id', $allRoomIds->pluck('room_id'))->get();
+            }
+        }
         return response()->json($rooms);
     }
 
