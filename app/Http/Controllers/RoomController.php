@@ -87,7 +87,7 @@ class RoomController extends Controller
             if ($role->name == 'admin') {
                 $allRoomIds = Room::pluck('rooms.id')
                     ->toArray();
-                $rooms = Room::whereIn('id', $allRoomIds->pluck('room_id'))->get();
+                $rooms = Room::whereIn('id', $allRoomIds)->get();
             }
         }
         return response()->json($rooms);
