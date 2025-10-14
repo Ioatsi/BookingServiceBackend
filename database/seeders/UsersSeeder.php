@@ -3,11 +3,8 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-use GuzzleHttp\Promise\Create;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
-use Faker\Factory as Faker;
+use Illuminate\Support\Facades\Hash;
 
 class UsersSeeder extends Seeder
 {
@@ -16,6 +13,24 @@ class UsersSeeder extends Seeder
      */
     public function run(): void
     {
+        // Create admin and mod first (no roles here)
+        User::create([
+            'username'   => 'admin',
+            'last_name'  => 'Administrator',
+            'first_name' => 'System',
+            'email'      => 'admin@example.com',
+            'password'   => Hash::make('admin'), // change for prod
+        ]);
+
+        User::create([
+            'username'   => 'mod',
+            'last_name'  => 'Moderator',
+            'first_name' => 'System',
+            'email'      => 'mod@example.com',
+            'password'   => Hash::make('mod'),
+        ]);
+
+        // The rest of your users (same data as before) with placeholder passwords
         $users = [
             ['username' => 'dmarina', 'last_name' => 'Δελιανίδη', 'first_name' => 'Μαρίνα', 'email' => 'No email1'],
             ['username' => 'karag', 'last_name' => 'Καραγεώργος', 'first_name' => 'Αντώνης', 'email' => 'No email2'],
@@ -32,22 +47,12 @@ class UsersSeeder extends Seeder
         ];
 
         foreach ($users as $user) {
-            User::create($user);
-        }
-
-        $usernames = array_column($users, 'username');
-        $userIds = DB::table('users')
-            ->whereIn('username', $usernames)
-            ->pluck('id');
-
-        foreach ($userIds as $userId) {
-            DB::table('role_user')->insert([
-                'user_id' => $userId,
-                'role_id' => 3
-            ]);
-            DB::table('role_user')->insert([
-                'user_id' => $userId,
-                'role_id' => 1
+            User::create([
+                'username'   => $user['username'],
+                'last_name'  => $user['last_name'],
+                'first_name' => $user['first_name'],
+                'email'      => $user['email'],
+                'password'   => Hash::make('password'), // placeholder - change later if needed
             ]);
         }
     }

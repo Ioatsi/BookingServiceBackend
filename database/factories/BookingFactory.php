@@ -23,8 +23,8 @@ class BookingFactory extends Factory
     public function definition(): array
     {
         static $incrementingName = 1;
-        $bookerIds = User::pluck('id')->toArray();
-        $roomIds = Room::pluck('id')->toArray();
+        $bookerIds = User::pluck('id')->values()->toArray();
+        $roomIds = Room::pluck('id')->values()->toArray();
         // Generate a random start date within the last week
         $startDate = $this->faker->dateTimeBetween('-1 year', 'now');
 

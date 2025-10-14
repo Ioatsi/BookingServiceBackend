@@ -25,7 +25,7 @@ class DatabaseSeeder extends Seeder
         $this->call(SemesterSeeder::class);
         //$this->call(RecurringSeeder::class);
         $this->call(BookingSeeder::class);
-        //$this->call(User_rolesSeeder::class);
+        $this->call(User_rolesSeeder::class);
         $this->call(Moderator_roomSeeder::class);
         //$this->call(DaySeeder::class);
         // \App\Models\User::factory()->create([
