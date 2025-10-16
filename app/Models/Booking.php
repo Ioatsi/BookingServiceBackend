@@ -4,8 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Semester;
 
 use Illuminate\Support\Facades\Auth;
+
 class Booking extends Model
 {
     use HasFactory;
@@ -32,21 +34,12 @@ class Booking extends Model
     protected static function boot()
     {
         parent::boot();
+
         static::creating(function ($booking) {
+            $booking->booker_id = $booking->booker_id ?? Auth::id();
+            $booking->semester_id = $booking->semester_id ?? Semester::where('is_current', true)->value('id');
 
-            $booking->booker_id = Auth::id();
             $conflicting = Booking::conflicts($booking);
-
-
-            /* if ($conflicting->isNotEmpty()) {
-                $firstConflicting = $conflicting->first();
-                $conflictId = $firstConflicting->conflict_id ? $firstConflicting->conflict_id : static::generateUniqueConflictId();
-                foreach ($conflicting as $conflict) {
-                    $conflict->update(['conflict_id' => $conflictId]);
-                }
-
-                $booking->conflict_id = $conflictId;
-            } */
         });
     }
 
@@ -65,23 +58,23 @@ class Booking extends Model
     {
         // Check for bookings that conflict with the current booking
         $conflictingBookings = Booking::where('room_id', $booking->room_id)
-        ->where('status', '!=', 2)
-        ->where(function ($query) use ($booking) {
-            $query->where(function ($query) use ($booking) {
-                $query->where('start', '>=', $booking->start)
-                      ->where('start', '<', $booking->end);
+            ->where('status', '!=', 2)
+            ->where(function ($query) use ($booking) {
+                $query->where(function ($query) use ($booking) {
+                    $query->where('start', '>=', $booking->start)
+                        ->where('start', '<', $booking->end);
+                })
+                    ->orWhere(function ($query) use ($booking) {
+                        $query->where('end', '>', $booking->start)
+                            ->where('end', '<=', $booking->end);
+                    })
+                    ->orWhere(function ($query) use ($booking) {
+                        $query->where('start', '<', $booking->start)
+                            ->where('end', '>', $booking->end);
+                    });
             })
-            ->orWhere(function ($query) use ($booking) {
-                $query->where('end', '>', $booking->start)
-                      ->where('end', '<=', $booking->end);
-            })
-            ->orWhere(function ($query) use ($booking) {
-                $query->where('start', '<', $booking->start)
-                      ->where('end', '>', $booking->end);
-            });
-        })
-        ->where('id', '<>', $booking->id) // Exclude the current booking
-        ->get();
+            ->where('id', '<>', $booking->id) // Exclude the current booking
+            ->get();
 
         if ($conflictingBookings->isNotEmpty()) {
             $firstConflicting = $conflictingBookings->first();
@@ -140,5 +133,4 @@ class Booking extends Model
     {
         return $this->belongsTo(Recurring::class);
     }
-
 }

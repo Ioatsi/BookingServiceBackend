@@ -16,7 +16,7 @@ class Moderator_roomSeeder extends Seeder
     public function run(): void
     {
         $moderatorIds = User::whereHas('roles', function ($query) {
-            $query->where('name', 'Moderator');
+            $query->whereIn('name', ['moderator', 'admin']);
         })->pluck('id')->toArray();
 
         $roomIds = Room::pluck('id')->toArray();

@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Semester;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Carbon\Carbon;
 
 class SemesterSeeder extends Seeder
 {
@@ -13,23 +14,35 @@ class SemesterSeeder extends Seeder
      */
     public function run(): void
     {
-        Semester::create([
-            'type' => 'Spring',
-            'start' => '2023-02-02',
-            'end' => '2023-06-06',
-            'is_current' => false
-        ]);
-        Semester::create([
-            'type' => 'Winter',
-            'start' => '2023-09-09',
-            'end' => '2024-02-01',
-            'is_current' => false
-        ]);
-        Semester::create([
-            'type' => 'Spring',
-            'start' => '2024-02-02',
-            'end' => '2024-06-06',
-            'is_current' => true
-        ]);
+        $now = Carbon::now();
+        $year = $now->year;
+
+        // Define semesters dynamically
+        $semesters = [
+            [
+                'type' => 'Spring',
+                'start' => Carbon::create($year, 2, 1),
+                'end'   => Carbon::create($year, 6, 30),
+            ],
+            [
+                'type' => 'Summer',
+                'start' => Carbon::create($year, 7, 1),
+                'end'   => Carbon::create($year, 8, 31),
+            ],
+            [
+                'type' => 'Winter',
+                'start' => Carbon::create($year, 9, 1),
+                'end'   => Carbon::create($year + 1, 1, 31),
+            ],
+        ];
+
+        foreach ($semesters as $semester) {
+            Semester::create([
+                'type' => $semester['type'],
+                'start' => $semester['start'],
+                'end' => $semester['end'],
+                'is_current' => $now->between($semester['start'], $semester['end']),
+            ]);
+        }
     }
 }

@@ -22,7 +22,7 @@ class User_rolesSeeder extends Seeder
 
         // Build an array of role IDs that are allowed for "random assignment".
         // We exclude role_id = 1 (admin) from random assignment so only 'admin' gets it.
-        $randomRoleIds = $roles->where('id', '!=', 1)->pluck('id')->toArray();
+        $randomRoleIds = $roles->whereNotIn('id', [1, 2])->pluck('id')->toArray();
 
         // Get users
         $users = User::all();
@@ -34,24 +34,13 @@ class User_rolesSeeder extends Seeder
                 continue;
             }
 
-            // Force mod -> role 2 (if exists)
+            // Force mod -> role 2 only
             if ($user->username === 'mod') {
-                if (in_array(2, $roles->pluck('id')->toArray())) {
-                    $user->roles()->sync([2]);
-                } else {
-                    // fallback: give the mod the first available non-admin role
-                    $fallback = collect($randomRoleIds)->first();
-                    $user->roles()->sync([$fallback]);
-                }
+                $user->roles()->sync([2]);
                 continue;
             }
-
-            // For everyone else: assign 1 or 2 random roles (but not role 1)
-            // Choose randomly between 1 or 2 roles to attach
             $num = rand(1, min(2, count($randomRoleIds)));
-            // shuffle and take $num roles
-            shuffle($randomRoleIds);
-            $assign = array_slice($randomRoleIds, 0, $num);
+            $assign = array_slice($randomRoleIds, 0, 1);
 
             $user->roles()->sync($assign);
         }

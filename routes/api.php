@@ -108,5 +108,5 @@ Route::middleware(['auth:api','check.statistics.access'])->group(function () {
 Route::post('/login', [LoginController::class, 'login']);
 Route::middleware('auth:api')->get('/me', [LoginController::class, 'me']);
 Route::middleware('auth:api')->post('/logout', [LoginController::class, 'logout']);
-Route::get('/authenticated', [LoginController::class, 'authenticated']);
-Route::get('/cas/callback', [LoginController::class, 'handleCasCallback'])->name('cas.callback');
+/* Route::get('/authenticated', [LoginController::class, 'authenticated']);
+Route::get('/cas/callback', [LoginController::class, 'handleCasCallback'])->name('cas.callback'); */
