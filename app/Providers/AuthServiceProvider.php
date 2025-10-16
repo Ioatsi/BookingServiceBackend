@@ -4,7 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\Facades\Gate;
 use App\Models\User; // Import the User model if not already imported
-
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use App\Models\Booking;
 // use Illuminate\Support\Facades\Gate;
@@ -30,7 +30,7 @@ class AuthServiceProvider extends ServiceProvider
         //
         Gate::define('create-booking', function ($user) {
             return $user->roles->contains(function ($role) {
-                return in_array($role->name, ['admin', 'faculty']);
+                return in_array($role->name, ['admin', 'moderator', 'faculty']);
             });
         });
 
@@ -44,9 +44,9 @@ class AuthServiceProvider extends ServiceProvider
 
             // Check if the user moderates the room where the booking takes place
             $isRoomModerator = DB::table('moderator_room')
-            ->where('user_id', $user->id)
-            ->where('room_id', $booking->room_id)
-            ->exists();
+                ->where('user_id', $user->id)
+                ->where('room_id', $booking->room_id)
+                ->exists();
 
             // Allow editing if any of the conditions are true
             return $isAdmin || $isBooker || $isRoomModerator;
@@ -55,10 +55,12 @@ class AuthServiceProvider extends ServiceProvider
         // Gate for resolving conflicts
         Gate::define('resolve-conflict', function ($user, $bookings) {
             // Extract room IDs from the bookings
-            $roomIds = collect($bookings)->pluck('room_id')->unique();
-
-             // Check if the user is an admin
-             $isAdmin = $user->roles->contains('name', 'admin');
+            $roomIds = collect($bookings instanceof \Illuminate\Support\Collection ? $bookings : [$bookings])
+            ->pluck('room_id')
+            ->unique()
+            ->filter();
+            // Check if the user is an admin
+            $isAdmin = $user->roles->contains('name', 'admin');
 
             // Check if the user moderates at least one of the rooms
             $moderatesAnyRoom = DB::table('moderator_room')
@@ -66,7 +68,7 @@ class AuthServiceProvider extends ServiceProvider
                 ->whereIn('room_id', $roomIds)
                 ->exists();
 
-            return $isAdmin || $moderatesAnyRoom;
+                return $isAdmin || $moderatesAnyRoom;
         });
 
         Gate::define('access-statistics', function (User $user) {
