@@ -26,7 +26,7 @@ class BookingSeeder extends Seeder
      */
     public function run(): void
     {
-        \App\Models\Booking::factory(500)->create();
+        \App\Models\Booking::factory(50)->create();
 
         //Make recurring and group bookings
         /* 
