@@ -8,10 +8,7 @@
     COPY . .
     
     # Install PHP dependencies
-    RUN composer install --optimize-autoloader --no-dev && \
-    php artisan config:cache && \
-    php artisan route:cache && \
-    php artisan view:cache
+    RUN composer install --optimize-autoloader
     
     # -----------------------------
     # Stage 2: Production container
