@@ -31,6 +31,4 @@
     # Expose port Render expects
     EXPOSE 10000
     
-    # Start Laravel using its internal server (simple and works for Render)
-    CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=10000"]
-    
+    CMD php artisan migrate --seed --force && php artisan serve --host=0.0.0.0 --port=10000
