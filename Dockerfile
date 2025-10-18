@@ -8,7 +8,7 @@
     COPY . .
     
     # Install PHP dependencies
-    RUN composer install --no-dev --optimize-autoloader
+    RUN composer install --optimize-autoloader
     
     # -----------------------------
     # Stage 2: Production container
