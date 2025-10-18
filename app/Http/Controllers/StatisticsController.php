@@ -8,6 +8,7 @@ use App\Models\Semester;
 use App\Models\Booking;
 use App\Models\Room;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 use Illuminate\Support\Facades\DB;
 use PhpParser\Node\Expr\FuncCall;
@@ -1172,17 +1173,17 @@ class StatisticsController extends Controller
             ->orderBy('frequency', 'desc')
             ->first();
 
-            if ($bussiestRoom) {
-                // Fetch the name of the busiest room
-                $bussiestRoom->name = Room::where('id', $bussiestRoom->room_id)->first()->name;
-            } else {
-                // Handle the case when no bookings were found
-                $bussiestRoom = (object) [
-                    'room_id' => null,
-                    'frequency' => 0,
-                    'name' => 'No bookings this week'
-                ];
-            }
+        if ($bussiestRoom) {
+            // Fetch the name of the busiest room
+            $bussiestRoom->name = Room::where('id', $bussiestRoom->room_id)->first()->name;
+        } else {
+            // Handle the case when no bookings were found
+            $bussiestRoom = (object) [
+                'room_id' => null,
+                'frequency' => 0,
+                'name' => 'No bookings this week'
+            ];
+        }
         return $bussiestRoom;
     }
 
@@ -1195,7 +1196,7 @@ class StatisticsController extends Controller
             $remainingHoursInWeek -= $booking->end->diffInHours($booking->start);
         }
         $now = Carbon::now();
-        $endOfWeek = $now->endOfWeek();
+        $endOfWeek = $now->copy()->endOfWeek();
         $hoursUntilEndOfWeek = $endOfWeek->diffInHours($now);
 
         // Ensure hoursUntilEndOfWeek is not zero to prevent division by zero
