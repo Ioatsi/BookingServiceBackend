@@ -1,0 +1,646 @@
+# flyctl launch added from .gitignore
+.phpunit.cache
+node_modules
+public/build
+public/hot
+public/storage
+storage/*.key
+vendor
+**/.env
+**/.env.backup
+**/.env.production
+**/.env.demo
+**/.phpunit.result.cache
+**/Homestead.json
+**/Homestead.yaml
+**/auth.json
+**/npm-debug.log
+**/yarn-error.log
+.fleet
+.idea
+.vscode
+**/dbml-schema.dbml
+**/factoryScript.php
+**/migrationScript.php
+**/seederScript.php
+
+# flyctl launch added from bootstrap/cache/.gitignore
+bootstrap/cache/**/*
+!bootstrap/cache/**/.gitignore
+
+# flyctl launch added from database/.gitignore
+database/**/*.sqlite*
+
+# flyctl launch added from storage/app/.gitignore
+storage/app/**/*
+!storage/app/**/public
+!storage/app/**/.gitignore
+
+# flyctl launch added from storage/app/public/.gitignore
+storage/app/public/**/*
+!storage/app/public/**/.gitignore
+
+# flyctl launch added from storage/framework/.gitignore
+storage/framework/**/compiled.php
+storage/framework/**/config.php
+storage/framework/**/down
+storage/framework/**/events.scanned.php
+storage/framework/**/maintenance.php
+storage/framework/**/routes.php
+storage/framework/**/routes.scanned.php
+storage/framework/**/schedule-*
+storage/framework/**/services.json
+
+# flyctl launch added from storage/framework/cache/.gitignore
+storage/framework/cache/**/*
+!storage/framework/cache/**/data
+!storage/framework/cache/**/.gitignore
+
+# flyctl launch added from storage/framework/cache/data/.gitignore
+storage/framework/cache/data/**/*
+!storage/framework/cache/data/**/.gitignore
+
+# flyctl launch added from storage/framework/sessions/.gitignore
+storage/framework/sessions/**/*
+!storage/framework/sessions/**/.gitignore
+
+# flyctl launch added from storage/framework/testing/.gitignore
+storage/framework/testing/**/*
+!storage/framework/testing/**/.gitignore
+
+# flyctl launch added from storage/framework/views/.gitignore
+storage/framework/views/**/*
+!storage/framework/views/**/.gitignore
+
+# flyctl launch added from storage/logs/.gitignore
+storage/logs/**/*
+!storage/logs/**/.gitignore
+
+# flyctl launch added from vendor/apereo/phpcas/.gitignore
+vendor/apereo/phpcas/**/docs/examples/config.php
+vendor/apereo/phpcas/**/utils/build.properties
+vendor/apereo/phpcas/**/utils/dist
+vendor/apereo/phpcas/**/utils/tmp
+vendor/apereo/phpcas/**/utils/starting_HEAD
+vendor/apereo/phpcas/.settings
+
+# Composer
+vendor/apereo/phpcas/**/composer.lock
+vendor/apereo/phpcas/vendor
+vendor/apereo/phpcas/.buildpath
+
+# flyctl launch added from vendor/brick/math/.gitignore
+vendor/brick/math/vendor
+vendor/brick/math/composer.lock
+vendor/brick/math/.phpunit.cache
+
+# flyctl launch added from vendor/carbonphp/carbon-doctrine-types/.gitignore
+vendor/carbonphp/carbon-doctrine-types/**/.idea
+vendor/carbonphp/carbon-doctrine-types/**/composer.lock
+vendor/carbonphp/carbon-doctrine-types/**/composer.phar
+vendor/carbonphp/carbon-doctrine-types/vendor
+vendor/carbonphp/carbon-doctrine-types/**/*.cache
+
+# flyctl launch added from vendor/dflydev/dot-access-data/.gitignore
+vendor/dflydev/dot-access-data/**/.phpcs-cache
+vendor/dflydev/dot-access-data/**/.phpunit.result.cache
+vendor/dflydev/dot-access-data/**/composer.lock
+vendor/dflydev/dot-access-data/**/phpcs.xml
+vendor/dflydev/dot-access-data/**/phpstan.neon
+vendor/dflydev/dot-access-data/**/phpunit.xml
+vendor/dflydev/dot-access-data/**/psalm.xml
+vendor/dflydev/dot-access-data/**/vendor
+
+# flyctl launch added from vendor/doctrine/inflector/.gitignore
+vendor/doctrine/inflector/vendor
+vendor/doctrine/inflector/composer.lock
+vendor/doctrine/inflector/composer.phar
+vendor/doctrine/inflector/phpunit.xml
+vendor/doctrine/inflector/.phpunit.result.cache
+vendor/doctrine/inflector/phpcs.xml
+vendor/doctrine/inflector/.phpcs-cache
+vendor/doctrine/inflector/phpstan.neon
+
+# flyctl launch added from vendor/doctrine/lexer/.gitignore
+vendor/doctrine/lexer/vendor
+vendor/doctrine/lexer/composer.lock
+vendor/doctrine/lexer/phpunit.xml
+vendor/doctrine/lexer/.phpunit.cache
+vendor/doctrine/lexer/phpcs.xml
+vendor/doctrine/lexer/.phpcs-cache
+
+# flyctl launch added from vendor/dragonmantank/cron-expression/.gitignore
+vendor/dragonmantank/cron-expression/**/nbproject
+vendor/dragonmantank/cron-expression/**/coverage
+vendor/dragonmantank/cron-expression/**/phpunit.xml
+vendor/dragonmantank/cron-expression/**/vendor
+vendor/dragonmantank/cron-expression/**/composer.phar
+vendor/dragonmantank/cron-expression/**/composer.lock
+vendor/dragonmantank/cron-expression/**/.idea
+vendor/dragonmantank/cron-expression/**/.php_cs.cache
+
+# flyctl launch added from vendor/egulias/email-validator/.gitignore
+vendor/egulias/email-validator/**/build
+vendor/egulias/email-validator/**/report
+vendor/egulias/email-validator/**/vendor
+vendor/egulias/email-validator/**/composer.lock
+vendor/egulias/email-validator/**/phpunit.result.cache
+vendor/egulias/email-validator/**/.phpunit*
+vendor/egulias/email-validator/**/.idea
+vendor/egulias/email-validator/**/.vscode
+vendor/egulias/email-validator/**/.php-version
+
+# flyctl launch added from vendor/fruitcake/php-cors/.gitignore
+vendor/fruitcake/php-cors/**/phpunit.xml
+vendor/fruitcake/php-cors/**/composer.lock
+vendor/fruitcake/php-cors/**/composer.phar
+vendor/fruitcake/php-cors/vendor
+vendor/fruitcake/php-cors/**/.phpunit.result.cache
+
+# flyctl launch added from vendor/graham-campbell/result-type/.gitignore
+vendor/graham-campbell/result-type/**/.phpunit.result.cache
+vendor/graham-campbell/result-type/**/composer.lock
+vendor/graham-campbell/result-type/**/phpunit.xml
+vendor/graham-campbell/result-type/**/vendor
+
+# flyctl launch added from vendor/guzzlehttp/guzzle/.gitignore
+vendor/guzzlehttp/guzzle/**/.php-cs-fixer.php
+vendor/guzzlehttp/guzzle/**/.php-cs-fixer.cache
+vendor/guzzlehttp/guzzle/**/.phpunit.result.cache
+vendor/guzzlehttp/guzzle/**/composer.lock
+vendor/guzzlehttp/guzzle/**/vendor
+vendor/guzzlehttp/guzzle/phpstan.neon
+vendor/guzzlehttp/guzzle/phpunit.xml
+
+vendor/guzzlehttp/guzzle/**/build
+vendor/guzzlehttp/guzzle/**/artifacts
+vendor/guzzlehttp/guzzle/**/docs/_build
+vendor/guzzlehttp/guzzle/**/docs/*.pyc
+
+# flyctl launch added from vendor/guzzlehttp/promises/.gitignore
+vendor/guzzlehttp/promises/**/artifacts
+vendor/guzzlehttp/promises/**/vendor
+vendor/guzzlehttp/promises/**/composer.lock
+vendor/guzzlehttp/promises/**/phpunit.xml
+vendor/guzzlehttp/promises/**/.php-cs-fixer.php
+vendor/guzzlehttp/promises/**/.php-cs-fixer.cache
+vendor/guzzlehttp/promises/**/.phpunit.result.cache
+
+# flyctl launch added from vendor/guzzlehttp/psr7/.gitignore
+vendor/guzzlehttp/psr7/**/.php-cs-fixer.php
+vendor/guzzlehttp/psr7/**/.php-cs-fixer.cache
+vendor/guzzlehttp/psr7/**/.phpunit.result.cache
+vendor/guzzlehttp/psr7/**/composer.lock
+vendor/guzzlehttp/psr7/**/vendor
+vendor/guzzlehttp/psr7/phpstan.neon
+vendor/guzzlehttp/psr7/phpunit.xml
+
+# flyctl launch added from vendor/guzzlehttp/uri-template/.gitignore
+vendor/guzzlehttp/uri-template/**/.php-cs-fixer.php
+vendor/guzzlehttp/uri-template/**/.php-cs-fixer.cache
+vendor/guzzlehttp/uri-template/**/.phpunit.result.cache
+vendor/guzzlehttp/uri-template/**/build
+vendor/guzzlehttp/uri-template/**/composer.lock
+vendor/guzzlehttp/uri-template/**/vendor
+vendor/guzzlehttp/uri-template/**/phpstan.neon
+vendor/guzzlehttp/uri-template/**/phpunit.xml
+
+# flyctl launch added from vendor/laravel/framework/.gitignore
+vendor/laravel/framework/.phpunit.cache
+vendor/laravel/framework/vendor
+vendor/laravel/framework/**/composer.phar
+vendor/laravel/framework/**/composer.lock
+vendor/laravel/framework/**/.DS_Store
+vendor/laravel/framework/**/Thumbs.db
+vendor/laravel/framework/phpunit.xml
+vendor/laravel/framework/.idea
+vendor/laravel/framework/.fleet
+vendor/laravel/framework/.vscode
+vendor/laravel/framework/**/.phpunit.result.cache
+
+# flyctl launch added from vendor/laravel/prompts/.gitignore
+vendor/laravel/prompts/.idea
+vendor/laravel/prompts/vendor
+vendor/laravel/prompts/**/composer.lock
+
+# flyctl launch added from vendor/laravel/sanctum/.gitignore
+vendor/laravel/sanctum/vendor
+vendor/laravel/sanctum/**/composer.lock
+vendor/laravel/sanctum/phpunit.xml
+vendor/laravel/sanctum/**/.phpunit.result.cache
+
+# flyctl launch added from vendor/laravel/serializable-closure/.gitignore
+vendor/laravel/serializable-closure/vendor
+vendor/laravel/serializable-closure/**/composer.lock
+vendor/laravel/serializable-closure/phpunit.xml
+vendor/laravel/serializable-closure/**/.phpunit.result.cache
+
+# flyctl launch added from vendor/laravel/tinker/.gitignore
+vendor/laravel/tinker/vendor
+vendor/laravel/tinker/**/composer.lock
+vendor/laravel/tinker/phpunit.xml
+vendor/laravel/tinker/**/.phpunit.result.cache
+
+# flyctl launch added from vendor/lcobucci/clock/.gitignore
+vendor/lcobucci/clock/vendor
+vendor/lcobucci/clock/phpunit.xml
+vendor/lcobucci/clock/phpcs.xml
+vendor/lcobucci/clock/.phpcs.cache
+vendor/lcobucci/clock/infection-log.txt
+vendor/lcobucci/clock/phpstan.neon
+vendor/lcobucci/clock/.phpunit.result.cache
+vendor/lcobucci/clock/build
+
+# flyctl launch added from vendor/lcobucci/jwt/.gitignore
+vendor/lcobucci/jwt/**/vendor
+vendor/lcobucci/jwt/**/phpunit.xml
+vendor/lcobucci/jwt/**/infection.txt
+vendor/lcobucci/jwt/**/coverage
+vendor/lcobucci/jwt/**/phpcs.xml
+vendor/lcobucci/jwt/.phpcs.cache
+vendor/lcobucci/jwt/.phpunit.result.cache
+vendor/lcobucci/jwt/build
+
+# flyctl launch added from vendor/league/commonmark/.gitignore
+vendor/league/commonmark/.idea
+vendor/league/commonmark/.phpcs-cache
+vendor/league/commonmark/.phpunit.result.cache
+vendor/league/commonmark/.phpunit.cache
+vendor/league/commonmark/build
+vendor/league/commonmark/docs/_site
+vendor/league/commonmark/**/composer.lock
+vendor/league/commonmark/**/composer.phar
+vendor/league/commonmark/vendor
+vendor/league/commonmark/**/phpunit.xml
+
+
+# flyctl launch added from vendor/league/commonmark/docs/.gitignore
+vendor/league/commonmark/docs/**/.jekyll-cache
+
+# flyctl launch added from vendor/league/config/.gitignore
+vendor/league/config/.idea
+vendor/league/config/.phpcs-cache
+vendor/league/config/.phpunit.result.cache
+vendor/league/config/build
+vendor/league/config/docs/_site
+vendor/league/config/**/composer.lock
+vendor/league/config/**/composer.phar
+vendor/league/config/vendor
+vendor/league/config/**/phpunit.xml
+
+# flyctl launch added from vendor/league/config/docs/.gitignore
+vendor/league/config/docs/**/.jekyll-cache
+
+# flyctl launch added from vendor/league/flysystem/.gitignore
+vendor/league/flysystem/vendor
+vendor/league/flysystem/coverage
+vendor/league/flysystem/.phpunit.result.cache
+vendor/league/flysystem/phpunit.xml
+vendor/league/flysystem/composer.lock
+vendor/league/flysystem/index_*.php
+vendor/league/flysystem/.php-cs-fixer.php
+vendor/league/flysystem/.php-cs-fixer.cache
+vendor/league/flysystem/google-cloud-service-account.json
+vendor/league/flysystem/**/.idea
+
+# flyctl launch added from vendor/league/flysystem/bin/.gitignore
+vendor/league/flysystem/bin/**/renamespace.php
+
+# flyctl launch added from vendor/league/flysystem/src/WebDAV/resources/.gitignore
+vendor/league/flysystem/src/WebDAV/resources/**/data
+vendor/league/flysystem/src/WebDAV/resources/**/index.php
+
+# flyctl launch added from vendor/league/flysystem/test_files/.gitignore
+vendor/league/flysystem/test_files/**/.data
+
+# flyctl launch added from vendor/league/mime-type-detection/.gitignore
+vendor/league/mime-type-detection/vendor
+vendor/league/mime-type-detection/coverage
+vendor/league/mime-type-detection/.phpunit.result.cache
+vendor/league/mime-type-detection/.php-cs-fixer.php
+vendor/league/mime-type-detection/.php-cs-fixer.cache
+vendor/league/mime-type-detection/phpunit.xml
+vendor/league/mime-type-detection/composer.lock
+
+# flyctl launch added from vendor/monolog/monolog/.gitignore
+vendor/monolog/monolog/**/vendor
+vendor/monolog/monolog/**/composer.phar
+vendor/monolog/monolog/**/phpunit.xml
+vendor/monolog/monolog/**/composer.lock
+vendor/monolog/monolog/**/.DS_Store
+vendor/monolog/monolog/**/.php-cs-fixer.cache
+vendor/monolog/monolog/**/.hg
+vendor/monolog/monolog/**/.phpunit.result.cache
+vendor/monolog/monolog/**/.phpunit.cache
+
+# flyctl launch added from vendor/nesbot/carbon/.gitignore
+vendor/nesbot/carbon/**/.idea
+vendor/nesbot/carbon/**/.vscode
+vendor/nesbot/carbon/**/*.iml
+vendor/nesbot/carbon/**/.php-cs-fixer.php
+vendor/nesbot/carbon/**/.php-cs-fixer.cache
+vendor/nesbot/carbon/**/vendor
+vendor/nesbot/carbon/**/composer.phar
+vendor/nesbot/carbon/**/composer.lock
+vendor/nesbot/carbon/**/coverage.xml
+vendor/nesbot/carbon/**/coverage
+vendor/nesbot/carbon/**/phpunit.xml
+vendor/nesbot/carbon/**/Carbon-*.zip
+vendor/nesbot/carbon/**/*.phpunit.result.cache
+vendor/nesbot/carbon/nbproject
+
+# flyctl launch added from vendor/nette/schema/.gitignore
+vendor/nette/schema/vendor
+vendor/nette/schema/composer.lock
+
+# flyctl launch added from vendor/nette/schema/tests/.gitignore
+vendor/nette/schema/tests/*/output
+vendor/nette/schema/tests/test.log
+vendor/nette/schema/tests/tmp
+
+# flyctl launch added from vendor/nette/utils/.gitignore
+vendor/nette/utils/vendor
+vendor/nette/utils/composer.lock
+
+# flyctl launch added from vendor/nette/utils/tests/.gitignore
+vendor/nette/utils/tests/*/output
+vendor/nette/utils/tests/test.log
+vendor/nette/utils/tests/tmp
+
+# flyctl launch added from vendor/nikic/php-parser/.gitignore
+vendor/nikic/php-parser/**/.idea
+vendor/nikic/php-parser/**/vendor
+vendor/nikic/php-parser/**/composer.lock
+vendor/nikic/php-parser/**/grammar/kmyacc.exe
+vendor/nikic/php-parser/**/grammar/y.output
+vendor/nikic/php-parser/**/.phpunit.result.cache
+vendor/nikic/php-parser/**/.php-cs-fixer.cache
+
+# flyctl launch added from vendor/nunomaduro/termwind/.gitignore
+vendor/nunomaduro/termwind/.phpunit.result.cache
+vendor/nunomaduro/termwind/.php-cs-fixer.cache
+vendor/nunomaduro/termwind/.php-cs-fixer.php
+vendor/nunomaduro/termwind/.idea
+vendor/nunomaduro/termwind/composer.lock
+vendor/nunomaduro/termwind/phpunit.xml
+vendor/nunomaduro/termwind/vendor
+vendor/nunomaduro/termwind/**/*.swp
+vendor/nunomaduro/termwind/**/*.swo
+
+# flyctl launch added from vendor/phpoption/phpoption/.gitignore
+vendor/phpoption/phpoption/**/.phpunit.result.cache
+vendor/phpoption/phpoption/**/composer.lock
+vendor/phpoption/phpoption/**/phpstan.src.neon
+vendor/phpoption/phpoption/**/phpstan.tests.neon
+vendor/phpoption/phpoption/**/phpunit.xml
+vendor/phpoption/phpoption/**/vendor
+
+# flyctl launch added from vendor/psr/clock/.gitignore
+vendor/psr/clock/vendor
+vendor/psr/clock/**/composer.lock
+
+# flyctl launch added from vendor/psr/container/.gitignore
+vendor/psr/container/**/composer.lock
+vendor/psr/container/**/composer.phar
+vendor/psr/container/vendor
+
+# flyctl launch added from vendor/psr/event-dispatcher/.gitignore
+vendor/psr/event-dispatcher/vendor
+vendor/psr/event-dispatcher/**/composer.lock
+
+# flyctl launch added from vendor/psr/http-factory/.gitignore
+vendor/psr/http-factory/**/composer.lock
+vendor/psr/http-factory/**/vendor
+
+# flyctl launch added from vendor/psr/log/.gitignore
+vendor/psr/log/**/vendor
+
+# flyctl launch added from vendor/psr/simple-cache/.gitignore
+vendor/psr/simple-cache/**/build
+vendor/psr/simple-cache/**/composer.lock
+vendor/psr/simple-cache/**/docs
+vendor/psr/simple-cache/**/vendor
+
+# flyctl launch added from vendor/psy/psysh/.gitignore
+vendor/psy/psysh/**/__pycache__
+vendor/psy/psysh/**/*.pyc
+vendor/psy/psysh/.phpunit.result.cache
+vendor/psy/psysh/build
+vendor/psy/psysh/composer.lock
+vendor/psy/psysh/dist
+vendor/psy/psysh/phpstan.neon
+vendor/psy/psysh/vendor-bin/*/vendor
+vendor/psy/psysh/vendor-bin/phpstan/composer.lock
+vendor/psy/psysh/vendor-bin/phpunit/composer.lock
+vendor/psy/psysh/vendor
+
+# flyctl launch added from vendor/ralouphie/getallheaders/.gitignore
+vendor/ralouphie/getallheaders/**/.idea
+vendor/ralouphie/getallheaders/**/.DS_store
+vendor/ralouphie/getallheaders/vendor
+vendor/ralouphie/getallheaders/**/composer.phar
+vendor/ralouphie/getallheaders/**/composer.lock
+
+# flyctl launch added from vendor/ramsey/collection/.gitignore
+vendor/ramsey/collection/**/captainhook.config.json
+vendor/ramsey/collection/**/composer.lock
+vendor/ramsey/collection/**/phpcs.xml
+vendor/ramsey/collection/**/phpunit.xml
+vendor/ramsey/collection/**/vendor
+
+# flyctl launch added from vendor/ramsey/collection/build/.gitignore
+vendor/ramsey/collection/build/**/*
+!vendor/ramsey/collection/build/**/.gitignore
+!vendor/ramsey/collection/build/**/cache
+!vendor/ramsey/collection/build/**/cache/.gitkeep
+!vendor/ramsey/collection/build/**/logs
+!vendor/ramsey/collection/build/**/logs/.gitkeep
+
+# flyctl launch added from vendor/ramsey/uuid/.gitignore
+vendor/ramsey/uuid/captainhook.config.json
+vendor/ramsey/uuid/phpcs.xml
+vendor/ramsey/uuid/phpunit.xml
+vendor/ramsey/uuid/vendor
+
+# flyctl launch added from vendor/ramsey/uuid/build/.gitignore
+vendor/ramsey/uuid/build/**/*
+!vendor/ramsey/uuid/build/**/.gitignore
+!vendor/ramsey/uuid/build/**/cache
+!vendor/ramsey/uuid/build/**/cache/.gitkeep
+!vendor/ramsey/uuid/build/**/logs
+!vendor/ramsey/uuid/build/**/logs/.gitkeep
+
+# flyctl launch added from vendor/ramsey/uuid/docs/.gitignore
+vendor/ramsey/uuid/docs/**/_build
+
+# flyctl launch added from vendor/ramsey/uuid/resources/vagrant/.gitignore
+vendor/ramsey/uuid/resources/vagrant/**/.vagrant
+
+# flyctl launch added from vendor/stella-maris/clock/.gitignore
+vendor/stella-maris/clock/**/vendor
+vendor/stella-maris/clock/**/tools
+vendor/stella-maris/clock/**/.phpunit.cache
+vendor/stella-maris/clock/**/composer.lock
+
+# flyctl launch added from vendor/subfission/cas/.gitignore
+vendor/subfission/cas/build
+vendor/subfission/cas/**/.idea
+vendor/subfission/cas/composer.lock
+vendor/subfission/cas/vendor
+vendor/subfission/cas/**/tools
+vendor/subfission/cas/**/.php-cs-fixer.cache
+vendor/subfission/cas/**/phpunit.xml
+
+# flyctl launch added from vendor/symfony/console/.gitignore
+vendor/symfony/console/**/vendor
+vendor/symfony/console/**/composer.lock
+vendor/symfony/console/**/phpunit.xml
+
+# flyctl launch added from vendor/symfony/css-selector/.gitignore
+vendor/symfony/css-selector/**/vendor
+vendor/symfony/css-selector/**/composer.lock
+vendor/symfony/css-selector/**/phpunit.xml
+
+# flyctl launch added from vendor/symfony/deprecation-contracts/.gitignore
+vendor/symfony/deprecation-contracts/**/vendor
+vendor/symfony/deprecation-contracts/**/composer.lock
+vendor/symfony/deprecation-contracts/**/phpunit.xml
+
+# flyctl launch added from vendor/symfony/error-handler/.gitignore
+vendor/symfony/error-handler/**/vendor
+vendor/symfony/error-handler/**/composer.lock
+vendor/symfony/error-handler/**/phpunit.xml
+
+# flyctl launch added from vendor/symfony/event-dispatcher/.gitignore
+vendor/symfony/event-dispatcher/**/vendor
+vendor/symfony/event-dispatcher/**/composer.lock
+vendor/symfony/event-dispatcher/**/phpunit.xml
+
+# flyctl launch added from vendor/symfony/event-dispatcher-contracts/.gitignore
+vendor/symfony/event-dispatcher-contracts/**/vendor
+vendor/symfony/event-dispatcher-contracts/**/composer.lock
+vendor/symfony/event-dispatcher-contracts/**/phpunit.xml
+
+# flyctl launch added from vendor/symfony/finder/.gitignore
+vendor/symfony/finder/**/vendor
+vendor/symfony/finder/**/composer.lock
+vendor/symfony/finder/**/phpunit.xml
+
+# flyctl launch added from vendor/symfony/finder/Tests/Fixtures/gitignore/.gitignore
+vendor/symfony/finder/Tests/Fixtures/gitignore/**/c.txt
+
+# flyctl launch added from vendor/symfony/finder/Tests/Fixtures/gitignore/git_root/search_root/.gitignore
+vendor/symfony/finder/Tests/Fixtures/gitignore/git_root/search_root/a.txt
+
+# flyctl launch added from vendor/symfony/finder/Tests/Fixtures/gitignore/git_root/search_root/dir/.gitignore
+vendor/symfony/finder/Tests/Fixtures/gitignore/git_root/search_root/dir/b.txt
+
+# flyctl launch added from vendor/symfony/finder/Tests/Fixtures/gitignore/search_root/.gitignore
+vendor/symfony/finder/Tests/Fixtures/gitignore/search_root/a.txt
+
+# flyctl launch added from vendor/symfony/finder/Tests/Fixtures/gitignore/search_root/dir/.gitignore
+vendor/symfony/finder/Tests/Fixtures/gitignore/search_root/dir/b.txt
+
+# flyctl launch added from vendor/symfony/http-foundation/.gitignore
+vendor/symfony/http-foundation/**/vendor
+vendor/symfony/http-foundation/**/composer.lock
+vendor/symfony/http-foundation/**/phpunit.xml
+
+# flyctl launch added from vendor/symfony/http-kernel/.gitignore
+vendor/symfony/http-kernel/**/vendor
+vendor/symfony/http-kernel/**/composer.lock
+vendor/symfony/http-kernel/**/phpunit.xml
+vendor/symfony/http-kernel/**/Tests/Fixtures/cache
+vendor/symfony/http-kernel/**/Tests/Fixtures/logs
+
+# flyctl launch added from vendor/symfony/mailer/.gitignore
+vendor/symfony/mailer/**/vendor
+vendor/symfony/mailer/**/composer.lock
+vendor/symfony/mailer/**/phpunit.xml
+
+# flyctl launch added from vendor/symfony/mime/.gitignore
+vendor/symfony/mime/**/composer.lock
+vendor/symfony/mime/**/phpunit.xml
+vendor/symfony/mime/**/vendor
+
+# flyctl launch added from vendor/symfony/process/.gitignore
+vendor/symfony/process/**/vendor
+vendor/symfony/process/**/composer.lock
+vendor/symfony/process/**/phpunit.xml
+
+# flyctl launch added from vendor/symfony/routing/.gitignore
+vendor/symfony/routing/**/vendor
+vendor/symfony/routing/**/composer.lock
+vendor/symfony/routing/**/phpunit.xml
+
+# flyctl launch added from vendor/symfony/service-contracts/.gitignore
+vendor/symfony/service-contracts/**/vendor
+vendor/symfony/service-contracts/**/composer.lock
+vendor/symfony/service-contracts/**/phpunit.xml
+
+# flyctl launch added from vendor/symfony/string/.gitignore
+vendor/symfony/string/**/composer.lock
+vendor/symfony/string/**/phpunit.xml
+vendor/symfony/string/**/vendor
+
+# flyctl launch added from vendor/symfony/translation/.gitignore
+vendor/symfony/translation/**/vendor
+vendor/symfony/translation/**/composer.lock
+vendor/symfony/translation/**/phpunit.xml
+
+# flyctl launch added from vendor/symfony/translation-contracts/.gitignore
+vendor/symfony/translation-contracts/**/vendor
+vendor/symfony/translation-contracts/**/composer.lock
+vendor/symfony/translation-contracts/**/phpunit.xml
+
+# flyctl launch added from vendor/symfony/uid/.gitignore
+vendor/symfony/uid/**/composer.lock
+vendor/symfony/uid/**/phpunit.xml
+vendor/symfony/uid/**/vendor
+
+# flyctl launch added from vendor/symfony/var-dumper/.gitignore
+vendor/symfony/var-dumper/**/composer.lock
+vendor/symfony/var-dumper/**/phpunit.xml
+vendor/symfony/var-dumper/**/vendor
+
+# flyctl launch added from vendor/tijsverkoyen/css-to-inline-styles/.gitignore
+vendor/tijsverkoyen/css-to-inline-styles/vendor
+vendor/tijsverkoyen/css-to-inline-styles/**/composer.lock
+vendor/tijsverkoyen/css-to-inline-styles/.phpunit.result.cache
+
+# flyctl launch added from vendor/tymon/jwt-auth/.gitignore
+vendor/tymon/jwt-auth/vendor
+vendor/tymon/jwt-auth/**/composer.lock
+vendor/tymon/jwt-auth/**/build
+vendor/tymon/jwt-auth/**/coverage.xml
+vendor/tymon/jwt-auth/**/.phpunit.result.cache
+
+# flyctl launch added from vendor/vlucas/phpdotenv/.gitignore
+vendor/vlucas/phpdotenv/**/.phpunit.result.cache
+vendor/vlucas/phpdotenv/**/composer.lock
+vendor/vlucas/phpdotenv/**/phpstan.neon
+vendor/vlucas/phpdotenv/**/phpstan.tests.neon
+vendor/vlucas/phpdotenv/**/phpunit.xml
+vendor/vlucas/phpdotenv/**/vendor
+
+# flyctl launch added from vendor/voku/portable-ascii/.gitignore
+# composer
+vendor/voku/portable-ascii/**/vendor
+vendor/voku/portable-ascii/**/composer.lock
+
+# php (phpunit)
+vendor/voku/portable-ascii/**/build/logs
+vendor/voku/portable-ascii/**/.phpunit.result.cache
+
+# phpcs fixer
+vendor/voku/portable-ascii/**/.php_cs.cache
+
+# PhpStorm
+vendor/voku/portable-ascii/**/.idea
+
+# flyctl launch added from vendor/webmozart/assert/.gitignore
+vendor/webmozart/assert/**/vendor
+vendor/webmozart/assert/composer.lock
+vendor/webmozart/assert/**/.phpunit.result.cache
+vendor/webmozart/assert/**/.php_cs.cache
+fly.toml
