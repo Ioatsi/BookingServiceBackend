@@ -56,15 +56,31 @@ class LoginController extends Controller
     }
 
     /**
+     * Refresh the JWT token.
+     */
+    public function refresh()
+    {
+        try {
+            $newToken = JWTAuth::refresh();
+            return response()->json([
+                'status' => 'success',
+                'token' => $newToken,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Failed to refresh token'], 500);
+        }
+    }
+
+    /**
      * Log out the user (invalidate token).
      */
     public function logout()
     {
         try {
             auth()->logout();
-            return response()->json(['message' => 'Logged out']);
+            return response()->json(['status' => 'success']);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Failed to logout'], 500);
+            return response()->json(['status' => 'error'], 500);
         }
     }
 }
