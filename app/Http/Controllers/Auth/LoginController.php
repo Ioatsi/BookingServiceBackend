@@ -61,13 +61,20 @@ class LoginController extends Controller
     public function refresh()
     {
         try {
-            $newToken = JWTAuth::refresh();
+            $currentToken = JWTAuth::getToken();
+            if (!$currentToken) {
+                return response()->json(['message' => 'Token not provided'], 400);
+            }
+
+            $newToken = JWTAuth::refresh($currentToken);
             return response()->json([
                 'status' => 'success',
                 'token' => $newToken,
             ]);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Failed to refresh token'], 500);
+            return response()->json([
+                'message' => 'Failed to refresh token',
+            ], 500);
         }
     }
 
